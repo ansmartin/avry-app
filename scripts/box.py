@@ -14,7 +14,7 @@ class PokemonBox:
         return self.number_of_pokemon_stored==self.size
     
     def position_is_in_range(self, position):
-        return position>=0 and position<self.max_position
+        return position>=0 and position<self.size
 
 
     def save_pokemon(self, pokemon_id):

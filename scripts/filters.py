@@ -18,11 +18,14 @@ class PokemonFilters:
         self.generations = None
 
         self.show_all_pokemon = True
-        self.fully_evolved = False
-        self.powerhouse = False
         self.legendary = False
         self.sublegendary = False
         self.mythical = False
+        self.powerhouse = False
+        self.rest = False
+
+        self.fully_evolved = False
+
         self.has_mega = False
         self.has_gmax = False
 

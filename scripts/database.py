@@ -75,38 +75,52 @@ class PokemonDatabaseManager:
                 )
             booleanIndex = booleanIndex & booleanIndex_gens
 
-        # specifics
+        # category
         if not filters.show_all_pokemon:
-            booleanIndex_aux = pd.Series([ False for x in range(self.size) ])
-            if filters.fully_evolved:
-                booleanIndex_aux = (
-                    booleanIndex_aux | (self.df.evolutions_ids.apply(len)==0)
-                )
-            if filters.powerhouse:
-                booleanIndex_aux = (
-                    booleanIndex_aux | (self.df.is_powerhouse)
-                )
+            booleanIndex_cat = pd.Series([ False for x in range(self.size) ])
             if filters.legendary:
-                booleanIndex_aux = (
-                    booleanIndex_aux | (self.df.is_legendary)
+                booleanIndex_cat = (
+                    booleanIndex_cat | (self.df.is_legendary)
                 )
             if filters.sublegendary:
-                booleanIndex_aux = (
-                    booleanIndex_aux | (self.df.is_sublegendary)
+                booleanIndex_cat = (
+                    booleanIndex_cat | (self.df.is_sublegendary)
                 )
             if filters.mythical:
-                booleanIndex_aux = (
-                    booleanIndex_aux | (self.df.is_mythical)
+                booleanIndex_cat = (
+                    booleanIndex_cat | (self.df.is_mythical)
                 )
-            if filters.has_mega:
-                booleanIndex_aux = (
-                    booleanIndex_aux | (self.df.has_mega)
+            if filters.powerhouse:
+                booleanIndex_cat = (
+                    booleanIndex_cat | (self.df.is_powerhouse)
                 )
-            if filters.has_gmax:
-                booleanIndex_aux = (
-                    booleanIndex_aux | (self.df.has_gmax)
+            if filters.rest:
+                booleanIndex_cat = (
+                    booleanIndex_cat | 
+                    (
+                        (~self.df.is_legendary) &
+                        (~self.df.is_sublegendary) &
+                        (~self.df.is_mythical) &
+                        (~self.df.is_powerhouse)
+                    )
                 )
-            booleanIndex = booleanIndex & booleanIndex_aux
+            booleanIndex = booleanIndex & booleanIndex_cat
+
+        # evolved
+        if filters.fully_evolved:
+            booleanIndex = (
+                booleanIndex & (self.df.evolutions_ids.apply(len)==0)
+            )
+
+        # transformation
+        if filters.has_mega:
+            booleanIndex = (
+                booleanIndex & (self.df.has_mega)
+            )
+        if filters.has_gmax:
+            booleanIndex = (
+                booleanIndex & (self.df.has_gmax)
+            )
 
         # nuevo conjunto de datos filtrados
         self.df_filtered = self.df.loc[booleanIndex]

@@ -48,10 +48,12 @@ class UserSystem:
 
     def add_user(self, username):
         self.users.append(User(username))
+        self.save_data()
 
     def delete_user(self, position):
         if self.position_is_in_range(position):
             self.users.pop(position)
+            self.save_data()
             return True
         else:
             return False

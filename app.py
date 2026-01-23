@@ -1,24 +1,10 @@
 from os import system
-import pandas as pd
-import random
-import json
-
 from scripts.users import UserSystem
-
-
-df = pd.read_parquet('../data/pokemon.parquet')
-max_position = len(df)-1
-option = 0
+from scripts.pokemon import PokemonDatabase
 
 
 def clear():
     system("clear||cls")
-
-def get_pokemon():
-    # elegir posicion random
-    n = random.randint(0, max_position)
-    pokemon = df.iloc[n].to_dict()
-    return pokemon
 
 def capitalize_name(text):
     words = text.split('-')
@@ -28,14 +14,17 @@ def capitalize_all_words(text):
     words = text.replace('-',' ').split()
     return ' '.join(w.capitalize() for w in words)
 
+def save_pokemon(pokemon_id):
+    user.pokemonBox.save_pokemon(pokemon_id)
+    userSystem.save_data()
+
 
 def print_pokemon_data():
-
     if(user.pokemonBox.is_full()):
         print('\nSe ha alcanzado el límite de Pokémon en la caja.')
         return
 
-    x = get_pokemon()
+    x = database.get_random_pokemon()
 
     evolutions = None
     for element in x['evolutions_ids']:
@@ -92,9 +81,7 @@ def print_pokemon_data():
         print(f'\tHabilidad oculta: {capitalize_all_words(hidden_ability)}')
 
     print(f'\tIlustración: {sprite_default}')
-
-    # guardar pokemon
-    user.pokemonBox.save_pokemon(x['id'])
+    save_pokemon(x['id'])
 
 
 def print_box():
@@ -106,16 +93,9 @@ def print_box():
     else:
         print(f'\nLista de Pokémon obtenidos: {user.pokemonBox.number_of_pokemon_stored}/20')
         n=1
-        for poke_id in box:
-            if(poke_id):
-                x = df.loc[poke_id]
-                species_name = x['species_name']
-                form_name_text = x['form_name_text']
-                
-                name = f' - {n}:\t{species_name.capitalize()}'
-                if(form_name_text is not None):
-                    name += f' ({form_name_text})'
-                print(name)
+        for pokemon_id in box:
+            if(pokemon_id):
+                print(f' - {n}:\t{database.get_fullname(pokemon_id)}')
             else:
                 print(f' - {n}:\t*')
             n+=1
@@ -221,9 +201,6 @@ def load_user():
             print('Opción no reconocida.')
             
 
-
-
-
 user_menu = """\n
     Opciones:
     - 1: Cargar usuario
@@ -246,7 +223,9 @@ MENU PRINCIPAL
 line = '\n------------------------------------'
 
 
+clear()
 userSystem = UserSystem()
+database = PokemonDatabase()
 load_user()
 
 
@@ -269,6 +248,7 @@ while(True):
         print_box()
     elif(option=='4'):
         user.pokemonBox.init_box()
+        userSystem.save_data()
         print('\nLa caja ha sido vaciada.')
     elif(option=='5'):
         break

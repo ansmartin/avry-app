@@ -14,7 +14,7 @@ class User:
 class UserSystem:
 
     def __init__(self):
-        self.max_users = 2
+        self.max_users = 128
         self.data_path = './data/users.p'
         self.load_data()
             

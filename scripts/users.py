@@ -22,11 +22,15 @@ class UserSystem:
         # carga los datos guardados
         try:
             self.users = pickle.load( open(self.data_path, "rb") )
+
+            if not isinstance(self.users, list) or not isinstance(self.users[0], User):
+                raise TypeError(f"Error al cargar el archivo \"{self.data_path}\", se creará uno nuevo.")
+                
         # si hay algún error, crea nuevos datos
         except:
             self.users = []
             self.add_user('admin')
-            self.save_data()
+            # self.save_data()
 
     def save_data(self):
         pickle.dump( self.users, open(self.data_path, "wb") )

@@ -1,6 +1,6 @@
 from os import system
 from scripts.users import UserSystem
-from scripts.pokemon import PokemonDatabase
+from scripts.database import PokemonDatabaseManager
 
 
 def clear():
@@ -225,8 +225,10 @@ line = '\n------------------------------------'
 
 clear()
 userSystem = UserSystem()
-database = PokemonDatabase()
-load_user()
+database = PokemonDatabaseManager()
+database.filter_dataset()
+#load_user()
+user = userSystem.get_user(0)
 
 
 while(True):
@@ -252,6 +254,12 @@ while(True):
         print('\nLa caja ha sido vaciada.')
     elif(option=='5'):
         break
+    elif(option=='6'):
+        pokemon = database.get_random_pokemon()
+        if pokemon is not None:
+            print('\nPokemon:')
+            for k,v in pokemon.items():
+                print(f' - {k}: {v}')
     else:
         print('Opción no reconocida.')
 

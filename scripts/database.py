@@ -11,7 +11,7 @@ class PokemonDatabaseManager:
         self.size = self.df.shape[0]
         self.max_position = self.size-1
         self.filterManager = PokemonFiltersManager()
-        self.df_filtered = None
+        self.dfFiltered = None
         self.filter_dataset()
 
     def get_fullname(self, pokemon_id):
@@ -26,15 +26,24 @@ class PokemonDatabaseManager:
 
         return name
         
-    def get_random_pokemon(self):
-        if self.df_filtered is None:
-            n = random.randint(0, self.max_position)
-            return self.df.iloc[n].to_dict()
-        else:
-            if(len(self.df_filtered)==0):
-                return None
-            n = random.randint(0, self.df_filtered.shape[0]-1)
-            return self.df_filtered.iloc[n].to_dict()
+    def get_random_pokemon(self, box):
+        while True:
+            
+            if self.dfFiltered is None:
+                n = random.randint(0, self.max_position)
+                pokemon = self.df.iloc[n].to_dict()
+            else:
+                if(len(self.dfFiltered)==0):
+                    return None
+                n = random.randint(0, self.dfFiltered.shape[0]-1)
+                pokemon = self.dfFiltered.iloc[n].to_dict()
+
+            # comprobar que el pokemon obtenido no está ya en la caja
+            if pokemon['id'] in box:
+                # repetir
+                continue
+            else:
+                return pokemon
 
     def filter_dataset(self):
         booleanMask = pd.Series([ True for x in range(self.size) ], index=self.df.index)
@@ -124,8 +133,7 @@ class PokemonDatabaseManager:
             )
 
         # nuevo conjunto de datos filtrados
-        self.df_filtered = self.df.loc[booleanMask]
+        self.dfFiltered = self.df.loc[booleanMask]
 
     def deactivate_filters(self):
-        self.df_filtered = None
-        self.filterManager.reset()
+        self.dfFiltered = None

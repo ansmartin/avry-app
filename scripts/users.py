@@ -9,6 +9,7 @@ class User:
         self.username = username
         self.money = 10000 # default
         self.pokemonBox = PokemonBox()
+        self.usedCards = {}
         
 
 class UserSystem:
@@ -17,6 +18,7 @@ class UserSystem:
         self.max_users = 128
         self.data_path = './data/users.p'
         self.load_data()
+        self.activeUser = self.users[0]
             
     def load_data(self):
         # carga los datos guardados
@@ -35,24 +37,26 @@ class UserSystem:
     def save_data(self):
         pickle.dump( self.users, open(self.data_path, "wb") )
 
-    def can_add_user(self):
-        if len(self.users) < self.max_users:
-            return True
-        else:
-            return False
-
     def username_available(self, username):
-        for user in self.users:
-            if user.username == username:
+        for u in self.users:
+            if u.username == username:
                 return True
         return False
 
     def position_is_in_range(self, position):
         return position>=0 and position<len(self.users)
 
+    def can_add_user(self):
+        return len(self.users) < self.max_users
+
     def add_user(self, username):
         self.users.append(User(username))
         self.save_data()
+
+    def add_pokemon_in_box(self, pokemon_id):
+        success = self.activeUser.pokemonBox.save_pokemon(pokemon_id)
+        if success:
+            self.save_data()
 
     def delete_user(self, position):
         if self.position_is_in_range(position):
@@ -68,6 +72,20 @@ class UserSystem:
         else:
             return None
 
+    def change_active_user(self, position):
+        user = self.get_user(position)
+
+        if user is None:
+            return False
+        else:
+            self.activeUser = user
+            return True
+
+    def can_pay_card(self, price):
+        return activeUser.money >= price
+
+    def pay_card(self, price):
+        activeUser.money -= price
 
     
         

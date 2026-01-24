@@ -18,6 +18,10 @@ def save_pokemon(pokemon_id):
     user.pokemonBox.save_pokemon(pokemon_id)
     userSystem.save_data()
 
+def empty_box():
+    user.pokemonBox.init_box()
+    userSystem.save_data()
+    print('\nLa caja ha sido vaciada.')
 
 def print_pokemon_data():
     if(user.pokemonBox.is_full()):
@@ -110,11 +114,10 @@ def print_users():
 
 def load_user():
     global user
-    user = None
 
     while(True):
         print_users()
-        print(user_menu)
+        print(menu_users)
         print('\nEscribe el número de la opción:')
 
         option = input()
@@ -185,14 +188,22 @@ def load_user():
                 except:
                     print('Número no reconocido.')
                     continue
+
+                if n < 0:
+                    clear()
+                    break
                 
-                if n==-1 or userSystem.delete_user(n):
+                if user.username == userSystem.users[n].username:
+                    print('No puedes borrar el usuario activo. Elige otro.')
+                    continue
+                
+                if userSystem.delete_user(n):
                     clear()
                     break
                 else:
                     print('Usuario no encontrado.')
-        #- 4: Salir
-        elif(option=='4'):
+        #- 9: Salir
+        elif(option=='9'):
             if user is None:
                 quit()
             else:
@@ -201,13 +212,7 @@ def load_user():
             print('Opción no reconocida.')
             
 
-user_menu = """\n
-    Opciones:
-    - 1: Cargar usuario
-    - 2: Crear nuevo usuario
-    - 3: Eliminar usuario
-    - 4: Salir
-"""
+
 
 menu = """\n
 MENU PRINCIPAL
@@ -217,7 +222,17 @@ MENU PRINCIPAL
     - 2: Obtener Pokémon aleatorio
     - 3: Ver caja
     - 4: Reiniciar caja
-    - 5: Salir
+    - 5: Mostrar filtros activos
+
+    - 9: Cerrar aplicación
+"""
+menu_users = """\n
+    Opciones:
+    - 1: Cargar usuario
+    - 2: Crear nuevo usuario
+    - 3: Eliminar usuario
+
+    - 9: Volver al menú principal
 """
 
 line = '\n------------------------------------'
@@ -225,10 +240,8 @@ line = '\n------------------------------------'
 
 clear()
 userSystem = UserSystem()
-database = PokemonDatabaseManager()
-database.filter_dataset()
-#load_user()
 user = userSystem.get_user(0)
+database = PokemonDatabaseManager()
 
 
 while(True):
@@ -249,12 +262,13 @@ while(True):
     elif(option=='3'):
         print_box()
     elif(option=='4'):
-        user.pokemonBox.init_box()
-        userSystem.save_data()
-        print('\nLa caja ha sido vaciada.')
+        empty_box()
     elif(option=='5'):
+        database.filterManager.print_options()
+    elif(option=='9'):
+        clear()
         break
-    elif(option=='6'):
+    elif(option=='m'):
         pokemon = database.get_random_pokemon()
         if pokemon is not None:
             print('\nPokemon:')

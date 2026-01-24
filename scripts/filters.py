@@ -4,9 +4,6 @@ import pickle
 class PokemonFilters:
 
     def __init__(self):
-        self.reset()
-
-    def reset(self):
         self.filter_by_type = False
         self.first_type = None
         self.second_type = None
@@ -34,30 +31,7 @@ class PokemonFilters:
 class PokemonFiltersManager:
 
     def __init__(self):
-        self.read_options_file = False
-        self.data_path = './data/filters.p'
-        self.load_data()
-
-    def load_data(self):
-        if not self.read_options_file:
-            self.filters = PokemonFilters()
-            return
-
-        # carga los datos guardados
-        try:
-            self.filters = pickle.load( open(self.data_path, "rb") )
-            
-            if not isinstance(self.filters, PokemonFilters):
-                raise TypeError(f"Error al cargar el archivo \"{self.data_path}\", se creará uno nuevo.")
-
-        # si hay algún error, crea nuevos datos
-        except:
-            self.filters = PokemonFilters()
-            self.save_data()
-
-    def save_data(self):
-        pickle.dump( self.filters, open(self.data_path, "wb") )
-
+        self.filters = PokemonFilters()
     
     def print_options(self):
         print('\nFiltros:')

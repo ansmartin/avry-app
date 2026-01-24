@@ -23,25 +23,24 @@ def empty_box():
     userSystem.save_data()
     print('\nLa caja ha sido vaciada.')
 
-def print_pokemon_data():
+def get_random_pokemon():
     if(user.pokemonBox.is_full()):
         print('\nSe ha alcanzado el límite de Pokémon en la caja.')
         return
 
     x = database.get_random_pokemon()
 
-    evolutions = None
-    for element in x['evolutions_ids']:
-        if(evolutions is None):
-            evolutions = str(element)
+    # comprobar que el pokemon obtenido no está repetido
+    while True:
+        if x['id'] in user.pokemonBox.box:
+            x = database.get_random_pokemon()
         else:
-            evolutions = evolutions + ',' + str(element)
-        
-    x['evolutions_ids'] = evolutions
-    #print(json.dumps(x, indent=4))
+            break
 
     species_name = x['species_name']
     form_name_text = x['form_name_text']
+
+    pokemon_generation_number = x['pokemon_generation_number']
 
     first_type = x['first_type']
     second_type = x['second_type']
@@ -50,16 +49,6 @@ def print_pokemon_data():
     second_ability = x['second_ability']
     hidden_ability = x['hidden_ability']
 
-    pokemon_generation_number = x['pokemon_generation_number']
-    evolves_from_pokemon_id = x['evolves_from_pokemon_id']
-    is_default = x['is_default']
-    is_baby = x['is_baby']
-    is_powerhouse = x['is_powerhouse']
-    is_legendary = x['is_legendary']
-    is_sublegendary = x['is_sublegendary']
-    is_mythical = x['is_mythical']
-    has_mega = x['has_mega']
-    has_gmax = x['has_gmax']
     sprite_default = x['sprite_default']
 
     print('\nPokémon aleatorio obtenido:')
@@ -218,11 +207,11 @@ menu = """\n
 MENU PRINCIPAL
 
     Opciones:
-    - 1: Cambiar de usuario
-    - 2: Obtener Pokémon aleatorio
-    - 3: Ver caja
-    - 4: Reiniciar caja
-    - 5: Mostrar filtros activos
+    - 1: Realizar tirada
+    - 2: Ver caja
+    - 3: Reiniciar caja
+    - 4: Mostrar filtros activos
+    - 5: Cambiar de usuario
 
     - 9: Cerrar aplicación
 """
@@ -256,15 +245,15 @@ while(True):
     print(f'Seleccionada opción {option}')
 
     if(option=='1'):
-        load_user()
+        get_random_pokemon()
     elif(option=='2'):
-        print_pokemon_data()
-    elif(option=='3'):
         print_box()
-    elif(option=='4'):
+    elif(option=='3'):
         empty_box()
-    elif(option=='5'):
+    elif(option=='4'):
         database.filterManager.print_options()
+    elif(option=='5'):
+        load_user()
     elif(option=='9'):
         clear()
         break

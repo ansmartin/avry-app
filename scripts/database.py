@@ -77,8 +77,12 @@ class PokemonDatabaseManager:
             booleanMask = booleanMask & booleanMask_gens
 
         # category
-        if not filters.show_all_pokemon:
+        if filters.filter_by_category:
             booleanMask_cat = pd.Series([ False for x in range(self.size) ], index=self.df.index)
+            if filters.mythical:
+                booleanMask_cat = (
+                    booleanMask_cat | (self.df.is_mythical)
+                )
             if filters.legendary:
                 booleanMask_cat = (
                     booleanMask_cat | (self.df.is_legendary)
@@ -86,10 +90,6 @@ class PokemonDatabaseManager:
             if filters.sublegendary:
                 booleanMask_cat = (
                     booleanMask_cat | (self.df.is_sublegendary)
-                )
-            if filters.mythical:
-                booleanMask_cat = (
-                    booleanMask_cat | (self.df.is_mythical)
                 )
             if filters.powerhouse:
                 booleanMask_cat = (
@@ -124,7 +124,7 @@ class PokemonDatabaseManager:
             )
 
         # nuevo conjunto de datos filtrados
-        self.df_filtered = self.df.loc[booleanMask.tolist()]
+        self.df_filtered = self.df.loc[booleanMask]
 
     def deactivate_filters(self):
         self.df_filtered = None

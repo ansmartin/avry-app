@@ -2,6 +2,7 @@ import pickle
 
 
 class PokemonFilters:
+
     def __init__(self):
         self.reset()
 
@@ -17,12 +18,12 @@ class PokemonFilters:
         self.filter_by_generation = False
         self.generations = None
 
-        self.show_all_pokemon = True
-        self.legendary = False
-        self.sublegendary = False
+        self.filter_by_category = True
         self.mythical = False
-        self.powerhouse = False
-        self.others = False
+        self.legendary = False
+        self.sublegendary = True
+        self.powerhouse = True
+        self.others = True
 
         self.fully_evolved = True
 
@@ -71,15 +72,15 @@ class PokemonFiltersManager:
         if self.filters.filter_by_generation:
             print(f' - generations: {self.filters.generations}')
             
-        print(f' - filtrar por categoría: {not self.filters.show_all_pokemon}')
-        if not self.filters.show_all_pokemon:
-            print(f' - legendary: {self.filters.legendary}')
-            print(f' - sublegendary: {self.filters.sublegendary}')
-            print(f' - mythical: {self.filters.mythical}')
-            print(f' - powerhouse: {self.filters.powerhouse}')
-            print(f' - el resto de Pokémon: {self.filters.others}')
+        print(f' - filtrar por categoría: {self.filters.filter_by_category}')
+        if self.filters.filter_by_category:
+            print(f'   - mythical: {self.filters.mythical}')
+            print(f'   - legendary: {self.filters.legendary}')
+            print(f'   - sublegendary: {self.filters.sublegendary}')
+            print(f'   - powerhouse: {self.filters.powerhouse}')
+            print(f'   - el resto de Pokémon: {self.filters.others}')
 
         print(f' - obtener sólo Pokémon completamente evolucionados: {self.filters.fully_evolved}')
         print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {self.filters.has_mega}')
-        print(f' - obtener sólo Pokémon que puedan gmaxizar: {self.filters.has_gmax}')
+        print(f' - obtener sólo Pokémon que puedan gigamaxizar: {self.filters.has_gmax}')
         

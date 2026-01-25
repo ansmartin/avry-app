@@ -1,5 +1,3 @@
-import pickle
-
 
 class PokemonFilters:
 
@@ -13,7 +11,7 @@ class PokemonFilters:
         #self.random_ability_any_pokemon = False
 
         self.filter_by_generation = False
-        self.generations = None
+        self.generations = [1,2,3,4,5,6,7,8,9]
 
         self.filter_by_category = True
         self.mythical = False

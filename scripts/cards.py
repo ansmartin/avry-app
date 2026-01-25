@@ -10,7 +10,8 @@ class Card:
 
 
 class Cards:
-
+    
+    @staticmethod
     def get_all_cards():
         cards = {}
 
@@ -98,19 +99,23 @@ class CardManager:
     
     def __init__(self):
         self.cards = Cards.get_all_cards()
-    
-    def add_used_card(self, tag, user):
-        uses = user.usedCards.get(tag, 0) + 1
-        user.usedCards[tag] = uses
 
     def can_use_card(self, tag, user):
         card = self.cards.get(tag, None)
         if card is None:
             return False
 
+        # sin limite
+        if card.limit==0:
+            return True
+
         uses = user.usedCards.get(tag, 0)
         if uses < card.limit:
-            return False
-        else:
             return True
+        else:
+            return False
+    
+    def add_used_card(self, tag, user):
+        uses = user.usedCards.get(tag, 0) + 1
+        user.usedCards[tag] = uses
 

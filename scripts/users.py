@@ -7,10 +7,17 @@ class User:
 
     def __init__(self, username):
         self.username = username
-        self.money = 10000 # default
         self.pokemonBox = PokemonBox()
+        self.init_variables()
+
+    def init_variables(self):
+        self.money = 10000 # default
         self.usedCards = {}
-        
+
+    def reset(self):
+        self.pokemonBox.init_box()
+        self.init_variables()
+
 
 class UserSystem:
 
@@ -81,11 +88,11 @@ class UserSystem:
             self.activeUser = user
             return True
 
-    def can_pay_card(self, price):
-        return activeUser.money >= price
+    def can_pay(self, price):
+        return self.activeUser.money >= price
 
-    def pay_card(self, price):
-        activeUser.money -= price
+    def pay(self, price):
+        self.activeUser.money -= price
 
     
         

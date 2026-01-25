@@ -16,22 +16,44 @@ def capitalize_all_words(text):
     return ' '.join(w.capitalize() for w in words)
 
 def empty_box():
-    userSystem.activeUser.pokemonBox.init_box()
+    userSystem.activeUser.reset()
     userSystem.save_data()
     print('\nLa caja ha sido vaciada.')
 
+def print_activeUser():
+    print(f'\nUsuario: {userSystem.activeUser.username}')
+    print(f'Dinero: {userSystem.activeUser.money}')
 
-def get_pokemon():
-    if(userSystem.activeUser.pokemonBox.is_full()):
+
+def get_pokemon(price=0, filtersMask=None):
+    if userSystem.activeUser.pokemonBox.is_full():
         maxBoxSize = userSystem.activeUser.pokemonBox.size
         print(f'\nSe ha alcanzado el límite de Pokémon en la caja ({maxBoxSize}/{maxBoxSize}). No se pueden obtener más Pokémon.')
         return
+    
+    if price>0:
+        userSystem.pay(price)
 
-    pokemon = database.get_random_pokemon(userSystem.activeUser.pokemonBox.box)
+    pokemon = database.get_random_pokemon(userSystem.activeUser.pokemonBox.box, filtersMask)
     
     # mostrar y guardar pokemon
     print_pokemon(pokemon)
     userSystem.add_pokemon_in_box(pokemon['id'])
+
+def get_pokemon_mega():
+    tag = 'mega'
+    card = cardManager.cards.get(tag, None)
+
+    if not cardManager.can_use_card(tag, userSystem.activeUser):
+        print('\nNo puedes usar esa carta porque ya has superado su límite de usos.')
+        return
+
+    if not userSystem.can_pay(card.price):
+        print('\nNo tienes suficiente dinero para comprar esa carta.')
+        return
+
+
+    get_pokemon(card.price, database.df.has_mega)
 
 
 def print_pokemon(pokemon):
@@ -99,7 +121,7 @@ def print_users():
         print(f' - {n+1}:\t{user.username}')
 
 
-def load_user():
+def open_menu_users():
 
     while(True):
         print_users()
@@ -108,10 +130,10 @@ def load_user():
 
         option = input()
         clear()
-
+        
         print_users()
 
-        print(f'Seleccionada opción {option}')
+        print(f'\nSeleccionada opción {option}')
 
         #- 1: Cargar usuario
         if(option=='1'):
@@ -141,12 +163,11 @@ def load_user():
 
             if userSystem.can_add_user():
                 print('\nEscribe un nombre para el usuario:')
-                name = input()
 
                 while True:
+                    name = input()
                     if userSystem.username_available(name):
                         print('\nEse nombre ya se encuentra en la base de datos, escribe otro diferente:')
-                        name = input()
                     else:
                         userSystem.add_user(name)
                         clear()
@@ -157,8 +178,9 @@ def load_user():
         #- 3: Eliminar usuario
         elif(option=='3'):
 
+            print('\nEscribe el número del usuario que quieres eliminar.\nEscribe 0 para cancelar.')
+
             while(True):
-                print('\nEscribe el número del usuario que quieres eliminar.\nEscribe 0 para cancelar.')
                 option = input()
 
                 if option == '0':
@@ -192,15 +214,22 @@ def load_user():
             print('Opción no reconocida.')
 
 
-def open_cards_menu():
+def open_menu_cards():
     
+    clear()
+    print_activeUser()
+
     while(True):
-        clear()
+        print(line)
         print('\n    Lista de cartas de ventaja:')
         n=1
         for c in cardManager.cards.values():
             print(f'\n    - {n}: {c.name}')
             print(f'        {c.description}')
+            print(f'        Precio: {c.price}')
+            if c.limit>0:
+                print(f'        Limite de usos: {c.limit}')
+
             n+=1
         print('\n    - 0: Volver al menú principal')
         print('\nEscribe el número de la opción:')
@@ -208,10 +237,10 @@ def open_cards_menu():
         option = input()
         clear()
 
-        print(f'Seleccionada opción {option}')
+        print(f'\nSeleccionada opción {option}')
         
         if(option=='1'):
-            get_random_pokemon_mega()
+            get_pokemon_mega()
         
         #- 0: Salir
         elif(option=='0'):
@@ -219,17 +248,7 @@ def open_cards_menu():
         else:
             print('Opción no reconocida.')
 
-
-def get_random_pokemon_mega():
-    tag = 'mega'
-    card = cardManager.cards.get(tag, None)
-    if card is None:
-        return
-
-    if userSystem.activeUser.can_pay_card(card.price) and cardManager.can_use_card(tag, user):
-        if(userSystem.activeUser.pokemonBox.is_full()):
-            print('\nNo se puede usar porque se ha alcanzado el límite de Pokémon en la caja.')
-            return
+        print_activeUser()
         
 
 
@@ -266,7 +285,7 @@ cardManager = CardManager()
 
 
 while(True):
-    print(f'\nUsuario: {userSystem.activeUser.username}')
+    print_activeUser()
     
     print(line + menu + line)
     print('\nEscribe el número de la opción:')
@@ -285,9 +304,9 @@ while(True):
     elif(option=='4'):
         database.filterManager.print_options()
     elif(option=='5'):
-        open_cards_menu()
+        open_menu_cards()
     elif(option=='6'):
-        load_user()
+        open_menu_users()
     elif(option=='0'):
         clear()
         break

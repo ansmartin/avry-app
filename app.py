@@ -77,21 +77,109 @@ def get_pokemon_with_card_mega():
     
     get_pokemon(filtersMask)
 
-def get_pokemon_with_card_fusion(pokemon_positions):
+def get_pokemon_with_card_fusion():
+
     tag = 'fusion'
     card = card_manager.cards.get(tag, None)
 
     if not check_card_conditions(card):
         return
 
+    print('\nEscribe el número de la posición del primer Pokémon a eliminar:')
+    option1 = int(input()) - 1
+    print('\nEscribe el número de la posición del segundo Pokémon a eliminar:')
+    option2 = int(input()) - 1
+    pokemon_positions = [option1,option2]
+
     if user_system.active_user.pokemon_box.get_length()<2:
         print('\nNo se puede usar porque no tienes más de 2 Pokémon.')
+        return
+
+    if (
+        not user_system.active_user.pokemon_box.position_is_in_range(pokemon_positions[0]) 
+        or 
+        not user_system.active_user.pokemon_box.position_is_in_range(pokemon_positions[1])
+    ):
+        print('\nError: Posiciones no detectadas.')
+        return
+
+    # usar carta
+    card_manager.add_used_card(tag, user_system.active_user)
+    user_system.pay(card.price)
+
+    user_system.active_user.pokemon_box.delete_pokemon(pokemon_positions[0])
+    user_system.active_user.pokemon_box.delete_pokemon(pokemon_positions[1])
+    get_pokemon()
+
+def get_pokemon_with_card_intercambio():
+
+    tag = 'intercambio'
+    card = card_manager.cards.get(tag, None)
+
+    if not check_card_conditions(card):
+        return
+
+    if user_system.active_user.pokemon_box.get_length()==0:
+        print('\nNo se puede usar porque no tienes ningún Pokémon.')
+        return
+
+    print('\nEscribe el número de la posición del Pokémon a intercambiar:')
+    pokemon_position = int(input()) - 1
     
+    if (
+        not user_system.active_user.pokemon_box.position_is_in_range(pokemon_position) 
+    ):
+        print('\nError: Posición no detectada.')
+        return
+
+    # usar carta
+    card_manager.add_used_card(tag, user_system.active_user)
+    user_system.pay(card.price)
+
+    user_system.active_user.pokemon_box.delete_pokemon(pokemon_position)
+    get_pokemon()
+
+def get_pokemon_with_card_preevo():
+
+    tag = 'preevo'
+    card = card_manager.cards.get(tag, None)
+
+    if not check_card_conditions(card):
+        return
+
+    if user_system.active_user.pokemon_box.get_length()==0:
+        print('\nNo se puede usar porque no tienes ningún Pokémon.')
+        return
+
+    print('\nEscribe el número de la posición del Pokémon que quieres cambiar por su pre-evolución:')
+    pokemon_position = int(input()) - 1
+    
+    if (
+        not user_system.active_user.pokemon_box.position_is_in_range(pokemon_position) 
+    ):
+        print('\nError: Posición no detectada.')
+        return
+    
+    pokemon_id = user_system.active_user.pokemon_box.get_pokemon(pokemon_position)
+    preevo_id = database.df.loc[pokemon_id].evolves_from_pokemon_id
+
+    if preevo_id is None:
+        print('\nError: El Pokémon seleccionado no tiene pre-evolución.')
+        return
+
     # usar carta
     card_manager.add_used_card(tag, user_system.active_user)
     user_system.pay(card.price)
     
-    get_pokemon()
+    user_system.active_user.pokemon_box.delete_pokemon(pokemon_position)
+
+    #get_pokemon()
+    pokemon = database.df.loc[preevo_id].to_dict()
+
+    # mostrar y guardar pokemon
+    print_pokemon(pokemon)
+    user_system.active_user.pokemon_box.box[pokemon_position] = preevo_id
+    user_system.save_data()
 
 def get_pokemon_with_card_comienzo():
     tag = 'comienzo'
@@ -99,14 +187,15 @@ def get_pokemon_with_card_comienzo():
 
     if not check_card_conditions(card):
         return
-    
+
     if user_system.active_user.pokemon_box.get_length()>=18:
         print('\nNo se puede usar porque ya se han realizado más de 18 tiradas.')
-    
+        return
+
     # usar carta
     card_manager.add_used_card(tag, user_system.active_user)
     user_system.pay(card.price)
-    
+
     user_system.active_user.pokemon_box.init_box()
     print('\nTiradas reiniciadas.')
 
@@ -138,7 +227,7 @@ def get_pokemon_with_card_aditional(number_ad):
 
     if not check_card_conditions(card):
         return
-    
+
     if box_is_full():
         return
 
@@ -337,11 +426,14 @@ def open_menu_cards():
         for c in card_manager.cards.values():
             print(f'\n    - {n}: {c.name}')
             print(f'        {c.description}')
+            n+=1
+            if not card_manager.can_use_card(c.tag, user_system.active_user):
+                print(f'        (AGOTADA)')
+                continue
             print(f'        Precio: {c.price}')
             if c.limit>0:
                 print(f'        Limite de usos: {c.limit}')
 
-            n+=1
         print('\n    - 0: Volver al menú principal')
         print('\nEscribe el número de la opción:')
 
@@ -352,8 +444,19 @@ def open_menu_cards():
         
         if(option=='1'):
             get_pokemon_with_card_mega()
+        elif(option=='2'):
+            print_box()
+            get_pokemon_with_card_fusion()
+        elif(option=='3'):
+            print_box()
+            get_pokemon_with_card_intercambio()
+        elif(option=='4'):
+            print_box()
+            get_pokemon_with_card_preevo()
         elif(option=='5'):
             get_pokemon_with_card_comienzo()
+        elif(option=='6'):
+            print(f'NO IMPLEMENTADA TODAVÍA')
         elif(option=='7'):
             print('\nEscribe el tipo del Pokémon:')
             pokemon_type = input()
@@ -365,7 +468,8 @@ def open_menu_cards():
         elif(option=='10'):
             get_pokemon_with_card_aditional(3)
         elif(option=='11'):
-            get_pokemon_with_card_selectiva()
+            print(f'NO IMPLEMENTADA TODAVÍA')
+            #get_pokemon_with_card_selectiva()
         
         #- 0: Salir
         elif(option=='0'):

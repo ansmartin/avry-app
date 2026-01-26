@@ -16,17 +16,17 @@ def capitalize_all_words(text):
     return ' '.join(w.capitalize() for w in words)
 
 def empty_box():
-    userSystem.activeUser.reset()
-    userSystem.save_data()
+    user_system.active_user.reset()
+    user_system.save_data()
     print('\nLa caja ha sido vaciada.')
 
-def print_activeUser():
-    print(f'\nUsuario: {userSystem.activeUser.username}')
-    print(f'Dinero: {userSystem.activeUser.money}')
+def print_active_user():
+    print(f'\nUsuario: {user_system.active_user.username}')
+    print(f'Dinero: {user_system.active_user.money}')
 
 def box_is_full():
-    if userSystem.activeUser.pokemonBox.is_full():
-        maxSizeBox = userSystem.activeUser.pokemonBox.max_size
+    if user_system.active_user.pokemon_box.is_full():
+        maxSizeBox = user_system.active_user.pokemon_box.max_size
         print(f'\nSe ha alcanzado el límite de Pokémon en la caja ({maxSizeBox}/{maxSizeBox}). No se pueden obtener más Pokémon.')
         return True
 
@@ -35,11 +35,11 @@ def check_card_conditions(card):
     if card is None:
         return False
 
-    if not cardManager.can_use_card(card.tag, userSystem.activeUser):
+    if not card_manager.can_use_card(card.tag, user_system.active_user):
         print('\nNo puedes usar esa carta porque ya has superado su límite de usos.')
         return False
 
-    if not userSystem.can_pay(card.price):
+    if not user_system.can_pay(card.price):
         print('\nNo tienes suficiente dinero para comprar esa carta.')
         return False
 
@@ -49,7 +49,7 @@ def get_pokemon(filtersMask=None):
     if box_is_full():
         return
 
-    pokemon = database.get_random_pokemon(userSystem.activeUser.pokemonBox.box, filtersMask)
+    pokemon = database.get_random_pokemon(user_system.active_user.pokemon_box.box, filtersMask)
 
     if pokemon is None:
         print('\nNingún Pokémon cumple con los criterios de búsqueda.')
@@ -57,11 +57,11 @@ def get_pokemon(filtersMask=None):
     
     # mostrar y guardar pokemon
     print_pokemon(pokemon)
-    userSystem.add_pokemon_in_box(pokemon['id'])
+    user_system.add_pokemon_in_box(pokemon['id'])
 
 def get_pokemon_with_card_mega():
     tag = 'mega'
-    card = cardManager.cards.get(tag, None)
+    card = card_manager.cards.get(tag, None)
 
     if not check_card_conditions(card):
         return
@@ -70,8 +70,8 @@ def get_pokemon_with_card_mega():
         return
     
     # usar carta
-    cardManager.add_used_card(tag, userSystem.activeUser)
-    userSystem.pay(card.price)
+    card_manager.add_used_card(tag, user_system.active_user)
+    user_system.pay(card.price)
 
     filtersMask = database.df_filtered.has_mega
     
@@ -79,40 +79,40 @@ def get_pokemon_with_card_mega():
 
 def get_pokemon_with_card_fusion(pokemon_positions):
     tag = 'fusion'
-    card = cardManager.cards.get(tag, None)
+    card = card_manager.cards.get(tag, None)
 
     if not check_card_conditions(card):
         return
 
-    if userSystem.activeUser.pokemonBox.get_length()<2:
+    if user_system.active_user.pokemon_box.get_length()<2:
         print('\nNo se puede usar porque no tienes más de 2 Pokémon.')
     
     # usar carta
-    cardManager.add_used_card(tag, userSystem.activeUser)
-    userSystem.pay(card.price)
+    card_manager.add_used_card(tag, user_system.active_user)
+    user_system.pay(card.price)
     
     get_pokemon()
 
 def get_pokemon_with_card_comienzo():
     tag = 'comienzo'
-    card = cardManager.cards.get(tag, None)
+    card = card_manager.cards.get(tag, None)
 
     if not check_card_conditions(card):
         return
     
-    if userSystem.activeUser.pokemonBox.get_length()>=18:
+    if user_system.active_user.pokemon_box.get_length()>=18:
         print('\nNo se puede usar porque ya se han realizado más de 18 tiradas.')
     
     # usar carta
-    cardManager.add_used_card(tag, userSystem.activeUser)
-    userSystem.pay(card.price)
+    card_manager.add_used_card(tag, user_system.active_user)
+    user_system.pay(card.price)
     
-    userSystem.activeUser.pokemonBox.init_box()
+    user_system.active_user.pokemon_box.init_box()
     print('\nTiradas reiniciadas.')
 
 def get_pokemon_with_card_type(pokemon_type):
     tag = 'tipo'
-    card = cardManager.cards.get(tag, None)
+    card = card_manager.cards.get(tag, None)
 
     if not check_card_conditions(card):
         return
@@ -121,8 +121,8 @@ def get_pokemon_with_card_type(pokemon_type):
         return
 
     # usar carta
-    cardManager.add_used_card(tag, userSystem.activeUser)
-    userSystem.pay(card.price)
+    card_manager.add_used_card(tag, user_system.active_user)
+    user_system.pay(card.price)
     
     filtersMask = (
         (database.df_filtered.first_type==pokemon_type) 
@@ -134,7 +134,7 @@ def get_pokemon_with_card_type(pokemon_type):
 
 def get_pokemon_with_card_aditional(number_ad):
     tag = 'adicional_' + str(number_ad)
-    card = cardManager.cards.get(tag, None)
+    card = card_manager.cards.get(tag, None)
 
     if not check_card_conditions(card):
         return
@@ -143,15 +143,15 @@ def get_pokemon_with_card_aditional(number_ad):
         return
 
     # usar carta
-    cardManager.add_used_card(tag, userSystem.activeUser)
-    userSystem.pay(card.price)
+    card_manager.add_used_card(tag, user_system.active_user)
+    user_system.pay(card.price)
 
     for _ in range(number_ad):
         get_pokemon()
 
 def get_pokemon_with_card_selectiva():
     tag = 'selectiva'
-    card = cardManager.cards.get(tag, None)
+    card = card_manager.cards.get(tag, None)
 
     if not check_card_conditions(card):
         return
@@ -160,8 +160,8 @@ def get_pokemon_with_card_selectiva():
         return
 
     # usar carta
-    cardManager.add_used_card(tag, userSystem.activeUser)
-    userSystem.pay(card.price)
+    card_manager.add_used_card(tag, user_system.active_user)
+    user_system.pay(card.price)
 
     for _ in range(6):
         get_pokemon()
@@ -209,14 +209,14 @@ def print_pokemon(pokemon):
 
 
 def print_box():
-    box = userSystem.activeUser.pokemonBox.box
-    maxSizeBox = userSystem.activeUser.pokemonBox.max_size
+    box = user_system.active_user.pokemon_box.box
+    maxSizeBox = user_system.active_user.pokemon_box.max_size
     if len(box)==0:
         print(f'\nLa caja está vacía. 0/{maxSizeBox}')
-        for n in range(userSystem.activeUser.pokemonBox.max_size):
+        for n in range(user_system.active_user.pokemon_box.max_size):
             print(f' - {n+1}:\t*')
     else:
-        print(f'\nLista de Pokémon obtenidos: {userSystem.activeUser.pokemonBox.get_length()}/{maxSizeBox}')
+        print(f'\nLista de Pokémon obtenidos: {user_system.active_user.pokemon_box.get_length()}/{maxSizeBox}')
         n=1
         for pokemon_id in box:
             if(pokemon_id):
@@ -228,7 +228,7 @@ def print_box():
 
 def print_users():
     print('\nUsuarios registrados:')
-    for n, user in enumerate(userSystem.users):
+    for n, user in enumerate(user_system.users):
         print(f' - {n+1}:\t{user.username}')
 
 
@@ -262,7 +262,7 @@ def open_menu_users():
                     continue
 
                 # cargar usuario
-                if userSystem.change_active_user(n):
+                if user_system.change_active_user(n):
                     # volver al menu principal
                     clear()
                     return
@@ -272,15 +272,15 @@ def open_menu_users():
         #- 2: Crear nuevo usuario
         elif(option=='2'):
 
-            if userSystem.can_add_user():
+            if user_system.can_add_user():
                 print('\nEscribe un nombre para el usuario:')
 
                 while True:
                     name = input()
-                    if userSystem.username_available(name):
+                    if user_system.username_available(name):
                         print('\nEse nombre ya se encuentra en la base de datos, escribe otro diferente:')
                     else:
-                        userSystem.add_user(name)
+                        user_system.add_user(name)
                         clear()
                         break
             else:
@@ -305,15 +305,15 @@ def open_menu_users():
                     print('Número no reconocido.')
                     continue
                 
-                if not userSystem.position_is_in_range(n):
+                if not user_system.position_is_in_range(n):
                     print('Usuario no encontrado.')
                     continue
                 
-                if userSystem.activeUser.username == userSystem.users[n].username:
+                if user_system.active_user.username == user_system.users[n].username:
                     print('No puedes borrar el usuario activo. Elige otro.')
                     continue
                 
-                if userSystem.delete_user(n):
+                if user_system.delete_user(n):
                     clear()
                     break
                 else:
@@ -328,13 +328,13 @@ def open_menu_users():
 def open_menu_cards():
     
     clear()
-    print_activeUser()
+    print_active_user()
 
     while(True):
         print(line)
         print('\n    Lista de cartas de ventaja:')
         n=1
-        for c in cardManager.cards.values():
+        for c in card_manager.cards.values():
             print(f'\n    - {n}: {c.name}')
             print(f'        {c.description}')
             print(f'        Precio: {c.price}')
@@ -373,7 +373,7 @@ def open_menu_cards():
         else:
             print('Opción no reconocida.')
 
-        print_activeUser()
+        print_active_user()
         
 
 
@@ -404,13 +404,13 @@ line = '\n------------------------------------'
 
 
 clear()
-userSystem = UserSystem()
+user_system = UserSystem()
 database = PokemonDatabaseManager()
-cardManager = CardManager()
+card_manager = CardManager()
 
 
 while(True):
-    print_activeUser()
+    print_active_user()
     
     print(line + menu + line)
     print('\nEscribe el número de la opción:')
@@ -436,7 +436,7 @@ while(True):
         clear()
         break
     elif(option=='m'):
-        pokemon = database.get_random_pokemon(userSystem.activeUser.pokemonBox.box)
+        pokemon = database.get_random_pokemon(user_system.active_user.pokemon_box.box)
         if pokemon is not None:
             print_pokemon(pokemon)
             print('\nDictionary:')

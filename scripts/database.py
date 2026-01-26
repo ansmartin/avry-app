@@ -17,13 +17,13 @@ class PokemonDatabaseManager:
 
         species_name = pokemon['species_name']
         form_name_text = pokemon['form_name_text']
-        
+
         name = species_name.capitalize()
-        if(form_name_text is not None):
+        if form_name_text is not None:
             name += f' ({form_name_text})'
 
         return name
-        
+
     def get_random_pokemon(self, box, mask=None):
 
         # escoger dataframe
@@ -83,7 +83,7 @@ class PokemonDatabaseManager:
                 boolean_mask = (
                     boolean_mask & (self.df.second_type==filters.first_type)
                 )
-        
+
         # generation
         if filters.filter_by_generation:
             boolean_mask_gens = pd.Series([ False for x in range(self.df.shape[0]) ], index=self.df.index)

@@ -109,13 +109,13 @@ class CardManager:
         if card.limit==0:
             return True
 
-        uses = user.usedCards.get(tag, 0)
+        uses = user.used_cards.get(tag, 0)
         if uses < card.limit:
             return True
         else:
             return False
     
     def add_used_card(self, tag, user):
-        uses = user.usedCards.get(tag, 0) + 1
-        user.usedCards[tag] = uses
+        uses = user.used_cards.get(tag, 0) + 1
+        user.used_cards[tag] = uses
 

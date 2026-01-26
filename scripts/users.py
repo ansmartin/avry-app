@@ -7,15 +7,16 @@ class User:
 
     def __init__(self, username):
         self.username = username
-        self.pokemonBox = PokemonBox()
+        self.pokemon_box = PokemonBox()
         self.init_variables()
 
     def init_variables(self):
-        self.money = 10000 # default
-        self.usedCards = {}
+        self.rolls = 20
+        self.money = 10000
+        self.used_cards = {}
 
     def reset(self):
-        self.pokemonBox.init_box()
+        self.pokemon_box.init_box()
         self.init_variables()
 
 
@@ -25,8 +26,8 @@ class UserSystem:
         self.max_users = 128
         self.data_path = './data/users.p'
         self.load_data()
-        self.activeUser = self.users[0]
-            
+        self.active_user = self.users[0]
+
     def load_data(self):
         # carga los datos guardados
         try:
@@ -34,7 +35,7 @@ class UserSystem:
 
             if not isinstance(self.users, list) or not isinstance(self.users[0], User):
                 raise TypeError(f"Error al cargar el archivo \"{self.data_path}\", se creará uno nuevo.")
-                
+
         # si hay algún error, crea nuevos datos
         except:
             self.users = []
@@ -61,7 +62,7 @@ class UserSystem:
         self.save_data()
 
     def add_pokemon_in_box(self, pokemon_id):
-        success = self.activeUser.pokemonBox.save_pokemon(pokemon_id)
+        success = self.active_user.pokemon_box.save_pokemon(pokemon_id)
         if success:
             self.save_data()
 
@@ -70,29 +71,27 @@ class UserSystem:
             self.users.pop(position)
             self.save_data()
             return True
-        else:
-            return False
+
+        return False
 
     def get_user(self, position):
         if self.position_is_in_range(position):
             return self.users[position]
-        else:
-            return None
+
+        return None
 
     def change_active_user(self, position):
         user = self.get_user(position)
 
         if user is None:
             return False
-        else:
-            self.activeUser = user
-            return True
+
+        self.active_user = user
+        return True
 
     def can_pay(self, price):
-        return self.activeUser.money >= price
+        return self.active_user.money >= price
 
     def pay(self, price):
-        self.activeUser.money -= price
+        self.active_user.money -= price
 
-    
-        

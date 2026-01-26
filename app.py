@@ -47,11 +47,11 @@ def check_card_conditions(card):
 
     return True
 
-def get_pokemon(filtersMask=None):
+def get_pokemon(mask=None):
     if box_is_full():
         return
 
-    pokemon = database.get_random_pokemon(user_system.active_user.pokemon_box.box, filtersMask)
+    pokemon = database.get_random_pokemon(user_system.active_user.pokemon_box.box, mask)
 
     if pokemon is None:
         print('\nNingún Pokémon cumple con los criterios de búsqueda.')
@@ -75,12 +75,11 @@ def get_pokemon_with_card_mega():
     card_manager.add_used_card(tag, user_system.active_user)
     user_system.pay(card.price)
 
-    filtersMask = database.df_filtered.has_mega
+    mask = database.df_filtered.has_mega
     
-    get_pokemon(filtersMask)
+    get_pokemon(mask)
 
 def get_pokemon_with_card_fusion():
-
     tag = 'fusion'
     card = card_manager.cards.get(tag, None)
 
@@ -93,17 +92,21 @@ def get_pokemon_with_card_fusion():
 
     try:
         print('\nEscribe el número de la posición del primer Pokémon a eliminar:')
-        option1 = int(input()) - 1
+        position1 = int(input()) - 1
         print('\nEscribe el número de la posición del segundo Pokémon a eliminar:')
-        option2 = int(input()) - 1
+        position2 = int(input()) - 1
     except:
         print('\nError: Posición no detectada.')
         return
+    
+    if position1==position2:
+        print('\nError: Las posiciones tienen que ser diferentes.')
+        return
 
     if (
-        not user_system.active_user.pokemon_box.position_is_in_range(pokemon_positions[0]) 
+        not user_system.active_user.pokemon_box.position_is_in_range(position1) 
         or 
-        not user_system.active_user.pokemon_box.position_is_in_range(pokemon_positions[1])
+        not user_system.active_user.pokemon_box.position_is_in_range(position2)
     ):
         print('\nError: Posiciones no detectadas.')
         return
@@ -112,12 +115,15 @@ def get_pokemon_with_card_fusion():
     card_manager.add_used_card(tag, user_system.active_user)
     user_system.pay(card.price)
 
-    user_system.active_user.pokemon_box.delete_pokemon(pokemon_positions[0])
-    user_system.active_user.pokemon_box.delete_pokemon(pokemon_positions[1])
+    # ajustar segunda posicion para cuando se borre la primera
+    if position1 < position2:
+        position2-=1
+
+    user_system.active_user.pokemon_box.delete_pokemon(position1)
+    user_system.active_user.pokemon_box.delete_pokemon(position2)
     get_pokemon()
 
 def get_pokemon_with_card_intercambio():
-
     tag = 'intercambio'
     card = card_manager.cards.get(tag, None)
 
@@ -149,7 +155,6 @@ def get_pokemon_with_card_intercambio():
     get_pokemon()
 
 def get_pokemon_with_card_preevo():
-
     tag = 'preevo'
     card = card_manager.cards.get(tag, None)
 
@@ -226,13 +231,13 @@ def get_pokemon_with_card_type(pokemon_type):
     card_manager.add_used_card(tag, user_system.active_user)
     user_system.pay(card.price)
     
-    filtersMask = (
+    mask = (
         (database.df_filtered.first_type==pokemon_type) 
         | 
         (database.df_filtered.second_type==pokemon_type)
     )
 
-    get_pokemon(filtersMask)
+    get_pokemon(mask)
 
 def get_pokemon_with_card_aditional(number_ad):
     tag = 'adicional_' + str(number_ad)

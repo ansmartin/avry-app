@@ -1,4 +1,6 @@
 from os import system
+from numpy import isnan
+
 from scripts.users import UserSystem
 from scripts.database import PokemonDatabaseManager
 from scripts.cards import CardManager
@@ -85,14 +87,17 @@ def get_pokemon_with_card_fusion():
     if not check_card_conditions(card):
         return
 
-    print('\nEscribe el número de la posición del primer Pokémon a eliminar:')
-    option1 = int(input()) - 1
-    print('\nEscribe el número de la posición del segundo Pokémon a eliminar:')
-    option2 = int(input()) - 1
-    pokemon_positions = [option1,option2]
-
     if user_system.active_user.pokemon_box.get_length()<2:
         print('\nNo se puede usar porque no tienes más de 2 Pokémon.')
+        return
+
+    try:
+        print('\nEscribe el número de la posición del primer Pokémon a eliminar:')
+        option1 = int(input()) - 1
+        print('\nEscribe el número de la posición del segundo Pokémon a eliminar:')
+        option2 = int(input()) - 1
+    except:
+        print('\nError: Posición no detectada.')
         return
 
     if (
@@ -123,8 +128,12 @@ def get_pokemon_with_card_intercambio():
         print('\nNo se puede usar porque no tienes ningún Pokémon.')
         return
 
-    print('\nEscribe el número de la posición del Pokémon a intercambiar:')
-    pokemon_position = int(input()) - 1
+    try:
+        print('\nEscribe el número de la posición del Pokémon a intercambiar:')
+        pokemon_position = int(input()) - 1
+    except:
+        print('\nError: Posición no detectada.')
+        return
     
     if (
         not user_system.active_user.pokemon_box.position_is_in_range(pokemon_position) 
@@ -151,8 +160,12 @@ def get_pokemon_with_card_preevo():
         print('\nNo se puede usar porque no tienes ningún Pokémon.')
         return
 
-    print('\nEscribe el número de la posición del Pokémon que quieres cambiar por su pre-evolución:')
-    pokemon_position = int(input()) - 1
+    try:
+        print('\nEscribe el número de la posición del Pokémon que quieres cambiar por su pre-evolución:')
+        pokemon_position = int(input()) - 1
+    except:
+        print('\nError: Posición no detectada.')
+        return
     
     if (
         not user_system.active_user.pokemon_box.position_is_in_range(pokemon_position) 
@@ -163,7 +176,7 @@ def get_pokemon_with_card_preevo():
     pokemon_id = user_system.active_user.pokemon_box.get_pokemon(pokemon_position)
     preevo_id = database.df.loc[pokemon_id].evolves_from_pokemon_id
 
-    if preevo_id is None:
+    if isnan(preevo_id):
         print('\nError: El Pokémon seleccionado no tiene pre-evolución.')
         return
 

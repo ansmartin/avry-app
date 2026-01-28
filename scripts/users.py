@@ -1,97 +1,131 @@
 import pickle
 
-from scripts.box import PokemonBox
+import scripts.constants as const
 
 
 class User:
 
-    def __init__(self, username):
+    def __init__(self, username, games=None):
         self.username = username
-        self.pokemon_box = PokemonBox()
-        self.init_variables()
+        if games:
+            self.games = games
+        else:
+            self.games = []
 
-    def init_variables(self):
-        self.rolls = 20
-        self.money = 10000
-        self.used_cards = {}
-
-    def reset(self):
-        self.pokemon_box.init_box()
-        self.init_variables()
+    def get_user_games(self):
+        return [ x for x in self.games ]
 
 
 class UserSystem:
 
     def __init__(self):
         self.max_users = 128
-        self.data_path = './data/users.p'
-        self.load_data()
-        self.active_user = self.users[0]
+        self.max_games_in_user = 128
 
-    def load_data(self):
+        self.usernames_list = []
+        self.load_usernames()
+
+        self.active_user = None
+
+
+    # usernames_list
+    
+    def load_usernames(self):
         # carga los datos guardados
         try:
-            self.users = pickle.load( open(self.data_path, "rb") )
+            self.usernames_list = pickle.load( open(const.SAVEDATA_PATH_USERNAMES_FILE, "rb") )
 
-            if not isinstance(self.users, list) or not isinstance(self.users[0], User):
-                raise TypeError(f"Error al cargar el archivo \"{self.data_path}\", se creará uno nuevo.")
+            if not isinstance(self.usernames_list, list):
+                raise TypeError()
+
+            if len(self.usernames_list)>0:
+                for s in self.usernames_list:
+                    if not isinstance(s, str):
+                        raise TypeError()
 
         # si hay algún error, crea nuevos datos
         except:
-            self.users = []
-            self.add_user('admin')
-            # self.save_data()
+            self.usernames_list = []
+            self.save_usernames()
 
-    def save_data(self):
-        pickle.dump( self.users, open(self.data_path, "wb") )
+    def save_usernames(self):
+        pickle.dump( self.usernames_list, open(const.SAVEDATA_PATH_USERNAMES_FILE, "wb") )
 
-    def username_available(self, username):
-        for u in self.users:
-            if u.username == username:
-                return True
-        return False
+    def name_is_available(self, username):
+        return username not in self.usernames_list
 
     def position_is_in_range(self, position):
-        return position>=0 and position<len(self.users)
+        return position>=0 and position<len(self.usernames_list)
+
+    def get_username(self, position):
+        if self.position_is_in_range(position):
+            return self.usernames_list[position]
+
+        return None
 
     def can_add_user(self):
-        return len(self.users) < self.max_users
+        return len(self.usernames_list) < self.max_users
 
     def add_user(self, username):
-        self.users.append(User(username))
-        self.save_data()
-
-    def add_pokemon_in_box(self, pokemon_id):
-        success = self.active_user.pokemon_box.save_pokemon(pokemon_id)
-        if success:
-            self.save_data()
-
-    def delete_user(self, position):
-        if self.position_is_in_range(position):
-            self.users.pop(position)
-            self.save_data()
+        if self.name_is_available(username):
+            self.usernames_list.append(username)
+            self.save_usernames()
             return True
 
         return False
 
-    def get_user(self, position):
+    def delete_user(self, position):
         if self.position_is_in_range(position):
-            return self.users[position]
+            self.usernames_list.pop(position)
+            self.save_usernames()
+            return True
 
-        return None
+        return False
 
-    def change_active_user(self, position):
-        user = self.get_user(position)
 
-        if user is None:
+    # user
+
+    def get_path_user(self, name):
+        return f'{const.SAVEDATA_PATH_USERS}{name}.p'
+
+    def change_user(self, position):
+        username = self.get_username(position)
+
+        if username is None:
             return False
 
-        self.active_user = user
+        self.load_user(username)
         return True
 
-    def can_pay(self, price):
-        return self.active_user.money >= price
+    def create_user(self, username):
+        self.active_user = User(username)
+        self.save_user()
 
-    def pay(self, price):
-        self.active_user.money -= price
+    def load_user(self, username):
+        # carga los datos guardados
+        try:
+            print('u')
+            user_path = self.get_path_user(username)
+            print(user_path)
+            game_list = pickle.load( open(user_path, "rb") )
+            print('uu')
 
+            if not isinstance(game_list, list):
+                raise TypeError()
+
+            if len(game_list)>0:
+                for s in game_list:
+                    if not isinstance(s, str):
+                        raise TypeError()
+
+            print(username)
+            print(game_list)
+            self.active_user = User(username, game_list)
+
+        # si hay algún error, crea nuevos datos
+        except:
+            self.create_user(username)
+
+    def save_user(self):
+        user_path = self.get_path_user(self.active_user.username)
+        pickle.dump( self.active_user.get_user_games(), open(user_path, "wb") )

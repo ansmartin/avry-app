@@ -1,3 +1,4 @@
+import os
 import pickle
 
 import scripts.constants as const
@@ -7,12 +8,9 @@ class User:
 
     def __init__(self, username, games=None):
         self.username = username
-        if games:
-            self.games = games
-        else:
-            self.games = []
+        self.games = games if games else []
 
-    def get_user_games(self):
+    def get_user_games_list(self):
         return [ x for x in self.games ]
 
 
@@ -46,9 +44,9 @@ class UserSystem:
         # si hay algún error, crea nuevos datos
         except:
             self.usernames_list = []
-            self.save_usernames()
+            self.save_file_usernames()
 
-    def save_usernames(self):
+    def save_file_usernames(self):
         pickle.dump( self.usernames_list, open(const.SAVEDATA_PATH_USERNAMES_FILE, "wb") )
 
     def name_is_available(self, username):
@@ -67,17 +65,17 @@ class UserSystem:
         return len(self.usernames_list) < self.max_users
 
     def add_user(self, username):
-        if self.name_is_available(username):
-            self.usernames_list.append(username)
-            self.save_usernames()
-            return True
+        self.usernames_list.append(username)
+        self.save_file_usernames()
 
-        return False
-
-    def delete_user(self, position):
+    def remove_user(self, position):
         if self.position_is_in_range(position):
+            # borrar archivo de usuario
+            username = self.get_username(position)
+            self.delete_file_user(username)
+            # y borrar de la lista de nombres de usuarios
             self.usernames_list.pop(position)
-            self.save_usernames()
+            self.save_file_usernames()
             return True
 
         return False
@@ -97,18 +95,11 @@ class UserSystem:
         self.load_user(username)
         return True
 
-    def create_user(self, username):
-        self.active_user = User(username)
-        self.save_user()
-
     def load_user(self, username):
         # carga los datos guardados
         try:
-            print('u')
             user_path = self.get_path_user(username)
-            print(user_path)
             game_list = pickle.load( open(user_path, "rb") )
-            print('uu')
 
             if not isinstance(game_list, list):
                 raise TypeError()
@@ -118,14 +109,21 @@ class UserSystem:
                     if not isinstance(s, str):
                         raise TypeError()
 
-            print(username)
-            print(game_list)
             self.active_user = User(username, game_list)
 
         # si hay algún error, crea nuevos datos
         except:
             self.create_user(username)
 
-    def save_user(self):
+    def create_user(self, username):
+        self.active_user = User(username)
+        self.save_file_user()
+
+    def save_file_user(self):
         user_path = self.get_path_user(self.active_user.username)
-        pickle.dump( self.active_user.get_user_games(), open(user_path, "wb") )
+        pickle.dump( self.active_user.get_user_games_list(), open(user_path, "wb") )
+
+    def delete_file_user(self, username):
+        user_path = self.get_path_user(username)
+        if os.path.exists(user_path):
+            os.remove(user_path)

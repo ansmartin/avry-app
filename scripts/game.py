@@ -56,7 +56,7 @@ class GameSessionManager:
         return None
 
     def can_add_game(self):
-        return len(self.user_system.active_user.games) < self.user_system.max_games_in_user
+        return len(self.user_system.active_user.games) < self.user_system.MAX_GAMES_IN_USER
 
     def add_game(self, name):
         self.user_system.active_user.games.append(name)

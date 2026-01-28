@@ -15,11 +15,11 @@ class User:
 
 
 class UserSystem:
+    
+    MAX_USERS = 128
+    MAX_GAMES_IN_USER = 128
 
     def __init__(self):
-        self.max_users = 128
-        self.max_games_in_user = 128
-
         self.usernames_list = []
         self.load_usernames()
 
@@ -62,11 +62,13 @@ class UserSystem:
         return None
 
     def can_add_user(self):
-        return len(self.usernames_list) < self.max_users
+        return len(self.usernames_list) < UserSystem.MAX_USERS
 
     def add_user(self, username):
         self.usernames_list.append(username)
         self.save_file_usernames()
+
+        self.create_user(username)
 
     def remove_user(self, position):
         if self.position_is_in_range(position):

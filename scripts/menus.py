@@ -47,18 +47,17 @@ class MenuManager():
         - 0: Volver al menú de usuarios
     """
 
-    text_menu = """
+    text_menu_game = """\n
         Opciones:
         - 1: Realizar tirada
-        - 2: Ver caja
-        - 3: Reiniciar caja
+        - 2: Comprar ventaja
+        - 3: Reiniciar partida
         - 4: Mostrar filtros activos
-        - 5: Usar carta de ventaja
 
         - 9: Elegir otra sesión de juego
         - 0: Cerrar aplicación
     """
-    text_menu = line + text_menu + line
+    text_menu_game = line + text_menu_game + line
 
 
     def print_active_user(self):
@@ -148,7 +147,6 @@ class MenuManager():
         # mostrar y guardar pokemon
         self.print_pokemon(pokemon)
         self.game_manager.add_pokemon_in_box(pokemon['id'])
-        return True
 
 
     def open_menu_users(self):
@@ -202,17 +200,24 @@ class MenuManager():
 
                     while True:
                         name = input()
-                        if self.user_system.add_user(name):
-                            clear()
-                            break
-                        else:
+
+                        if not self.game_manager.name_is_available(name):
                             print('\nEse nombre ya se encuentra en la base de datos, escribe otro diferente:')
+                            continue
+                        
+                        self.user_system.add_user(name)
+                        clear()
 
                 else:
                     print('La lista de usuarios está llena, borra alguno para hacer hueco.')
 
             #- 3: Eliminar usuario
             elif(option=='3'):
+
+                if len(self.user_system.usernames_list)==0:
+                    print('No hay usuarios registrados.')
+                    continue
+
                 self.print_users()
 
                 print('\nEscribe el número del usuario que quieres eliminar.\nEscribe 0 para cancelar.')
@@ -231,15 +236,15 @@ class MenuManager():
                         print('Número no reconocido.')
                         continue
 
-                    if not self.user_system.position_is_in_range(n):
-                        print('Usuario no encontrado.')
-                        continue
+                    # if not self.user_system.position_is_in_range(n):
+                    #     print('Usuario no encontrado.')
+                    #     continue
 
                     # if self.user_system.active_user.username == self.user_system.usernames_list[n]:
                     #     print('No puedes borrar el usuario activo. Elige otro.')
                     #     continue
 
-                    if self.user_system.delete_user(n):
+                    if self.user_system.remove_user(n):
                         clear()
                         break
                     else:
@@ -314,21 +319,45 @@ class MenuManager():
                 self.print_games()
 
                 if self.game_manager.can_add_game():
+                    
                     print('\nEscribe un nombre para la sesión de juego:')
+                    name = input()
 
-                    while True:
-                        name = input()
-                        if self.game_manager.add_game(name):
-                            clear()
-                            break
-                        else:
-                            print('\nEse nombre ya se encuentra en la base de datos, escribe otro diferente:')
+                    if not self.game_manager.name_is_available(name):
+                        print('\nEse nombre ya se encuentra en la base de datos.')
+                        continue
+                    
+                    print('\n¿Valores por defecto? Escribe 1 para si, escribe otra cosa para no.')
+                    default = input()
 
+                    if default=='1':
+                        self.game_manager.add_game_default(name)
+                        continue
+
+                    print('\nEscribe el número de tiradas disponibles:')
+                    rolls = input()
+
+                    print('\nEscribe el número de tiquets disponibles:')
+                    tickets = input()
+
+                    print('\nEscribe el número de dinero disponibles:')
+                    money = input()
+
+                    print('\nEscribe el número de puntos de item disponibles:')
+                    item_points = input()
+
+                    self.game_manager.add_game_with_options(name, rolls, tickets, money, item_points)
+                            
                 else:
                     print('La lista de juegos está llena, borra alguno para hacer hueco.')
 
             #- 3: Eliminar sesión de juego
             elif(option=='3'):
+                
+                if len(self.user_system.active_user.games)==0:
+                    print('No hay sesiones de juego registradas.')
+                    continue
+
                 self.print_games()
 
                 print('\nEscribe el número de la sesión de juego que quieres eliminar.\nEscribe 0 para cancelar.')
@@ -342,20 +371,20 @@ class MenuManager():
 
                     try:
                         n = int(option)
-                        n-=1
+                        n-=1  
                     except:
                         print('Número no reconocido.')
                         continue
 
-                    if not self.game_manager.position_is_in_range(n):
-                        print('Sesión de juego no encontrada.')
-                        continue
+                    # if not self.game_manager.position_is_in_range(n):
+                    #     print('Sesión de juego no encontrada.')
+                    #     continue
 
                     # if self.user_system.active_user.username == self.user_system.usernames_list[n]:
                     #     print('No puedes borrar el usuario activo. Elige otro.')
                     #     continue
 
-                    if self.game_manager.delete_game(n):
+                    if self.game_manager.remove_game(n):
                         clear()
                         break
                     else:
@@ -375,7 +404,7 @@ class MenuManager():
             self.print_game_info()
             self.print_box()
             
-            print(MenuManager.text_menu)
+            print(MenuManager.text_menu_game)
 
             print('\nEscribe el número de la opción:')
             option = input()
@@ -385,15 +414,15 @@ class MenuManager():
 
             if(option=='1'):
                 if self.game_manager.game.rolls>0:
-                    if self.get_pokemon():
-                        self.game_manager.game.rolls-=1
+                    self.game_manager.game.rolls-=1
+                    self.get_pokemon()
             elif(option=='2'):
                 self.open_menu_cards()
-
             elif(option=='3'):
-                empty_box()
+                self.game_manager.reset_game()
+                print('\nSesión de juego reiniciada.')
             elif(option=='4'):
-                database.filter_manager.print_options()
+                self.database.filter_manager.print_options()
 
             elif(option=='9'):
                 clear()
@@ -403,9 +432,9 @@ class MenuManager():
                 quit()
 
             elif(option=='m'):
-                pokemon = database.get_random_pokemon(game_manager.game.box.poke_list)
+                pokemon = self.database.get_random_pokemon(self.game_manager.game.box.poke_list)
                 if pokemon is not None:
-                    print_pokemon(pokemon)
+                    self.print_pokemon(pokemon)
                     print('\nDictionary:')
                     for k,v in pokemon.items():
                         print(f' - {k}: {v}')
@@ -478,3 +507,231 @@ class MenuManager():
 
             print_active_user()
             
+
+
+    def check_card_conditions(card):
+        if card is None:
+            return False
+
+        if not card_manager.can_use_card(card.tag, user_system.active_user):
+            print('\nNo puedes usar esa carta porque ya has superado su límite de usos.')
+            return False
+
+        if not user_system.can_pay(card.price):
+            print('\nNo tienes suficiente dinero para comprar esa carta.')
+            return False
+
+        return True
+
+    def get_pokemon_with_card_mega():
+        tag = 'mega'
+        card = card_manager.cards.get(tag, None)
+
+        if not check_card_conditions(card):
+            return
+
+        if box_is_full():
+            return
+        
+        # usar carta
+        card_manager.add_used_card(tag, user_system.active_user)
+        user_system.pay(card.price)
+
+        mask = database.df_filtered.has_mega
+        
+        get_pokemon(mask)
+
+    def get_pokemon_with_card_fusion():
+        tag = 'fusion'
+        card = card_manager.cards.get(tag, None)
+
+        if not check_card_conditions(card):
+            return
+
+        if user_system.active_user.pokemon_box.get_length()<2:
+            print('\nNo se puede usar porque no tienes más de 2 Pokémon.')
+            return
+
+        try:
+            print('\nEscribe el número de la posición del primer Pokémon a eliminar:')
+            position1 = int(input()) - 1
+            print('\nEscribe el número de la posición del segundo Pokémon a eliminar:')
+            position2 = int(input()) - 1
+        except:
+            print('\nError: Posición no detectada.')
+            return
+        
+        if position1==position2:
+            print('\nError: Las posiciones tienen que ser diferentes.')
+            return
+
+        if (
+            not user_system.active_user.pokemon_box.position_is_in_range(position1) 
+            or 
+            not user_system.active_user.pokemon_box.position_is_in_range(position2)
+        ):
+            print('\nError: Posiciones no detectadas.')
+            return
+
+        # usar carta
+        card_manager.add_used_card(tag, user_system.active_user)
+        user_system.pay(card.price)
+
+        # ajustar segunda posicion para cuando se borre la primera
+        if position1 < position2:
+            position2-=1
+
+        user_system.active_user.pokemon_box.delete_pokemon(position1)
+        user_system.active_user.pokemon_box.delete_pokemon(position2)
+        get_pokemon()
+
+    def get_pokemon_with_card_intercambio():
+        tag = 'intercambio'
+        card = card_manager.cards.get(tag, None)
+
+        if not check_card_conditions(card):
+            return
+
+        if user_system.active_user.pokemon_box.get_length()==0:
+            print('\nNo se puede usar porque no tienes ningún Pokémon.')
+            return
+
+        try:
+            print('\nEscribe el número de la posición del Pokémon a intercambiar:')
+            pokemon_position = int(input()) - 1
+        except:
+            print('\nError: Posición no detectada.')
+            return
+        
+        if (
+            not user_system.active_user.pokemon_box.position_is_in_range(pokemon_position) 
+        ):
+            print('\nError: Posición no detectada.')
+            return
+
+        # usar carta
+        card_manager.add_used_card(tag, user_system.active_user)
+        user_system.pay(card.price)
+
+        user_system.active_user.pokemon_box.delete_pokemon(pokemon_position)
+        get_pokemon()
+
+    def get_pokemon_with_card_preevo():
+        tag = 'preevo'
+        card = card_manager.cards.get(tag, None)
+
+        if not check_card_conditions(card):
+            return
+
+        if user_system.active_user.pokemon_box.get_length()==0:
+            print('\nNo se puede usar porque no tienes ningún Pokémon.')
+            return
+
+        try:
+            print('\nEscribe el número de la posición del Pokémon que quieres cambiar por su pre-evolución:')
+            pokemon_position = int(input()) - 1
+        except:
+            print('\nError: Posición no detectada.')
+            return
+        
+        if (
+            not user_system.active_user.pokemon_box.position_is_in_range(pokemon_position) 
+        ):
+            print('\nError: Posición no detectada.')
+            return
+        
+        pokemon_id = user_system.active_user.pokemon_box.get_pokemon(pokemon_position)
+        preevo_id = database.df.loc[pokemon_id].evolves_from_pokemon_id
+
+        if isnan(preevo_id):
+            print('\nError: El Pokémon seleccionado no tiene pre-evolución.')
+            return
+
+        # usar carta
+        card_manager.add_used_card(tag, user_system.active_user)
+        user_system.pay(card.price)
+        
+        user_system.active_user.pokemon_box.delete_pokemon(pokemon_position)
+
+        #get_pokemon()
+        pokemon = database.df.loc[preevo_id].to_dict()
+
+        # mostrar y guardar pokemon
+        print_pokemon(pokemon)
+        user_system.active_user.pokemon_box.poke_list[pokemon_position] = preevo_id
+        user_system.save_data()
+
+    def get_pokemon_with_card_comienzo():
+        tag = 'comienzo'
+        card = card_manager.cards.get(tag, None)
+
+        if not check_card_conditions(card):
+            return
+
+        if user_system.active_user.pokemon_box.get_length()>=18:
+            print('\nNo se puede usar porque ya se han realizado más de 18 tiradas.')
+            return
+
+        # usar carta
+        card_manager.add_used_card(tag, user_system.active_user)
+        user_system.pay(card.price)
+
+        user_system.active_user.pokemon_box.init_box()
+        print('\nTiradas reiniciadas.')
+
+    def get_pokemon_with_card_type(pokemon_type):
+        tag = 'tipo'
+        card = card_manager.cards.get(tag, None)
+
+        if not check_card_conditions(card):
+            return
+
+        if box_is_full():
+            return
+
+        # usar carta
+        card_manager.add_used_card(tag, user_system.active_user)
+        user_system.pay(card.price)
+        
+        mask = (
+            (database.df_filtered.first_type==pokemon_type) 
+            | 
+            (database.df_filtered.second_type==pokemon_type)
+        )
+
+        get_pokemon(mask)
+
+    def get_pokemon_with_card_aditional(number_ad):
+        tag = 'adicional_' + str(number_ad)
+        card = card_manager.cards.get(tag, None)
+
+        if not check_card_conditions(card):
+            return
+
+        if box_is_full():
+            return
+
+        # usar carta
+        card_manager.add_used_card(tag, user_system.active_user)
+        user_system.pay(card.price)
+
+        for _ in range(number_ad):
+            get_pokemon()
+
+    def get_pokemon_with_card_selectiva():
+        tag = 'selectiva'
+        card = card_manager.cards.get(tag, None)
+
+        if not check_card_conditions(card):
+            return
+
+        if box_is_full():
+            return
+
+        # usar carta
+        card_manager.add_used_card(tag, user_system.active_user)
+        user_system.pay(card.price)
+
+        for _ in range(6):
+            get_pokemon()
+

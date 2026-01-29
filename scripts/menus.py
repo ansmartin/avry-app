@@ -326,7 +326,7 @@ class MenuManager():
                     print('\nEscribe un nombre para la sesión de juego:')
                     name = input()
 
-                    if not self.game_manager.name_is_available(name):
+                    if not self.user_system.active_user.name_is_available(name):
                         print('\nEse nombre ya se encuentra en la base de datos.')
                         continue
                     
@@ -428,6 +428,7 @@ class MenuManager():
                 print('\nSesión de juego reiniciada.')
             elif(option=='4'):
                 self.database.filter_manager.print_options()
+                print(MenuManager.TEXT_LINE)
 
             elif(option=='9'):
                 clear()
@@ -453,6 +454,7 @@ class MenuManager():
 
         while(True):
             self.print_active_user()
+            self.print_game_info()
             print(MenuManager.TEXT_LINE)
             print('\n    Lista de cartas de ventaja:')
             n=1
@@ -653,8 +655,6 @@ class MenuManager():
         # usar carta
         self.game_manager.game.add_used_card(tag)
         self.game_manager.game.spend_money(card.price)
-        
-        self.game_manager.game.box.delete_pokemon(pokemon_position)
 
         #get_pokemon()
         pokemon = self.database.df.loc[preevo_id].to_dict()
@@ -679,7 +679,7 @@ class MenuManager():
         self.game_manager.game.add_used_card(tag)
         self.game_manager.game.spend_money(card.price)
 
-        self.game_manager.game.box.init_box()
+        self.game_manager.game.reset_rolls_and_box()
         print('\nTiradas reiniciadas.')
 
     def get_pokemon_with_card_type(self, pokemon_type):

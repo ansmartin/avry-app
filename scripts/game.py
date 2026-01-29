@@ -19,6 +19,7 @@ class GameSession:
         self.name = name
 
         self.rolls = rolls if rolls else GameSession.DEFAULT_ROLLS
+        self.rolls_backup = self.rolls
         self.tickets = tickets if tickets else GameSession.DEFAULT_TICKETS
         self.money = money if money else GameSession.DEFAULT_MONEY
         self.item_points = item_points if item_points else GameSession.DEFAULT_ITEM_POINTS
@@ -34,6 +35,10 @@ class GameSession:
 
     def reset(self):
         self.set_variables_to_default()
+        self.box.init_box()
+
+    def reset_rolls_and_box(self):
+        self.rolls = self.rolls_backup
         self.box.init_box()
 
     def can_spend_money(self, price):

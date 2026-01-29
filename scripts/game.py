@@ -157,7 +157,7 @@ class GameSessionManager:
 
     def add_pokemon_in_box(self, pokemon_id):
         self.game.box.add_pokemon(pokemon_id)
-        self.save_file_game()
+        #self.save_file_game()
 
     def reset_game(self):
         self.game.reset()

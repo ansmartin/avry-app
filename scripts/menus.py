@@ -70,7 +70,7 @@ class MenuManager():
         print(f'\n   Datos de la sesión de juego')
         print(f'      Tiradas restantes: {self.game_manager.game.rolls}')
         print(f'      Tiquets: {self.game_manager.game.tickets}')
-        print(f'      Dinero: {self.game_manager.game.money}')
+        print(f'      Dinero: {self.game_manager.game.money} monedas')
         print(f'      Puntos de items: {self.game_manager.game.item_points}')
 
     def print_box(self):
@@ -465,7 +465,7 @@ class MenuManager():
                 if not self.game_manager.can_use_card(card):
                     print(f'        (AGOTADA)')
                     continue
-                print(f'        Precio: {card.price}')
+                print(f'        Precio: {card.price} monedas')
                 if card.limit>0:
                     print(f'        Limite de usos: {card.limit}')
 
@@ -545,6 +545,7 @@ class MenuManager():
         mask = self.database.df_filtered.has_mega
         
         self.get_pokemon(mask)
+        self.game_manager.save_file_game()
 
     def get_pokemon_with_card_fusion(self):
         tag = 'fusion'
@@ -589,6 +590,7 @@ class MenuManager():
         self.game_manager.game.box.delete_pokemon(position1)
         self.game_manager.game.box.delete_pokemon(position2)
         self.get_pokemon()
+        self.game_manager.save_file_game()
 
     def get_pokemon_with_card_intercambio(self):
         tag = 'intercambio'
@@ -620,6 +622,7 @@ class MenuManager():
 
         self.game_manager.game.box.delete_pokemon(pokemon_position)
         self.get_pokemon()
+        self.game_manager.save_file_game()
 
     def get_pokemon_with_card_preevo(self):
         tag = 'preevo'
@@ -681,6 +684,7 @@ class MenuManager():
 
         self.game_manager.game.reset_rolls_and_box()
         print('\nTiradas reiniciadas.')
+        self.game_manager.save_file_game()
 
     def get_pokemon_with_card_type(self, pokemon_type):
         tag = 'tipo'
@@ -703,6 +707,7 @@ class MenuManager():
         )
 
         self.get_pokemon(mask)
+        self.game_manager.save_file_game()
 
     def get_pokemon_with_card_aditional(self, number_ad):
         tag = 'adicional_' + str(number_ad)
@@ -721,6 +726,8 @@ class MenuManager():
         for _ in range(number_ad):
             self.get_pokemon()
 
+        self.game_manager.save_file_game()
+
     def get_pokemon_with_card_selectiva(self):
         tag = 'selectiva'
         card = self.card_manager.cards.get(tag, None)
@@ -737,4 +744,6 @@ class MenuManager():
 
         for _ in range(6):
             self.get_pokemon()
+
+        self.game_manager.save_file_game()
 

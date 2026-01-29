@@ -36,6 +36,16 @@ class GameSession:
         self.set_variables_to_default()
         self.box.init_box()
 
+    def can_spend_money(self, price):
+        return self.money >= price
+
+    def spend_money(self, price):
+        self.money -= price
+
+    def add_used_card(self, tag : str):
+        uses = self.used_cards.get(tag, 0) + 1
+        self.used_cards[tag] = uses
+
 
 class GameSessionManager:
     
@@ -140,12 +150,6 @@ class GameSessionManager:
             os.remove(game_path)
 
 
-    def can_pay(self, price):
-        return self.game.money >= price
-
-    def pay(self, price):
-        self.game.money -= price
-
     def add_pokemon_in_box(self, pokemon_id):
         self.game.box.add_pokemon(pokemon_id)
         self.save_file_game()
@@ -153,3 +157,15 @@ class GameSessionManager:
     def reset_game(self):
         self.game.reset()
         self.save_file_game()
+
+
+    def can_use_card(self, card):
+        if card is None:
+            return False
+
+        # sin limite
+        if card.limit==0:
+            return True
+
+        uses = self.game.used_cards.get(card.tag, 0)
+        return uses < card.limit

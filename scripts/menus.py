@@ -456,16 +456,16 @@ class MenuManager():
             print(MenuManager.TEXT_LINE)
             print('\n    Lista de cartas de ventaja:')
             n=1
-            for c in self.card_manager.cards.values():
-                print(f'\n    - {n}: {c.name}')
-                print(f'        {c.description}')
+            for card in self.card_manager.cards.values():
+                print(f'\n    - {n}: {card.name}')
+                print(f'        {card.description}')
                 n+=1
-                if not self.card_manager.can_use_card(c.tag, self.user_system.active_user):
+                if not self.game_manager.can_use_card(card):
                     print(f'        (AGOTADA)')
                     continue
-                print(f'        Precio: {c.price}')
-                if c.limit>0:
-                    print(f'        Limite de usos: {c.limit}')
+                print(f'        Precio: {card.price}')
+                if card.limit>0:
+                    print(f'        Limite de usos: {card.limit}')
 
             print('\n    - 0: Volver al menú principal')
             print('\nEscribe el número de la opción:')
@@ -516,11 +516,11 @@ class MenuManager():
         if card is None:
             return False
 
-        if not self.card_manager.can_use_card(card.tag, self.user_system.active_user):
+        if not self.game_manager.can_use_card(card):
             print('\nNo puedes usar esa carta porque ya has superado su límite de usos.')
             return False
 
-        if not self.user_system.can_pay(card.price):
+        if not self.game_manager.game.can_spend_money(card.price):
             print('\nNo tienes suficiente dinero para comprar esa carta.')
             return False
 
@@ -537,8 +537,8 @@ class MenuManager():
         #     return
         
         # usar carta
-        self.card_manager.add_used_card(tag, self.user_system.active_user)
-        self.game_manager.pay(card.price)
+        self.game_manager.game.add_used_card(tag)
+        self.game_manager.game.spend_money(card.price)
 
         mask = self.database.df_filtered.has_mega
         
@@ -577,8 +577,8 @@ class MenuManager():
             return
 
         # usar carta
-        self.card_manager.add_used_card(tag, self.user_system.active_user)
-        self.game_manager.pay(card.price)
+        self.game_manager.game.add_used_card(tag)
+        self.game_manager.game.spend_money(card.price)
 
         # ajustar segunda posicion para cuando se borre la primera
         if position1 < position2:
@@ -613,8 +613,8 @@ class MenuManager():
             return
 
         # usar carta
-        self.card_manager.add_used_card(tag, self.user_system.active_user)
-        self.game_manager.pay(card.price)
+        self.game_manager.game.add_used_card(tag)
+        self.game_manager.game.spend_money(card.price)
 
         self.game_manager.game.box.delete_pokemon(pokemon_position)
         self.get_pokemon()
@@ -651,8 +651,8 @@ class MenuManager():
             return
 
         # usar carta
-        self.card_manager.add_used_card(tag, self.user_system.active_user)
-        self.game_manager.pay(card.price)
+        self.game_manager.game.add_used_card(tag)
+        self.game_manager.game.spend_money(card.price)
         
         self.game_manager.game.box.delete_pokemon(pokemon_position)
 
@@ -676,8 +676,8 @@ class MenuManager():
             return
 
         # usar carta
-        self.card_manager.add_used_card(tag, self.user_system.active_user)
-        self.game_manager.pay(card.price)
+        self.game_manager.game.add_used_card(tag)
+        self.game_manager.game.spend_money(card.price)
 
         self.game_manager.game.box.init_box()
         print('\nTiradas reiniciadas.')
@@ -693,8 +693,8 @@ class MenuManager():
         #     return
 
         # usar carta
-        self.card_manager.add_used_card(tag, self.user_system.active_user)
-        self.game_manager.pay(card.price)
+        self.game_manager.game.add_used_card(tag)
+        self.game_manager.game.spend_money(card.price)
         
         mask = (
             (self.database.df_filtered.first_type==pokemon_type) 
@@ -715,8 +715,8 @@ class MenuManager():
         #     return
 
         # usar carta
-        self.card_manager.add_used_card(tag, self.user_system.active_user)
-        self.game_manager.pay(card.price)
+        self.game_manager.game.add_used_card(tag)
+        self.game_manager.game.spend_money(card.price)
 
         for _ in range(number_ad):
             self.get_pokemon()
@@ -732,8 +732,8 @@ class MenuManager():
         #     return
 
         # usar carta
-        self.card_manager.add_used_card(tag, self.user_system.active_user)
-        self.game_manager.pay(card.price)
+        self.game_manager.game.add_used_card(tag)
+        self.game_manager.game.spend_money(card.price)
 
         for _ in range(6):
             self.get_pokemon()

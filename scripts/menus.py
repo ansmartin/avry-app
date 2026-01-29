@@ -165,7 +165,7 @@ class MenuManager():
             #- 1: Cargar usuario
             if(option=='1'):
                 
-                if len(self.user_system.usernames)==0:
+                if len(self.user_system.usernames._list)==0:
                     print('No hay usuarios registrados.')
                     continue
 
@@ -213,7 +213,7 @@ class MenuManager():
             #- 3: Eliminar usuario
             elif(option=='3'):
 
-                if len(self.user_system.usernames)==0:
+                if len(self.user_system.usernames._list)==0:
                     print('No hay usuarios registrados.')
                     continue
 
@@ -255,12 +255,12 @@ class MenuManager():
 
     def print_users(self):
         print('\nUsuarios registrados:')
-        for n, username in enumerate(self.user_system.usernames):
+        for n, username in enumerate(self.user_system.usernames._list):
             print(f' - {n+1}:\t{username}')
 
     def print_games(self):
         print('\nSesiones de juego registradas:')
-        for n, gamename in enumerate(self.user_system.active_user.games):
+        for n, gamename in enumerate(self.user_system.active_user.games._list):
             print(f' - {n+1}:\t{gamename}')
 
 
@@ -271,7 +271,7 @@ class MenuManager():
         while(True):
             self.print_active_user()
 
-            if len(self.user_system.active_user.games)==0:
+            if len(self.user_system.active_user.games._list)==0:
                 print('\nEste usuario todavía no tiene sesiones de juego registradas.')
             else:
                 self.print_games()
@@ -287,7 +287,7 @@ class MenuManager():
             #- 1: Cargar sesión de juego
             if(option=='1'):
                 
-                if len(self.user_system.active_user.games)==0:
+                if len(self.user_system.active_user.games._list)==0:
                     print('No hay sesiones de juego registradas.')
                     continue
 
@@ -314,7 +314,7 @@ class MenuManager():
 
             #- 2: Crear nueva sesión de juego
             elif(option=='2'):
-                if len(self.user_system.active_user.games)>0:
+                if len(self.user_system.active_user.games._list)>0:
                     self.print_games()
 
                 if self.user_system.active_user.games.can_add_element():
@@ -355,7 +355,7 @@ class MenuManager():
             #- 3: Eliminar sesión de juego
             elif(option=='3'):
                 
-                if len(self.user_system.active_user.games)==0:
+                if len(self.user_system.active_user.games._list)==0:
                     print('No hay sesiones de juego registradas.')
                     continue
 

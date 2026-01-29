@@ -3,7 +3,8 @@ import pickle
 
 import scripts.constants as const
 from scripts.users import UserSystem
-from scripts.box import PokemonBox
+from scripts.classlist import ClassList
+from scripts.cards import Card
 
 
 class GameSession:
@@ -17,6 +18,7 @@ class GameSession:
     
     def __init__(self, name, rolls=None, tickets=None, money=None, item_points=None):
         self.name = name
+        self.box = ClassList()
 
         self.rolls = rolls if rolls else GameSession.DEFAULT_ROLLS
         self.rolls_backup = self.rolls
@@ -24,10 +26,9 @@ class GameSession:
         self.money = money if money else GameSession.DEFAULT_MONEY
         self.item_points = item_points if item_points else GameSession.DEFAULT_ITEM_POINTS
         self.used_cards = {}
-        self.box = PokemonBox()
 
     def set_variables_to_default(self):
-        self.rolls = GameSession.DEFAULT_ROLLS
+        self.rolls = self.rolls_backup = GameSession.DEFAULT_ROLLS
         self.tickets = GameSession.DEFAULT_TICKETS
         self.money = GameSession.DEFAULT_MONEY
         self.item_points = GameSession.DEFAULT_ITEM_POINTS
@@ -35,11 +36,11 @@ class GameSession:
 
     def reset(self):
         self.set_variables_to_default()
-        self.box.init_box()
+        self.box.reset()
 
     def reset_rolls_and_box(self):
         self.rolls = self.rolls_backup
-        self.box.init_box()
+        self.box.reset()
 
     def can_spend_money(self, price):
         return self.money >= price
@@ -58,16 +59,13 @@ class GameSessionManager:
         self.user_system = user_system
         self.game = game
 
-    def can_add_game(self):
-        return len(self.user_system.active_user.games) < self.user_system.MAX_GAMES_IN_USER
-
     def add_game_to_list(self, name):
-        self.user_system.active_user.games.append(name)
+        self.user_system.active_user.games.add(name)
         self.user_system.save_file_user()
 
     def add_game_default(self, name):
         self.add_game_to_list(name)
-        self.create_game(name)
+        self.create_and_save_game(name)
 
     def add_game_with_options(self, name, rolls, tickets, money, item_points):
         self.add_game_to_list(name)
@@ -102,15 +100,15 @@ class GameSessionManager:
         except:
             item_points = None
 
-        self.create_game(name, rolls, tickets, money, item_points)
+        self.create_and_save_game(name, rolls, tickets, money, item_points)
 
     def remove_game(self, position):
-        if self.user_system.active_user.position_is_in_range(position):
+        if self.user_system.active_user.games.position_is_in_range(position):
             # borrar archivo de juego
-            name = self.user_system.active_user.get_gamename(position)
+            name = self.user_system.active_user.games.get(position)
             self.delete_file_game(name)
             # y borrar de la lista del usuario
-            self.user_system.active_user.games.pop(position)
+            self.user_system.active_user.games.remove(position)
             self.user_system.save_file_user()
             return True
 
@@ -120,7 +118,7 @@ class GameSessionManager:
         return f'{const.SAVEDATA_PATH_GAMES}{self.user_system.active_user.username}_{name}.p'
 
     def change_game(self, position):
-        name = self.user_system.active_user.get_gamename(position)
+        name = self.user_system.active_user.games.get(position)
 
         if name is None:
             return False
@@ -139,9 +137,9 @@ class GameSessionManager:
 
         # si hay algún error, crea nuevos datos
         except:
-            self.create_game(name)
+            self.create_and_save_game(name)
 
-    def create_game(self, name, rolls=None, tickets=None, money=None, item_points=None):
+    def create_and_save_game(self, name, rolls=None, tickets=None, money=None, item_points=None):
         self.game = GameSession(name, rolls, tickets, money, item_points)
         self.save_file_game()
 
@@ -154,17 +152,12 @@ class GameSessionManager:
         if os.path.exists(game_path):
             os.remove(game_path)
 
-
-    def add_pokemon_in_box(self, pokemon_id):
-        self.game.box.add_pokemon(pokemon_id)
-        #self.save_file_game()
-
-    def reset_game(self):
+    def reset_and_save_game(self):
         self.game.reset()
         self.save_file_game()
 
 
-    def can_use_card(self, card):
+    def can_use_card(self, card : Card):
         if card is None:
             return False
 

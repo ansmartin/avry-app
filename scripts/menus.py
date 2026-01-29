@@ -52,8 +52,8 @@ class MenuManager():
         Opciones:
         - 1: Realizar tirada
         - 2: Comprar ventaja
-        - 3: Reiniciar partida
-        - 4: Mostrar filtros activos
+        - 3: Mostrar filtros activos
+        - 4: Reiniciar partida con valores por defecto
 
         - 9: Elegir otra sesión de juego
         - 0: Cerrar aplicación
@@ -74,7 +74,7 @@ class MenuManager():
         print(f'      Puntos de items: {self.game_manager.game.item_points}')
 
     def print_box(self):
-        box = self.game_manager.game.box.poke_list
+        box = self.game_manager.game.box._list
 
         if len(box)==0:
             print(f'\nLa lista de Pokémon obtenidos está vacía.')
@@ -136,7 +136,7 @@ class MenuManager():
     #         return True
 
     def get_pokemon(self, mask=None):
-        pokemon = self.database.get_random_pokemon(self.game_manager.game.box.poke_list, mask)
+        pokemon = self.database.get_random_pokemon(self.game_manager.game.box._list, mask)
 
         if pokemon is None:
             print('\nNingún Pokémon cumple con los criterios de búsqueda.')
@@ -144,7 +144,7 @@ class MenuManager():
         
         # mostrar y guardar pokemon
         self.print_pokemon(pokemon)
-        self.game_manager.add_pokemon_in_box(pokemon['id'])
+        self.game_manager.game.box.add(pokemon['id'])
 
 
     def open_menu_users(self):
@@ -165,7 +165,7 @@ class MenuManager():
             #- 1: Cargar usuario
             if(option=='1'):
                 
-                if len(self.user_system.usernames_list)==0:
+                if len(self.user_system.usernames)==0:
                     print('No hay usuarios registrados.')
                     continue
 
@@ -193,17 +193,17 @@ class MenuManager():
             elif(option=='2'):
                 self.print_users()
 
-                if self.user_system.can_add_user():
+                if self.user_system.usernames.can_add_element():
                     print('\nEscribe un nombre para el nuevo usuario:')
 
                     while True:
                         name = input()
 
-                        if not self.user_system.name_is_available(name):
+                        if self.user_system.usernames.contains(name):
                             print('\nEse nombre ya se encuentra en la base de datos, escribe otro diferente:')
                             continue
                         
-                        self.user_system.add_user(name)
+                        self.user_system.add_user_and_save_file(name)
                         clear()
                         break
 
@@ -213,7 +213,7 @@ class MenuManager():
             #- 3: Eliminar usuario
             elif(option=='3'):
 
-                if len(self.user_system.usernames_list)==0:
+                if len(self.user_system.usernames)==0:
                     print('No hay usuarios registrados.')
                     continue
 
@@ -235,11 +235,7 @@ class MenuManager():
                         print('Número no reconocido.')
                         continue
 
-                    # if not self.user_system.position_is_in_range(n):
-                    #     print('Usuario no encontrado.')
-                    #     continue
-
-                    # if self.user_system.active_user.username == self.user_system.usernames_list[n]:
+                    # if self.user_system.active_user.username == self.user_system.usernames[n]:
                     #     print('No puedes borrar el usuario activo. Elige otro.')
                     #     continue
 
@@ -259,7 +255,7 @@ class MenuManager():
 
     def print_users(self):
         print('\nUsuarios registrados:')
-        for n, username in enumerate(self.user_system.usernames_list):
+        for n, username in enumerate(self.user_system.usernames):
             print(f' - {n+1}:\t{username}')
 
     def print_games(self):
@@ -321,12 +317,12 @@ class MenuManager():
                 if len(self.user_system.active_user.games)>0:
                     self.print_games()
 
-                if self.game_manager.can_add_game():
+                if self.user_system.active_user.games.can_add_element():
                     
                     print('\nEscribe un nombre para la sesión de juego:')
                     name = input()
 
-                    if not self.user_system.active_user.name_is_available(name):
+                    if self.user_system.active_user.games.contains(name):
                         print('\nEse nombre ya se encuentra en la base de datos.')
                         continue
                     
@@ -381,11 +377,7 @@ class MenuManager():
                         print('Número no reconocido.')
                         continue
 
-                    # if not self.game_manager.position_is_in_range(n):
-                    #     print('Sesión de juego no encontrada.')
-                    #     continue
-
-                    # if self.user_system.active_user.username == self.user_system.usernames_list[n]:
+                    # if self.user_system.active_user.username == self.user_system.usernames[n]:
                     #     print('No puedes borrar el usuario activo. Elige otro.')
                     #     continue
 
@@ -418,17 +410,14 @@ class MenuManager():
             print(f'Seleccionada opción {option}')
 
             if(option=='1'):
-                if self.game_manager.game.rolls>0:
-                    self.game_manager.game.rolls-=1
-                    self.get_pokemon()
+                self.roll()
             elif(option=='2'):
                 self.open_menu_cards()
             elif(option=='3'):
-                self.game_manager.reset_game()
-                print('\nSesión de juego reiniciada.')
-            elif(option=='4'):
                 self.database.filter_manager.print_options()
-                print(MenuManager.TEXT_LINE)
+            elif(option=='4'):
+                self.game_manager.reset_and_save_game()
+                print('\nSesión de juego reiniciada.')
 
             elif(option=='9'):
                 clear()
@@ -438,7 +427,7 @@ class MenuManager():
                 quit()
 
             elif(option=='m'):
-                pokemon = self.database.get_random_pokemon(self.game_manager.game.box.poke_list)
+                pokemon = self.database.get_random_pokemon(self.game_manager.game.box._list)
                 if pokemon is not None:
                     self.print_pokemon(pokemon)
                     print('\nDictionary:')
@@ -447,6 +436,15 @@ class MenuManager():
             else:
                 print('Opción no reconocida.')
 
+            print(MenuManager.TEXT_LINE)
+
+    def roll(self):
+        if self.game_manager.game.rolls==0:
+            return
+
+        self.game_manager.game.rolls-=1
+        self.get_pokemon()
+        self.game_manager.save_file_game()
 
     def open_menu_cards(self):
         
@@ -587,8 +585,8 @@ class MenuManager():
         if position1 < position2:
             position2-=1
 
-        self.game_manager.game.box.delete_pokemon(position1)
-        self.game_manager.game.box.delete_pokemon(position2)
+        self.game_manager.game.box.remove(position1)
+        self.game_manager.game.box.remove(position2)
         self.get_pokemon()
         self.game_manager.save_file_game()
 
@@ -620,7 +618,7 @@ class MenuManager():
         self.game_manager.game.add_used_card(tag)
         self.game_manager.game.spend_money(card.price)
 
-        self.game_manager.game.box.delete_pokemon(pokemon_position)
+        self.game_manager.game.box.remove(pokemon_position)
         self.get_pokemon()
         self.game_manager.save_file_game()
 
@@ -648,7 +646,7 @@ class MenuManager():
             print('\nError: Posición no detectada.')
             return
         
-        pokemon_id = self.game_manager.game.box.get_pokemon(pokemon_position)
+        pokemon_id = self.game_manager.game.box.get(pokemon_position)
         preevo_id = self.database.df.loc[pokemon_id].evolves_from_pokemon_id
 
         if isnan(preevo_id):
@@ -664,7 +662,7 @@ class MenuManager():
 
         # mostrar y guardar pokemon
         self.print_pokemon(pokemon)
-        self.game_manager.game.box.poke_list[pokemon_position] = preevo_id
+        self.game_manager.game.box._list[pokemon_position] = preevo_id
         self.game_manager.save_file_game()
 
     def get_pokemon_with_card_comienzo(self):
@@ -674,8 +672,8 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        if self.game_manager.game.box.get_length()>=18:
-            print('\nNo se puede usar porque ya se han realizado más de 18 tiradas.')
+        if (self.game_manager.game.rolls_backup - self.game_manager.game.rolls) >= 18:
+            print('\nNo se puede usar porque ya se han realizado 18 tiradas o más.')
             return
 
         # usar carta

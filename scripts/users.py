@@ -13,6 +13,17 @@ class User:
     def get_user_games_list(self):
         return [ x for x in self.games ]
 
+    def position_is_in_range(self, position):
+        return position>=0 and position<len(self.games)
+
+    def get_gamename(self, position):
+        if self.position_is_in_range(position):
+            return self.games[position]
+
+        return None
+
+    def name_is_available(self, name):
+        return name not in self.games
 
 class UserSystem:
     

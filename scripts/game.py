@@ -8,7 +8,7 @@ from scripts.box import PokemonBox
 
 class GameSession:
     
-    MAX_ROLLS = 128
+    MAX_ROLLS = 1028
 
     DEFAULT_ROLLS = 20
     DEFAULT_TICKETS = 3
@@ -39,62 +39,60 @@ class GameSession:
 
 class GameSessionManager:
     
-    def __init__(self, user_system : UserSystem):
+    def __init__(self, user_system : UserSystem, game : GameSession = None):
         self.user_system = user_system
-        self.game = None
-
-    def name_is_available(self, name):
-        return name not in self.user_system.active_user.games
-
-    def position_is_in_range(self, position):
-        return position>=0 and position<len(self.user_system.active_user.games)
-
-    def get_gamename(self, position):
-        if self.position_is_in_range(position):
-            return self.user_system.active_user.games[position]
-
-        return None
+        self.game = game
 
     def can_add_game(self):
         return len(self.user_system.active_user.games) < self.user_system.MAX_GAMES_IN_USER
 
-    def add_game(self, name):
+    def add_game_to_list(self, name):
         self.user_system.active_user.games.append(name)
         self.user_system.save_file_user()
 
     def add_game_default(self, name):
-        self.add_game(name)
+        self.add_game_to_list(name)
         self.create_game(name)
 
     def add_game_with_options(self, name, rolls, tickets, money, item_points):
-        self.add_game(name)
+        self.add_game_to_list(name)
 
         try:
             rolls = int(rolls)
+            if rolls<0:
+                rolls=0
+            if rolls > GameSession.MAX_ROLLS:
+                rolls = GameSession.MAX_ROLLS
         except:
             rolls = None
 
         try:
             tiquets = int(tiquets)
+            if tiquets<0:
+                tiquets=0
         except:
             tiquets = None
 
         try:
             money = int(money)
+            if money<0:
+                money=0
         except:
             money = None
 
         try:
             item_points = int(item_points)
+            if item_points<0:
+                item_points=0
         except:
             item_points = None
 
         self.create_game(name, rolls, tickets, money, item_points)
 
     def remove_game(self, position):
-        if self.position_is_in_range(position):
+        if self.user_system.active_user.position_is_in_range(position):
             # borrar archivo de juego
-            name = self.get_gamename(position)
+            name = self.user_system.active_user.get_gamename(position)
             self.delete_file_game(name)
             # y borrar de la lista del usuario
             self.user_system.active_user.games.pop(position)
@@ -107,7 +105,7 @@ class GameSessionManager:
         return f'{const.SAVEDATA_PATH_GAMES}{self.user_system.active_user.username}_{name}.p'
 
     def change_game(self, position):
-        name = self.get_gamename(position)
+        name = self.user_system.active_user.get_gamename(position)
 
         if name is None:
             return False
@@ -149,9 +147,8 @@ class GameSessionManager:
         self.game.money -= price
 
     def add_pokemon_in_box(self, pokemon_id):
-        success = self.game.box.save_pokemon(pokemon_id)
-        if success:
-            self.save_file_game()
+        self.game.box.add_pokemon(pokemon_id)
+        self.save_file_game()
 
     def reset_game(self):
         self.game.reset()

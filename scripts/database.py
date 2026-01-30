@@ -24,7 +24,7 @@ class PokemonDatabaseManager:
 
         return name
 
-    def get_random_pokemon(self, box, mask=None):
+    def get_random_pokemon(self, box_list, mask=None):
 
         # escoger dataframe
         if self.df_filtered is None:
@@ -38,20 +38,17 @@ class PokemonDatabaseManager:
         if mask is not None:
             dataframe = dataframe.loc[mask]
 
+        # quitar ya obtenidos
+        new_mask = dataframe.id.apply(lambda x : x not in box_list)
+        dataframe = dataframe.loc[new_mask]
+
         if dataframe.shape[0]==0:
             return None
 
-        # obtener pokemon
-        while True:
-            n = random.randint(0, dataframe.shape[0]-1)
-            pokemon = dataframe.iloc[n].to_dict()
-
-            # comprobar que el pokemon obtenido no está ya en la caja
-            if pokemon['id'] in box:
-                # repetir
-                continue
-            else:
-                return pokemon
+        # obtener pokemon aleatorio
+        n = random.randint(0, dataframe.shape[0]-1)
+        pokemon = dataframe.iloc[n].to_dict()
+        return pokemon
 
     def filter_dataset(self):
         boolean_mask = pd.Series([ True for x in range(self.df.shape[0]) ], index=self.df.index)

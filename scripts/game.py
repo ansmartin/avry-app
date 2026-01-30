@@ -90,11 +90,11 @@ class GameSessionManager:
             rolls = None
 
         try:
-            tiquets = int(tiquets)
-            if tiquets<0:
-                tiquets=0
+            tickets = int(tickets)
+            if tickets<0:
+                tickets=0
         except:
-            tiquets = None
+            tickets = None
 
         try:
             money = int(money)

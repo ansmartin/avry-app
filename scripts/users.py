@@ -33,10 +33,10 @@ class UserSystem:
             if not isinstance(self.usernames, ClassList):
                 raise TypeError()
 
-            if len(self.usernames._list)>0:
-                for element in self.usernames._list:
-                    if not isinstance(element, str):
-                        raise TypeError()
+            # if len(self.usernames._list)>0:
+            #     for element in self.usernames._list:
+            #         if not isinstance(element, str):
+            #             raise TypeError()
 
         # si hay algún error, crea nuevos datos
         except:
@@ -88,10 +88,10 @@ class UserSystem:
             if not isinstance(user, User):
                 raise TypeError()
 
-            if len(user.games)>0:
-                for element in user.games:
-                    if not isinstance(element, str):
-                        raise TypeError()
+            # if len(user.games)>0:
+            #     for element in user.games._list:
+            #         if not isinstance(element, str):
+            #             raise TypeError()
 
             self.active_user = user
 

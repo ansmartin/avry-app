@@ -58,8 +58,8 @@ class CardManager:
         cards[tag] = Card(tag,name,description,price,limit)
         
         tag = 'tipo'
-        name = 'TIRADA ELEMENTAL'
-        description = 'ELIGE UN TIPO DE POKÉMON Y REALIZA UNA TIRADA EN LA QUE SÓLO SALGAN POKÉMON DE ESE TIPO.' 
+        name = 'TIQUET ELEMENTAL'
+        description = 'OBTIENES UN TICKET ADICIONAL PARA FORZAR EL TIPO DEL POKÉMON.' 
         price = 400
         limit = 0
         cards[tag] = Card(tag,name,description,price,limit)

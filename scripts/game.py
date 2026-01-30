@@ -11,7 +11,7 @@ class GameSession:
     
     MAX_ROLLS = 1028
 
-    DEFAULT_ROLLS = 20
+    DEFAULT_ROLLS = 25
     DEFAULT_TICKETS = 3
     DEFAULT_MONEY = 10_000
     DEFAULT_ITEM_POINTS = 200
@@ -25,6 +25,7 @@ class GameSession:
         self.tickets = tickets if tickets else GameSession.DEFAULT_TICKETS
         self.money = money if money else GameSession.DEFAULT_MONEY
         self.item_points = item_points if item_points else GameSession.DEFAULT_ITEM_POINTS
+        self.used_rolls = 0
         self.used_cards = {}
 
     def set_variables_to_default(self):
@@ -32,6 +33,7 @@ class GameSession:
         self.tickets = GameSession.DEFAULT_TICKETS
         self.money = GameSession.DEFAULT_MONEY
         self.item_points = GameSession.DEFAULT_ITEM_POINTS
+        self.used_rolls = 0
         self.used_cards = {}
 
     def reset(self):
@@ -40,6 +42,7 @@ class GameSession:
 
     def reset_rolls_and_box(self):
         self.rolls = self.rolls_backup
+        self.used_rolls = 0
         self.box.reset()
 
     def can_spend_money(self, price):
@@ -47,6 +50,13 @@ class GameSession:
 
     def spend_money(self, price):
         self.money -= price
+
+    def spend_roll(self):
+        self.rolls-=1
+        self.used_rolls+=1
+
+    def spend_ticket(self):
+        self.tickets-=1
 
     def add_used_card(self, tag : str):
         uses = self.used_cards.get(tag, 0) + 1
@@ -152,9 +162,9 @@ class GameSessionManager:
         if os.path.exists(game_path):
             os.remove(game_path)
 
-    def reset_and_save_game(self):
-        self.game.reset()
-        self.save_file_game()
+    # def reset_and_save_game(self):
+    #     self.game.reset()
+    #     self.save_file_game()
 
 
     def can_use_card(self, card : Card):

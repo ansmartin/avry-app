@@ -26,33 +26,27 @@ class PokemonFilters:
         self.has_gmax = False
 
 
-class PokemonFiltersManager:
-
-    def __init__(self):
-        self.filters = PokemonFilters()
-    
     def print_options(self):
         print('\nFiltros:')
 
-        print(f' - filtrar por tipo: {self.filters.filter_by_type}')
-        if self.filters.filter_by_type:
-            print(f' - first_type: {self.filters.first_type}')
-            print(f' - second_type: {self.filters.second_type}')
-            print(f' - any_type: {self.filters.any_type}')
+        print(f' - filtrar por tipo: {self.filter_by_type}')
+        if self.filter_by_type:
+            print(f' - first_type: {self.first_type}')
+            print(f' - second_type: {self.second_type}')
+            print(f' - any_type: {self.any_type}')
 
-        print(f' - filtrar por generación: {self.filters.filter_by_generation}')
-        if self.filters.filter_by_generation:
-            print(f' - generations: {self.filters.generations}')
+        print(f' - filtrar por generación: {self.filter_by_generation}')
+        if self.filter_by_generation:
+            print(f' - generations: {self.generations}')
             
-        print(f' - filtrar por categoría: {self.filters.filter_by_category}')
-        if self.filters.filter_by_category:
-            print(f'   - mythical: {self.filters.mythical}')
-            print(f'   - legendary: {self.filters.legendary}')
-            print(f'   - sublegendary: {self.filters.sublegendary}')
-            print(f'   - powerhouse: {self.filters.powerhouse}')
-            print(f'   - el resto de Pokémon: {self.filters.others}')
+        print(f' - filtrar por categoría: {self.filter_by_category}')
+        if self.filter_by_category:
+            print(f'   - mythical: {self.mythical}')
+            print(f'   - legendary: {self.legendary}')
+            print(f'   - sublegendary: {self.sublegendary}')
+            print(f'   - powerhouse: {self.powerhouse}')
+            print(f'   - el resto de Pokémon: {self.others}')
 
-        print(f' - obtener sólo Pokémon completamente evolucionados: {self.filters.fully_evolved}')
-        print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {self.filters.has_mega}')
-        print(f' - obtener sólo Pokémon que puedan gigamaxizar: {self.filters.has_gmax}')
-        
+        print(f' - obtener sólo Pokémon completamente evolucionados: {self.fully_evolved}')
+        print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {self.has_mega}')
+        print(f' - obtener sólo Pokémon que puedan gigamaxizar: {self.has_gmax}')

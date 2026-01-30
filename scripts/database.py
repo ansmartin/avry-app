@@ -1,7 +1,7 @@
 import random
 import pandas as pd
 
-from scripts.filters import PokemonFiltersManager
+from scripts.filters import PokemonFilters
 
 
 class PokemonDatabaseManager:
@@ -9,7 +9,7 @@ class PokemonDatabaseManager:
     def __init__(self):
         self.df = pd.read_parquet('../data/pokemon.parquet')
         self.df_filtered = None
-        self.filter_manager = PokemonFiltersManager()
+        self.filters = PokemonFilters()
         self.filter_dataset()
 
     def get_fullname(self, pokemon_id):
@@ -51,65 +51,64 @@ class PokemonDatabaseManager:
         return pokemon
 
     def filter_dataset(self):
-        boolean_mask = pd.Series([ True for x in range(self.df.shape[0]) ], index=self.df.index)
-        filters = self.filter_manager.filters
+        boolean_mask = pd.Series( [True] * self.df.shape[0], index=self.df.index)
 
         # type
-        if filters.filter_by_type:
-            if filters.any_type:
+        if self.filters.filter_by_type:
+            if self.filters.any_type:
                 boolean_mask = (
                     boolean_mask & ( 
-                        (self.df.first_type==filters.any_type)
+                        (self.df.first_type==self.filters.any_type)
                         |
-                        (self.df.second_type==filters.any_type)
+                        (self.df.second_type==self.filters.any_type)
                     )
                 )
-            elif filters.first_type & filters.second_type:
+            elif self.filters.first_type & self.filters.second_type:
                 boolean_mask = (
                     boolean_mask & ( 
-                        (self.df.first_type==filters.first_type)
+                        (self.df.first_type==self.filters.first_type)
                         &
-                        (self.df.second_type==filters.second_type)
+                        (self.df.second_type==self.filters.second_type)
                     )
                 )
-            elif filters.first_type:
+            elif self.filters.first_type:
                 boolean_mask = (
-                    boolean_mask & (self.df.first_type==filters.first_type)
+                    boolean_mask & (self.df.first_type==self.filters.first_type)
                 )
-            elif filters.second_type:
+            elif self.filters.second_type:
                 boolean_mask = (
-                    boolean_mask & (self.df.second_type==filters.first_type)
+                    boolean_mask & (self.df.second_type==self.filters.first_type)
                 )
 
         # generation
-        if filters.filter_by_generation:
-            boolean_mask_gens = pd.Series([ False for x in range(self.df.shape[0]) ], index=self.df.index)
-            for gen in filters.generations:
+        if self.filters.filter_by_generation:
+            boolean_mask_gens = pd.Series( [False] * self.df.shape[0], index=self.df.index)
+            for gen in self.filters.generations:
                 boolean_mask_gens = (
                     boolean_mask_gens | (self.df.pokemon_generation_number==gen)
                 )
             boolean_mask = boolean_mask & boolean_mask_gens
 
         # category
-        if filters.filter_by_category:
-            boolean_mask_cat = pd.Series([ False for x in range(self.df.shape[0]) ], index=self.df.index)
-            if filters.mythical:
+        if self.filters.filter_by_category:
+            boolean_mask_cat = pd.Series( [False] * self.df.shape[0], index=self.df.index)
+            if self.filters.mythical:
                 boolean_mask_cat = (
                     boolean_mask_cat | (self.df.is_mythical)
                 )
-            if filters.legendary:
+            if self.filters.legendary:
                 boolean_mask_cat = (
                     boolean_mask_cat | (self.df.is_legendary)
                 )
-            if filters.sublegendary:
+            if self.filters.sublegendary:
                 boolean_mask_cat = (
                     boolean_mask_cat | (self.df.is_sublegendary)
                 )
-            if filters.powerhouse:
+            if self.filters.powerhouse:
                 boolean_mask_cat = (
                     boolean_mask_cat | (self.df.is_powerhouse)
                 )
-            if filters.others:
+            if self.filters.others:
                 boolean_mask_cat = (
                     boolean_mask_cat | 
                     (
@@ -122,17 +121,17 @@ class PokemonDatabaseManager:
             boolean_mask = boolean_mask & boolean_mask_cat
 
         # evolved
-        if filters.fully_evolved:
+        if self.filters.fully_evolved:
             boolean_mask = (
                 boolean_mask & (self.df.evolutions_ids.apply(len)==0)
             )
 
         # transformation
-        if filters.has_mega:
+        if self.filters.has_mega:
             boolean_mask = (
                 boolean_mask & (self.df.has_mega)
             )
-        if filters.has_gmax:
+        if self.filters.has_gmax:
             boolean_mask = (
                 boolean_mask & (self.df.has_gmax)
             )

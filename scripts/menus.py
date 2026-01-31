@@ -526,8 +526,7 @@ class MenuManager():
             elif(option=='10'):
                 self.use_card_aditional(3)
             elif(option=='11'):
-                print(f'NO IMPLEMENTADA TODAVÍA')
-                #get_pokemon_with_card_selectiva()
+                self.get_pokemon_with_card_selectiva()
             
             #- 0: Salir
             elif(option=='0'):
@@ -557,9 +556,6 @@ class MenuManager():
 
         if not self.check_card_conditions(card):
             return
-
-        # if self.box_is_full():
-        #     return
 
         mask = self.database.df_filtered.has_mega
         
@@ -705,27 +701,21 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        # if self.box_is_full():
-        #     return
-
         print('\nAñadido un tiquet de forzar tipo.')
         self.game_manager.game.tickets+=1
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save_game(card)
 
-    def use_card_aditional(self, number_ad):
-        tag = 'adicional_' + str(number_ad)
+    def use_card_aditional(self, number):
+        tag = 'adicional_' + str(number)
         card = self.card_manager.cards.get(tag, None)
 
         if not self.check_card_conditions(card):
             return
 
-        # if self.box_is_full():
-        #     return
-
-        for _ in range(number_ad):
-            self.get_pokemon()
+        print(f'\nTiradas adicionales añadidas: {number}')
+        self.game_manager.game.rolls+=number
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save_game(card)
@@ -737,11 +727,37 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        # if self.box_is_full():
-        #     return
+        pokemon_list = []
 
         for _ in range(6):
-            self.get_pokemon()
+            #self.get_pokemon()
+            pokemon = self.database.get_random_pokemon(self.game_manager.game.box._list)
+
+            if pokemon is None:
+                break
+
+            self.print_pokemon(pokemon)
+            pokemon_list.append(pokemon['id'])
+
+        pokemon_list_length = len(pokemon_list)
+        if pokemon_list_length==0:
+            print('\nNingún Pokémon cumple con los criterios de búsqueda.')
+            return
+
+        while(True):
+            try:
+                print(f'\nEscribe el número del Pokémon que quieres quedarte (del 1 al {pokemon_list_length}):')
+                pokemon_position = int(input()) - 1
+
+                if pokemon_position<0 or pokemon_position>=6:
+                    print('\nError: La posición no se encuentra dentro del rango.')
+                    continue
+                
+                pokemon_id = pokemon_list[pokemon_position]
+                self.game_manager.game.box.add(pokemon_id)
+                break
+            except:
+                print('\nError: Posición no detectada.')
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save_game(card)

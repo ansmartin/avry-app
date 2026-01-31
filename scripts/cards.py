@@ -38,7 +38,7 @@ class CardManager:
         
         tag = 'preevo'
         name = 'LA PRE-EVO ES MEJOR'
-        description = 'PUEDES ELEGIR LA PRE-EVOLUCIÓN DE UNO DE TUS POKÉMON.' 
+        description = 'PUEDES CAMBIAR UNO DE TUS POKÉMON POR SU PRE-EVOLUCIÓN.' 
         price = 1500
         limit = 0
         cards[tag] = Card(tag,name,description,price,limit)
@@ -66,21 +66,21 @@ class CardManager:
         
         tag = 'adicional_1'
         name = 'TIRADA ADICIONAL 1'
-        description = 'REALIZA UNA TIRADA ADICIONAL.' 
+        description = 'OBTIENES UNA TIRADA ADICIONAL.' 
         price = 800
         limit = 1
         cards[tag] = Card(tag,name,description,price,limit)
         
         tag = 'adicional_2'
         name = 'TIRADA ADICIONAL 2'
-        description = 'REALIZA DOS TIRADAS ADICIONALES.' 
+        description = 'OBTIENES DOS TIRADAS ADICIONALES.' 
         price = 1400
         limit = 1
         cards[tag] = Card(tag,name,description,price,limit)
         
         tag = 'adicional_3'
         name = 'TIRADA ADICIONAL 3'
-        description = 'REALIZA TRES TIRADAS ADICIONALES.' 
+        description = 'OBTIENES TRES TIRADAS ADICIONALES.' 
         price = 2000
         limit = 1
         cards[tag] = Card(tag,name,description,price,limit)

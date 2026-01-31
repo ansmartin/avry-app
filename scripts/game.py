@@ -177,3 +177,10 @@ class GameSessionManager:
 
         uses = self.game.used_cards.get(card.tag, 0)
         return uses < card.limit
+
+    def buy_card_and_save_game(self, card):
+        # usar carta
+        self.game.spend_money(card.price)
+        self.game.add_used_card(card.tag)
+        # guardar
+        self.save_file_game()

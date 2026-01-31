@@ -144,6 +144,7 @@ class MenuManager():
         # mostrar y guardar pokemon
         self.print_pokemon(pokemon)
         self.game_manager.game.box.add(pokemon['id'])
+        return True
 
 
     def open_menu_users(self):
@@ -415,7 +416,7 @@ class MenuManager():
             elif(option=='3'):
                 self.open_menu_cards()
             elif(option=='4'):
-                self.database.filter_manager.print_options()
+                self.database.filters.print_options()
 
             elif(option=='9'):
                 clear()
@@ -441,11 +442,10 @@ class MenuManager():
             print('\nNo quedan tiradas.')
             return
 
-        self.game_manager.game.spend_roll()
-
         # obtener pokemon y guardar archivo de juego
-        self.get_pokemon()
-        self.game_manager.save_file_game()
+        if self.get_pokemon():
+            self.game_manager.game.spend_roll()
+            self.game_manager.save_file_game()
 
     def roll_with_type(self):
         if self.game_manager.game.rolls==0:
@@ -461,9 +461,6 @@ class MenuManager():
             print('\nError: Tipo no identificado.')
             return
 
-        self.game_manager.game.spend_ticket()
-        self.game_manager.game.spend_roll()
-
         mask = (
             (self.database.df_filtered.first_type==pokemon_type) 
             | 
@@ -471,8 +468,10 @@ class MenuManager():
         )
 
         # obtener pokemon y guardar archivo de juego
-        self.get_pokemon(mask)
-        self.game_manager.save_file_game()
+        if self.get_pokemon(mask):
+            self.game_manager.game.spend_ticket()
+            self.game_manager.game.spend_roll()
+            self.game_manager.save_file_game()
 
     def open_menu_cards(self):
         
@@ -561,15 +560,12 @@ class MenuManager():
 
         # if self.box_is_full():
         #     return
-        
-        # usar carta
-        self.game_manager.game.add_used_card(tag)
-        self.game_manager.game.spend_money(card.price)
 
         mask = self.database.df_filtered.has_mega
         
-        self.get_pokemon(mask)
-        self.game_manager.save_file_game()
+        # obtener pokemon y guardar archivo de juego
+        if self.get_pokemon(mask):
+            self.game_manager.buy_card_and_save_game(card)
 
     def use_card_fusion(self):
         tag = 'fusion'
@@ -603,18 +599,16 @@ class MenuManager():
             print('\nError: Posiciones no detectadas.')
             return
 
-        # usar carta
-        self.game_manager.game.add_used_card(tag)
-        self.game_manager.game.spend_money(card.price)
-
         # ajustar segunda posicion para cuando se borre la primera
         if position1 < position2:
             position2-=1
 
         self.game_manager.game.box.remove(position1)
         self.game_manager.game.box.remove(position2)
-        self.get_pokemon()
-        self.game_manager.save_file_game()
+
+        # obtener pokemon y guardar archivo de juego
+        if self.get_pokemon():
+            self.game_manager.buy_card_and_save_game(card)
 
     def use_card_intercambio(self):
         tag = 'intercambio'
@@ -640,13 +634,11 @@ class MenuManager():
             print('\nError: Posición no detectada.')
             return
 
-        # usar carta
-        self.game_manager.game.add_used_card(tag)
-        self.game_manager.game.spend_money(card.price)
-
         self.game_manager.game.box.remove(pokemon_position)
-        self.get_pokemon()
-        self.game_manager.save_file_game()
+
+        # obtener pokemon y guardar archivo de juego
+        if self.get_pokemon():
+            self.game_manager.buy_card_and_save_game(card)
 
     def use_card_preevo(self):
         tag = 'preevo'
@@ -679,17 +671,15 @@ class MenuManager():
             print('\nError: El Pokémon seleccionado no tiene pre-evolución.')
             return
 
-        # usar carta
-        self.game_manager.game.add_used_card(tag)
-        self.game_manager.game.spend_money(card.price)
-
         #get_pokemon()
         pokemon = self.database.df.loc[preevo_id].to_dict()
 
         # mostrar y guardar pokemon
         self.print_pokemon(pokemon)
         self.game_manager.game.box._list[pokemon_position] = preevo_id
-        self.game_manager.save_file_game()
+
+        # guardar archivo de juego
+        self.game_manager.buy_card_and_save_game(card)
 
     def use_card_comienzo(self):
         tag = 'comienzo'
@@ -702,13 +692,11 @@ class MenuManager():
             print('\nNo se puede usar porque ya se han realizado 18 tiradas o más.')
             return
 
-        # usar carta
-        self.game_manager.game.add_used_card(tag)
-        self.game_manager.game.spend_money(card.price)
-
         print('\nTiradas reiniciadas.')
         self.game_manager.game.reset_rolls_and_box()
-        self.game_manager.save_file_game()
+
+        # guardar archivo de juego
+        self.game_manager.buy_card_and_save_game(card)
 
     def use_card_type(self):
         tag = 'tipo'
@@ -720,13 +708,11 @@ class MenuManager():
         # if self.box_is_full():
         #     return
 
-        # usar carta
-        self.game_manager.game.add_used_card(tag)
-        self.game_manager.game.spend_money(card.price)
-
         print('\nAñadido un tiquet de forzar tipo.')
         self.game_manager.game.tickets+=1
-        self.game_manager.save_file_game()
+
+        # guardar archivo de juego
+        self.game_manager.buy_card_and_save_game(card)
 
     def use_card_aditional(self, number_ad):
         tag = 'adicional_' + str(number_ad)
@@ -738,14 +724,11 @@ class MenuManager():
         # if self.box_is_full():
         #     return
 
-        # usar carta
-        self.game_manager.game.add_used_card(tag)
-        self.game_manager.game.spend_money(card.price)
-
         for _ in range(number_ad):
             self.get_pokemon()
 
-        self.game_manager.save_file_game()
+        # guardar archivo de juego
+        self.game_manager.buy_card_and_save_game(card)
 
     def get_pokemon_with_card_selectiva(self):
         tag = 'selectiva'
@@ -757,12 +740,9 @@ class MenuManager():
         # if self.box_is_full():
         #     return
 
-        # usar carta
-        self.game_manager.game.add_used_card(tag)
-        self.game_manager.game.spend_money(card.price)
-
         for _ in range(6):
             self.get_pokemon()
 
-        self.game_manager.save_file_game()
+        # guardar archivo de juego
+        self.game_manager.buy_card_and_save_game(card)
 

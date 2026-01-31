@@ -9,8 +9,6 @@ class PokemonDatabaseManager:
     def __init__(self):
         self.df = pd.read_parquet('../data/pokemon.parquet')
         self.df_filtered = None
-        self.filters = PokemonFilters()
-        self.filter_dataset()
 
     def get_fullname(self, pokemon_id:int) -> str:
         pokemon = self.df.loc[pokemon_id]
@@ -50,81 +48,79 @@ class PokemonDatabaseManager:
         pokemon = dataframe.iloc[n].to_dict()
         return pokemon
 
-    def filter_dataset(self):
+    def filter_dataset(self, filters:PokemonFilters):
         dataframe = self.df
 
         # type
-        if self.filters.filter_by_type:
-            if self.filters.any_type:
+        if filters.filter_by_type:
+            if filters.any_type:
                 mask = (
-                    (dataframe.first_type==self.filters.any_type)
+                    (dataframe.first_type==filters.any_type)
                     |
-                    (dataframe.second_type==self.filters.any_type)
+                    (dataframe.second_type==filters.any_type)
                 )
                 dataframe = dataframe.loc[mask]
-            elif self.filters.first_type and self.filters.second_type:
+            elif filters.first_type and filters.second_type:
                 mask = (
-                    (dataframe.first_type==self.filters.first_type)
+                    (dataframe.first_type==filters.first_type)
                     &
-                    (dataframe.second_type==self.filters.second_type)
+                    (dataframe.second_type==filters.second_type)
                 )
                 dataframe = dataframe.loc[mask]
-            elif self.filters.first_type:
-                mask = dataframe.first_type==self.filters.first_type
+            elif filters.first_type:
+                mask = dataframe.first_type==filters.first_type
                 dataframe = dataframe.loc[mask]
-            elif self.filters.second_type:
-                mask = dataframe.second_type==self.filters.second_type
+            elif filters.second_type:
+                mask = dataframe.second_type==filters.second_type
                 dataframe = dataframe.loc[mask]
 
         # generation
-        if self.filters.filter_by_generation and len(self.filters.generations)>0:
-            mask = dataframe.pokemon_generation_number.apply(lambda x : x in self.filters.generations)
-            dataframe = dataframe.loc[mask]
+        mask = dataframe.pokemon_generation_number.apply(lambda x : x <= filters.generation)
+        dataframe = dataframe.loc[mask]
 
         # evolved
-        if self.filters.fully_evolved:
+        if filters.fully_evolved:
             mask = dataframe.evolutions_ids.apply(len)==0
             dataframe = dataframe.loc[mask]
 
         # transformation
-        if self.filters.has_mega:
-            mask = dataframe.has_mega
-            dataframe = dataframe.loc[mask]
+        # if filters.has_mega:
+        #     mask = dataframe.has_mega
+        #     dataframe = dataframe.loc[mask]
 
-        if self.filters.has_gmax:
-            mask = dataframe.has_gmax
-            dataframe = dataframe.loc[mask]
+        # if filters.has_gmax:
+        #     mask = dataframe.has_gmax
+        #     dataframe = dataframe.loc[mask]
 
         # category
-        if self.filters.filter_by_category:
-            mask = pd.Series([False] * dataframe.shape[0], index=dataframe.index)
-            if self.filters.mythical:
-                mask = (
-                    mask | (dataframe.is_mythical)
+        mask = pd.Series([False] * dataframe.shape[0], index=dataframe.index)
+        if filters.mythical:
+            mask = (
+                mask | (dataframe.is_mythical)
+            )
+        if filters.legendary:
+            mask = (
+                mask | (dataframe.is_legendary)
+            )
+        if filters.sublegendary:
+            mask = (
+                mask | (dataframe.is_sublegendary)
+            )
+        if filters.powerhouse:
+            mask = (
+                mask | (dataframe.is_powerhouse)
+            )
+        if filters.others:
+            mask = (
+                mask | 
+                (
+                    (~dataframe.is_mythical) &
+                    (~dataframe.is_legendary) &
+                    (~dataframe.is_sublegendary) &
+                    (~dataframe.is_powerhouse)
                 )
-            if self.filters.legendary:
-                mask = (
-                    mask | (dataframe.is_legendary)
-                )
-            if self.filters.sublegendary:
-                mask = (
-                    mask | (dataframe.is_sublegendary)
-                )
-            if self.filters.powerhouse:
-                mask = (
-                    mask | (dataframe.is_powerhouse)
-                )
-            if self.filters.others:
-                mask = (
-                    mask | 
-                    (
-                        (~dataframe.is_legendary) &
-                        (~dataframe.is_sublegendary) &
-                        (~dataframe.is_mythical) &
-                        (~dataframe.is_powerhouse)
-                    )
-                )
-            dataframe = dataframe.loc[mask]
+            )
+        dataframe = dataframe.loc[mask]
 
         # nuevo conjunto de datos filtrados
         self.df_filtered = dataframe

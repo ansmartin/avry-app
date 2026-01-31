@@ -69,10 +69,10 @@ class MenuManager():
         print(f'\nSesión de juego: {self.game_manager.game.name}')
 
         print(f'\n   Datos de la sesión de juego')
-        print(f'      Tiradas restantes: {self.game_manager.game.rolls}')
-        print(f'      Tiquets para forzar tipo: {self.game_manager.game.tickets}')
-        print(f'      Dinero: {self.game_manager.game.money} monedas')
-        print(f'      Puntos de items: {self.game_manager.game.item_points}')
+        print(f'      Tiradas restantes: {self.game_manager.game.options.rolls}')
+        print(f'      Tiquets para forzar tipo: {self.game_manager.game.options.tickets}')
+        print(f'      Dinero: {self.game_manager.game.options.money} monedas')
+        print(f'      Puntos de items: {self.game_manager.game.options.item_points}')
 
     def print_box(self):
         if self.game_manager.game.box.get_length()==0:
@@ -325,28 +325,56 @@ class MenuManager():
                     if self.user_system.active_user.games.contains(name):
                         print('\nEse nombre ya se encuentra en la base de datos.')
                         continue
-                    
-                    print('\n¿Valores por defecto? Escribe 1 para si, escribe otra cosa para no.')
-                    default = input()
 
-                    if default=='1':
-                        self.game_manager.add_game_default(name)
-                        clear()
-                        continue
 
-                    print('\nEscribe el número de tiradas disponibles:')
-                    rolls = input()
+                    print('\n¿Valores de juego por defecto? Escribe 1 para si, escribe otra cosa para no.')
+                    default_options = input()
 
-                    print('\nEscribe el número de tiquets de forzar tipo disponibles:')
-                    tickets = input()
+                    options = {}
+                    if default_options!='1':
+                        print('\nEscribe el número de tiradas disponibles:')
+                        options['rolls'] = input()
 
-                    print('\nEscribe la cantidad de dinero disponible:')
-                    money = input()
+                        print('\nEscribe el número de tiquets de forzar tipo disponibles:')
+                        options['tickets'] = input()
 
-                    print('\nEscribe el número de puntos de item disponibles:')
-                    item_points = input()
+                        print('\nEscribe la cantidad de dinero disponible:')
+                        options['money'] = input()
 
-                    self.game_manager.add_game_with_options(name, rolls, tickets, money, item_points)
+                        print('\nEscribe el número de puntos de item disponibles:')
+                        options['item_points'] = input()
+
+
+                    print('\n¿Valores de filtros por defecto? Escribe 1 para si, escribe otra cosa para no.')
+                    default_filters = input()
+
+                    filters = {}
+                    if default_filters!='1':
+                        print('\nFiltrar por generación del Pokémon.')
+                        print('Escribe el número de hasta qué generación aparecen los Pokémon:')
+                        filters['generation'] = input()
+
+                        print('\nFiltrar por categoría del Pokémon.')
+                        print('¿Incluir míticos? Escribe 1 para si, escribe otra cosa para no.')
+                        filters['mythical'] = input()=='1'
+
+                        print('\n¿Incluir legendarios? Escribe 1 para si, escribe otra cosa para no.')
+                        filters['legendary'] = input()=='1'
+
+                        print('\n¿Incluir sublegendarios? Escribe 1 para si, escribe otra cosa para no.')
+                        filters['sublegendary'] = input()=='1'
+
+                        print('\n¿Incluir pesos pesados? Escribe 1 para si, escribe otra cosa para no.')
+                        filters['powerhouse'] = input()=='1'
+
+                        print('\n¿Incluir los demás Pokémon que no pertenezcan a estas categorías? Escribe 1 para si, escribe otra cosa para no.')
+                        filters['others'] = input()=='1'
+
+                        print('\nFiltrar por etapa evolutiva del Pokémon.')
+                        print('¿Incluir solamente Pokémon en su última etapa evolutiva? Escribe 1 para si, escribe otra cosa para no.')
+                        filters['fully_evolved'] = input()=='1'
+
+                    self.game_manager.create_game_session(name, options, filters)
                     clear()
                             
                 else:
@@ -416,7 +444,7 @@ class MenuManager():
             elif(option=='3'):
                 self.open_menu_cards()
             elif(option=='4'):
-                self.database.filters.print_options()
+                self.game_manager.game.filters.print_options()
 
             elif(option=='9'):
                 clear()
@@ -438,7 +466,7 @@ class MenuManager():
             print(MenuManager.TEXT_LINE)
 
     def roll(self):
-        if self.game_manager.game.rolls==0:
+        if self.game_manager.game.get_rolls()==0:
             print('\nNo quedan tiradas.')
             return
 
@@ -448,10 +476,10 @@ class MenuManager():
             self.game_manager.save_file_game()
 
     def roll_with_type(self):
-        if self.game_manager.game.rolls==0:
+        if self.game_manager.game.get_rolls()==0:
             print('\nNo quedan tiradas.')
             return
-        if self.game_manager.game.tickets==0:
+        if self.game_manager.game.get_tickets()==0:
             print('\nNo quedan tiquets.')
             return
 
@@ -702,20 +730,20 @@ class MenuManager():
             return
 
         print('\nAñadido un tiquet de forzar tipo.')
-        self.game_manager.game.tickets+=1
+        self.game_manager.game.add_ticket()
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save_game(card)
 
-    def use_card_aditional(self, number:int):
-        tag = 'adicional_' + str(number)
+    def use_card_aditional(self, rolls:int):
+        tag = 'adicional_' + str(rolls)
         card = self.card_manager.cards.get(tag, None)
 
         if not self.check_card_conditions(card):
             return
 
-        print(f'\nTiradas adicionales añadidas: {number}')
-        self.game_manager.game.rolls+=number
+        print(f'\nTiradas adicionales añadidas: {rolls}')
+        self.game_manager.game.add_rolls(rolls)
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save_game(card)
@@ -727,15 +755,18 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
+        print('')
+
         pokemon_list = []
 
-        for _ in range(6):
+        for n in range(6):
             #self.get_pokemon()
             pokemon = self.database.get_random_pokemon(self.game_manager.game.box._list)
 
             if pokemon is None:
                 break
 
+            print(f'- {n+1}')
             self.print_pokemon(pokemon)
             pokemon_list.append(pokemon['id'])
 

@@ -3,11 +3,13 @@ import pickle
 
 import scripts.constants as const
 from scripts.users import UserSystem
+from scripts.database import PokemonDatabaseManager
 from scripts.classlist import ClassList
+from scripts.filters import PokemonFilters
 from scripts.cards import Card
 
 
-class GameSession:
+class GameOptions:
     
     MAX_ROLLS = 1028
 
@@ -15,48 +17,79 @@ class GameSession:
     DEFAULT_TICKETS = 3
     DEFAULT_MONEY = 10_000
     DEFAULT_ITEM_POINTS = 200
+
+    def __init__(self, rolls:int=None, tickets:int=None, money:int=None, item_points:int=None):
+        self.rolls = rolls if rolls else GameOptions.DEFAULT_ROLLS
+        self.tickets = tickets if tickets else GameOptions.DEFAULT_TICKETS
+        self.money = money if money else GameOptions.DEFAULT_MONEY
+        self.item_points = item_points if item_points else GameOptions.DEFAULT_ITEM_POINTS
+
+    def set_to_default(self):
+        self.rolls = GameOptions.DEFAULT_ROLLS
+        self.tickets = GameOptions.DEFAULT_TICKETS
+        self.money = GameOptions.DEFAULT_MONEY
+        self.item_points = GameOptions.DEFAULT_ITEM_POINTS
+
+
+class GameSession:
     
-    def __init__(self, name, rolls:int=None, tickets:int=None, money:int=None, item_points:int=None):
+    def __init__(self, name, options:GameOptions=None, filters:PokemonFilters=None):
         self.name = name
         self.box = ClassList()
 
-        self.rolls = rolls if rolls else GameSession.DEFAULT_ROLLS
-        self.rolls_backup = self.rolls
-        self.tickets = tickets if tickets else GameSession.DEFAULT_TICKETS
-        self.money = money if money else GameSession.DEFAULT_MONEY
-        self.item_points = item_points if item_points else GameSession.DEFAULT_ITEM_POINTS
+        self.options = options if isinstance(options, GameOptions) else GameOptions()
+        self.filters = filters if isinstance(filters, PokemonFilters) else PokemonFilters()
+
+        self.rolls_backup = self.options.rolls
         self.used_rolls = 0
         self.used_cards = {}
-
-    def set_variables_to_default(self):
-        self.rolls = self.rolls_backup = GameSession.DEFAULT_ROLLS
-        self.tickets = GameSession.DEFAULT_TICKETS
-        self.money = GameSession.DEFAULT_MONEY
-        self.item_points = GameSession.DEFAULT_ITEM_POINTS
-        self.used_rolls = 0
-        self.used_cards = {}
-
-    def reset(self):
-        self.set_variables_to_default()
-        self.box.reset()
 
     def reset_rolls_and_box(self):
-        self.rolls = self.rolls_backup
+        self.options.rolls = self.rolls_backup
         self.used_rolls = 0
         self.box.reset()
 
-    def can_spend_money(self, price:int) -> bool:
-        return self.money >= price
 
-    def spend_money(self, price:int):
-        self.money -= price
+    def get_rolls(self) -> int:
+        return self.options.rolls
+
+    def get_tickets(self) -> int:
+        return self.options.tickets
+
+
+    def add_rolls(self, rolls:int):
+        self.options.rolls+=rolls
+
+    def add_ticket(self):
+        self.options.tickets+=1
+
+
+    def can_spend_roll(self) -> bool:
+        return self.options.rolls > 0
+
+    def can_spend_ticket(self) -> bool:
+        return self.options.tickets > 0
+
+    def can_spend_money(self, price:int) -> bool:
+        return self.options.money >= price
+
+    def can_spend_item_points(self, points:int) -> bool:
+        return self.options.item_points >= points
+
 
     def spend_roll(self):
-        self.rolls-=1
+        self.options.rolls-=1
         self.used_rolls+=1
 
     def spend_ticket(self):
-        self.tickets-=1
+        self.options.tickets-=1
+
+    def spend_money(self, price:int):
+        self.options.money-=price
+
+    def spend_item_points(self, points:int):
+        self.options.item_points-=points
+
 
     def add_used_card(self, tag:str):
         uses = self.used_cards.get(tag, 0) + 1
@@ -65,59 +98,85 @@ class GameSession:
 
 class GameSessionManager:
     
-    def __init__(self, user_system : UserSystem, game : GameSession = None):
+    def __init__(self, user_system:UserSystem, database:PokemonDatabaseManager, game:GameSession = None):
         self.user_system = user_system
+        self.database = database
         self.game = game
 
     def add_game_to_list(self, name):
         self.user_system.active_user.games.add(name)
         self.user_system.save_file_user()
 
-    def add_game_default(self, name):
-        self.add_game_to_list(name)
-        self.create_and_save_game(name)
-
-    def add_game_with_options(self, name, rolls, tickets, money, item_points):
+    def create_game_session(self, name, dic_options:dict=None, dic_filters:dict=None):
         self.add_game_to_list(name)
 
-        try:
-            rolls = int(rolls)
-            if rolls<0:
-                rolls=0
-            if rolls > GameSession.MAX_ROLLS:
-                rolls = GameSession.MAX_ROLLS
-        except:
-            rolls = None
+        options = None
+        filters = None
 
-        try:
-            tickets = int(tickets)
-            if tickets<0:
-                tickets=0
-        except:
-            tickets = None
+        if dic_options:
+            
+            try:
+                rolls = int(dic_options['rolls'])
+                if rolls<0:
+                    rolls=0
+                if rolls > GameOptions.MAX_ROLLS:
+                    rolls = GameOptions.MAX_ROLLS
+            except:
+                rolls = None
 
-        try:
-            money = int(money)
-            if money<0:
-                money=0
-        except:
-            money = None
+            try:
+                tickets = int(dic_options['tickets'])
+                if tickets<0:
+                    tickets=0
+            except:
+                tickets = None
 
-        try:
-            item_points = int(item_points)
-            if item_points<0:
-                item_points=0
-        except:
-            item_points = None
+            try:
+                money = int(dic_options['money'])
+                if money<0:
+                    money=0
+            except:
+                money = None
 
-        self.create_and_save_game(name, rolls, tickets, money, item_points)
+            try:
+                item_points = int(dic_options['item_points'])
+                if item_points<0:
+                    item_points=0
+            except:
+                item_points = None
+
+            options = GameOptions(rolls, tickets, money, item_points)
+
+
+        if dic_filters:
+            
+            try:
+                generation = int(dic_filters['generation'])
+                if generation<0:
+                    generation=0
+            except:
+                generation = 9
+            
+            filters = PokemonFilters()
+            filters.generation = generation
+            filters.mythical = dic_filters['mythical']
+            filters.legendary = dic_filters['legendary']
+            filters.sublegendary = dic_filters['sublegendary']
+            filters.powerhouse = dic_filters['powerhouse']
+            filters.others = dic_filters['others']
+            filters.fully_evolved = dic_filters['fully_evolved']
+
+
+        self.game = GameSession(name, options, filters)
+        self.save_file_game()
+
 
     def remove_game(self, position:int) -> bool:
         if self.user_system.active_user.games.position_is_in_range(position):
             # borrar archivo de juego
             name = self.user_system.active_user.games.get(position)
             self.delete_file_game(name)
-            # y borrar de la lista del usuario
+            # y borrar juego de la lista del usuario
             self.user_system.active_user.games.remove(position)
             self.user_system.save_file_user()
             return True
@@ -147,11 +206,12 @@ class GameSessionManager:
 
         # si hay algún error, crea nuevos datos
         except:
-            self.create_and_save_game(name)
+            self.game = GameSession(name)
+            self.save_file_game()
 
-    def create_and_save_game(self, name, rolls=None, tickets=None, money=None, item_points=None):
-        self.game = GameSession(name, rolls, tickets, money, item_points)
-        self.save_file_game()
+        # pasa los filtros
+        self.database.filter_dataset(self.game.filters)
+
 
     def save_file_game(self):
         game_path = self.get_path_game(self.game.name)

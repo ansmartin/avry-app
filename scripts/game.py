@@ -226,6 +226,11 @@ class GameSessionManager:
     #     self.game.reset()
     #     self.save_file_game()
 
+    def get_namelist_of_obtained_pokemon(self) -> list:
+        return [ 
+            self.database.get_fullname(pokemon_id)
+            for pokemon_id in self.game.box._list
+        ]
 
     def can_use_card(self, card:Card) -> bool:
         if card is None:

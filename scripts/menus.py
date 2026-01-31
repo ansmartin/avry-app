@@ -75,17 +75,14 @@ class MenuManager():
         print(f'      Puntos de items: {self.game_manager.game.options.item_points}')
 
     def print_box(self):
-        if self.game_manager.game.box.get_length()==0:
+        pokemon_list = self.game_manager.get_namelist_of_obtained_pokemon()
+
+        if len(pokemon_list)==0:
             print(f'\nLa lista de Pokémon obtenidos está vacía.')
         else:
             print(f'\nLista de Pokémon obtenidos:')
-            n=1
-            for pokemon_id in self.game_manager.game.box._list:
-                if(pokemon_id):
-                    print(f' - {n}:\t{self.database.get_fullname(pokemon_id)}')
-                else:
-                    print(f' - {n}:\t*')
-                n+=1
+            for n, pokemon in enumerate(pokemon_list):
+                print(f' - {n+1}:\t{pokemon}')
 
     def print_pokemon(self, pokemon : dict):
 
@@ -509,12 +506,12 @@ class MenuManager():
             self.print_active_user()
             self.print_game_info()
             print(MenuManager.TEXT_LINE)
+
             print('\n    Lista de cartas de ventaja:')
-            n=1
-            for card in self.card_manager.cards.values():
-                print(f'\n    - {n}: {card.name}')
+            for n, card in enumerate(self.card_manager.cards.values()):
+                print(f'\n    - {n+1}: {card.name}')
                 print(f'        {card.description}')
-                n+=1
+
                 if not self.game_manager.can_use_card(card):
                     print(f'        (AGOTADA)')
                     continue
@@ -561,7 +558,6 @@ class MenuManager():
                 return
             else:
                 print('Opción no reconocida.')
-            
 
 
     def check_card_conditions(self, card:Card) -> bool:
@@ -610,7 +606,7 @@ class MenuManager():
         except:
             print('\nError: Posición no detectada.')
             return
-        
+
         if position1==position2:
             print('\nError: Las posiciones tienen que ser diferentes.')
             return

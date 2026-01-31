@@ -12,7 +12,7 @@ class PokemonDatabaseManager:
         self.filters = PokemonFilters()
         self.filter_dataset()
 
-    def get_fullname(self, pokemon_id):
+    def get_fullname(self, pokemon_id:int) -> str:
         pokemon = self.df.loc[pokemon_id]
 
         species_name = pokemon['species_name']
@@ -24,7 +24,7 @@ class PokemonDatabaseManager:
 
         return name
 
-    def get_random_pokemon(self, box_list, mask=None):
+    def get_random_pokemon(self, box_list:list, mask=None):
 
         # escoger dataframe
         if self.df_filtered is None:

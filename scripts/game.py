@@ -16,7 +16,7 @@ class GameSession:
     DEFAULT_MONEY = 10_000
     DEFAULT_ITEM_POINTS = 200
     
-    def __init__(self, name, rolls=None, tickets=None, money=None, item_points=None):
+    def __init__(self, name, rolls:int=None, tickets:int=None, money:int=None, item_points:int=None):
         self.name = name
         self.box = ClassList()
 
@@ -45,10 +45,10 @@ class GameSession:
         self.used_rolls = 0
         self.box.reset()
 
-    def can_spend_money(self, price):
+    def can_spend_money(self, price:int) -> bool:
         return self.money >= price
 
-    def spend_money(self, price):
+    def spend_money(self, price:int):
         self.money -= price
 
     def spend_roll(self):
@@ -58,7 +58,7 @@ class GameSession:
     def spend_ticket(self):
         self.tickets-=1
 
-    def add_used_card(self, tag : str):
+    def add_used_card(self, tag:str):
         uses = self.used_cards.get(tag, 0) + 1
         self.used_cards[tag] = uses
 
@@ -112,7 +112,7 @@ class GameSessionManager:
 
         self.create_and_save_game(name, rolls, tickets, money, item_points)
 
-    def remove_game(self, position):
+    def remove_game(self, position:int) -> bool:
         if self.user_system.active_user.games.position_is_in_range(position):
             # borrar archivo de juego
             name = self.user_system.active_user.games.get(position)
@@ -124,10 +124,10 @@ class GameSessionManager:
 
         return False
 
-    def get_path_game(self, name):
+    def get_path_game(self, name:str) -> str:
         return f'{const.SAVEDATA_PATH_GAMES}{self.user_system.active_user.username}_{name}.p'
 
-    def change_game(self, position):
+    def change_game(self, position:int) -> bool:
         name = self.user_system.active_user.games.get(position)
 
         if name is None:
@@ -157,7 +157,7 @@ class GameSessionManager:
         game_path = self.get_path_game(self.game.name)
         pickle.dump( self.game, open(game_path, "wb") )
 
-    def delete_file_game(self, name):
+    def delete_file_game(self, name:str):
         game_path = self.get_path_game(name)
         if os.path.exists(game_path):
             os.remove(game_path)
@@ -167,7 +167,7 @@ class GameSessionManager:
     #     self.save_file_game()
 
 
-    def can_use_card(self, card : Card):
+    def can_use_card(self, card:Card) -> bool:
         if card is None:
             return False
 
@@ -178,7 +178,7 @@ class GameSessionManager:
         uses = self.game.used_cards.get(card.tag, 0)
         return uses < card.limit
 
-    def buy_card_and_save_game(self, card):
+    def buy_card_and_save_game(self, card:Card):
         # usar carta
         self.game.spend_money(card.price)
         self.game.add_used_card(card.tag)

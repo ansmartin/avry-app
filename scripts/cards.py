@@ -1,7 +1,7 @@
 
 class Card:
     
-    def __init__(self, tag, name, description, price, limit):
+    def __init__(self, tag:str, name:str, description:str, price:int, limit:int):
         self.tag = tag
         self.name = name
         self.description = description

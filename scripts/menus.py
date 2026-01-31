@@ -4,18 +4,18 @@ from numpy import isnan
 from scripts.users import UserSystem
 from scripts.game import GameSessionManager
 from scripts.database import PokemonDatabaseManager
-from scripts.cards import CardManager
+from scripts.cards import Card, CardManager
 from scripts.types import PokemonTypes
 
 
 def clear():
     system("clear||cls")
 
-def capitalize_name(text):
+def capitalize_name(text:str):
     words = text.split('-')
     return '-'.join(w.capitalize() for w in words)
 
-def capitalize_all_words(text):
+def capitalize_all_words(text:str):
     words = text.replace('-',' ').split()
     return ' '.join(w.capitalize() for w in words)
 
@@ -134,7 +134,7 @@ class MenuManager():
     #         print(f'\nSe ha alcanzado el límite de Pokémon en la caja ({maxSizeBox}/{maxSizeBox}). No se pueden obtener más Pokémon.')
     #         return True
 
-    def get_pokemon(self, mask=None):
+    def get_pokemon(self, mask=None) -> bool:
         pokemon = self.database.get_random_pokemon(self.game_manager.game.box._list, mask)
 
         if pokemon is None:
@@ -536,7 +536,7 @@ class MenuManager():
             
 
 
-    def check_card_conditions(self, card):
+    def check_card_conditions(self, card:Card) -> bool:
         if card is None:
             return False
 
@@ -707,7 +707,7 @@ class MenuManager():
         # guardar archivo de juego
         self.game_manager.buy_card_and_save_game(card)
 
-    def use_card_aditional(self, number):
+    def use_card_aditional(self, number:int):
         tag = 'adicional_' + str(number)
         card = self.card_manager.cards.get(tag, None)
 

@@ -1,3 +1,4 @@
+DATAFRAME_PATH = '../data/pokemon.parquet'
 SAVEDATA_PATH = './savedata/'
 SAVEDATA_PATH_USERNAMES_FILE = SAVEDATA_PATH + 'usernames.p'
 SAVEDATA_PATH_USERS = SAVEDATA_PATH + 'users/'

@@ -1,13 +1,14 @@
 import random
 import pandas as pd
 
+import scripts.constants as const
 from scripts.filters import PokemonFilters
 
 
 class PokemonDatabaseManager:
 
     def __init__(self):
-        self.df = pd.read_parquet('../data/pokemon.parquet')
+        self.df = pd.read_parquet(const.DATAFRAME_PATH)
         self.df_filtered = None
 
     def get_fullname(self, pokemon_id:int) -> str:
@@ -75,8 +76,9 @@ class PokemonDatabaseManager:
                 dataframe = dataframe.loc[mask]
 
         # generation
-        mask = dataframe.pokemon_generation_number.apply(lambda x : x <= filters.generation)
-        dataframe = dataframe.loc[mask]
+        if filters.generation != PokemonFilters.DEFAULT_GENERATION:
+            mask = dataframe.pokemon_generation_number.apply(lambda x : x <= filters.generation)
+            dataframe = dataframe.loc[mask]
 
         # evolved
         if filters.fully_evolved:

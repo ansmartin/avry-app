@@ -624,11 +624,10 @@ class MenuManager():
         if position1 < position2:
             position2-=1
 
-        self.game_manager.game.box.remove(position1)
-        self.game_manager.game.box.remove(position2)
-
         # obtener pokemon y guardar archivo de juego
         if self.get_pokemon():
+            self.game_manager.game.box.remove(position1)
+            self.game_manager.game.box.remove(position2)
             self.game_manager.buy_card_and_save_game(card)
 
     def use_card_intercambio(self):
@@ -655,10 +654,9 @@ class MenuManager():
             print('\nError: Posición no detectada.')
             return
 
-        self.game_manager.game.box.remove(pokemon_position)
-
         # obtener pokemon y guardar archivo de juego
         if self.get_pokemon():
+            self.game_manager.game.box.remove(pokemon_position)
             self.game_manager.buy_card_and_save_game(card)
 
     def use_card_preevo(self):
@@ -762,7 +760,8 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        print('')
+        if self.game_manager.game.get_rolls() < 6:
+            return
 
         pokemon_list = []
 
@@ -773,29 +772,51 @@ class MenuManager():
             if pokemon is None:
                 break
 
-            print(f'- {n+1}')
-            self.print_pokemon(pokemon)
-            pokemon_list.append(pokemon['id'])
+            pokemon_list.append(pokemon)
 
-        pokemon_list_length = len(pokemon_list)
-        if pokemon_list_length==0:
+        if len(pokemon_list)==0:
             print('\nNingún Pokémon cumple con los criterios de búsqueda.')
             return
 
+        clear()
+        picks = 0
         while(True):
-            try:
-                print(f'\nEscribe el número del Pokémon que quieres quedarte (del 1 al {pokemon_list_length}):')
-                pokemon_position = int(input()) - 1
+            print(f'\nTiradas restantes: {self.game_manager.game.get_rolls()}\n')
+            
+            # mostrar pokemons
+            for n, pokemon in enumerate(pokemon_list):
+                print(f'- {n+1}')
+                self.print_pokemon(pokemon)
 
-                if pokemon_position<0 or pokemon_position>=6:
-                    print('\nError: La posición no se encuentra dentro del rango.')
-                    continue
-                
-                pokemon_id = pokemon_list[pokemon_position]
-                self.game_manager.game.box.add(pokemon_id)
-                break
+            print(f'\nEscribe el número del Pokémon que quieres quedarte (del 1 al {len(pokemon_list)}) (Gastas 1 tirada por cada Pokémon que te quedes).\nEscribe 0 para parar.')
+
+            try:
+                pokemon_position = int(input()) - 1
             except:
+                clear()
                 print('\nError: Posición no detectada.')
+                continue
+
+            # termina
+            if pokemon_position==-1:
+                break
+
+            if pokemon_position<0 or pokemon_position>=len(pokemon_list):
+                clear()
+                print('\nError: La posición no se encuentra dentro del rango.')
+                continue
+
+            clear()
+            print('\nTirada gastada.')
+            pokemon = pokemon_list.pop(pokemon_position)
+            self.game_manager.game.box.add(pokemon['id'])
+            self.game_manager.game.spend_roll()
+            picks+=1
+
+            # termina
+            if picks==5 or len(pokemon_list)==0:
+                break
+            
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save_game(card)

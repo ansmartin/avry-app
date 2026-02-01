@@ -40,14 +40,14 @@ class GameSession:
     
     def __init__(self, 
             name:str, 
-            options:GameOptions = GameOptions(), 
-            filters:PokemonFilters = PokemonFilters()
+            options:GameOptions = None, 
+            filters:PokemonFilters = None
         ):
         self.name = name
         self.box = ClassList()
 
-        self.options = options
-        self.filters = filters
+        self.options = options if options else GameOptions()
+        self.filters = filters if filters else PokemonFilters()
 
         self.rolls_backup = self.options.rolls
         self.used_rolls = 0

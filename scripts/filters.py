@@ -1,28 +1,41 @@
 
 class PokemonFilters:
 
-    def __init__(self):
-        self.filter_by_type = False
-        self.first_type = None
-        self.second_type = None
-        self.any_type = None
+    def __init__(self,
+            # filter by type
+            filter_by_type:bool = False,
+            first_type:str = None,
+            second_type:str = None,
+            any_type:str = None,
 
-        # self.filter_by_generation = True
-        self.generation = 9
+            # filter by generation
+            generation:int = 9,
 
-        # self.filter_by_category = True
-        self.mythical = False
-        self.legendary = False
-        self.sublegendary = True
-        self.powerhouse = True
-        self.others = True
+            # filter by category
+            mythical:bool = False,
+            legendary:bool = False,
+            sublegendary:bool = True,
+            powerhouse:bool = True,
+            others:bool = True,
 
-        self.fully_evolved = True
-
+            # filter by stage
+            fully_evolved:bool = True
+        ):
+        self.filter_by_type = filter_by_type
+        self.first_type = first_type
+        self.second_type = second_type
+        self.any_type = any_type
+        self.generation = generation
+        self.mythical = mythical
+        self.legendary = legendary
+        self.sublegendary = sublegendary
+        self.powerhouse = powerhouse
+        self.others = others
+        self.fully_evolved = fully_evolved
         # self.has_mega = False
         # self.has_gmax = False
-        #self.random_ability_same_pokemon = False
-        #self.random_ability_any_pokemon = False
+        # self.random_ability_same_pokemon = False
+        # self.random_ability_any_pokemon = False
 
 
     def print_options(self):

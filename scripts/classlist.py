@@ -1,9 +1,9 @@
 
 class ClassList():
     
-    def __init__(self, max_size:int = 0, new_list:list = None):
-        self._list = new_list if new_list else []
+    def __init__(self, max_size:int = 0, new_list:list = []):
         self.max_size = max_size
+        self._list = new_list
 
     def reset(self):
         self._list = []

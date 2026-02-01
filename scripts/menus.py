@@ -181,7 +181,7 @@ class MenuManager():
 
                     # cargar usuario
                     if self.user_system.change_user(n):
-                        self.open_menu_user_active()
+                        self.open_menu_game_sessions()
                         break
                     else:
                         print('Usuario no encontrado.')
@@ -200,7 +200,7 @@ class MenuManager():
                             print('\nEse nombre ya se encuentra en la base de datos, escribe otro diferente:')
                             continue
                         
-                        self.user_system.add_user_and_save_file(name)
+                        self.user_system.add_username_and_save_file(name)
                         clear()
                         break
 
@@ -261,7 +261,7 @@ class MenuManager():
             print(f' - {n+1}:\t{gamename}')
 
 
-    def open_menu_user_active(self):
+    def open_menu_game_sessions(self):
 
         clear()
 
@@ -414,6 +414,7 @@ class MenuManager():
 
             #- 0: Salir
             elif(option=='0'):
+                self.user_system.active_user=None
                 clear()
                 return
             else:

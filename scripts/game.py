@@ -18,11 +18,16 @@ class GameOptions:
     DEFAULT_MONEY = 10_000
     DEFAULT_ITEM_POINTS = 200
 
-    def __init__(self, rolls:int=None, tickets:int=None, money:int=None, item_points:int=None):
-        self.rolls = rolls if rolls else GameOptions.DEFAULT_ROLLS
-        self.tickets = tickets if tickets else GameOptions.DEFAULT_TICKETS
-        self.money = money if money else GameOptions.DEFAULT_MONEY
-        self.item_points = item_points if item_points else GameOptions.DEFAULT_ITEM_POINTS
+    def __init__(self, 
+            rolls:int = DEFAULT_ROLLS, 
+            tickets:int = DEFAULT_TICKETS, 
+            money:int = DEFAULT_MONEY, 
+            item_points:int = DEFAULT_ITEM_POINTS
+        ):
+        self.rolls = rolls
+        self.tickets = tickets
+        self.money = money
+        self.item_points = item_points
 
     def set_to_default(self):
         self.rolls = GameOptions.DEFAULT_ROLLS
@@ -33,12 +38,16 @@ class GameOptions:
 
 class GameSession:
     
-    def __init__(self, name, options:GameOptions=None, filters:PokemonFilters=None):
+    def __init__(self, 
+            name:str, 
+            options:GameOptions = GameOptions(), 
+            filters:PokemonFilters = PokemonFilters()
+        ):
         self.name = name
         self.box = ClassList()
 
-        self.options = options if isinstance(options, GameOptions) else GameOptions()
-        self.filters = filters if isinstance(filters, PokemonFilters) else PokemonFilters()
+        self.options = options
+        self.filters = filters
 
         self.rolls_backup = self.options.rolls
         self.used_rolls = 0
@@ -98,16 +107,16 @@ class GameSession:
 
 class GameSessionManager:
     
-    def __init__(self, user_system:UserSystem, database:PokemonDatabaseManager, game:GameSession = None):
+    def __init__(self, user_system:UserSystem, database:PokemonDatabaseManager):
         self.user_system = user_system
         self.database = database
-        self.game = game
+        self.game = None
 
     def add_game_to_list(self, name):
         self.user_system.active_user.games.add(name)
         self.user_system.save_file_user()
 
-    def create_game_session(self, name, dic_options:dict=None, dic_filters:dict=None):
+    def create_game_session(self, name:str, dic_options:dict=None, dic_filters:dict=None):
         self.add_game_to_list(name)
 
         options = None
@@ -157,14 +166,15 @@ class GameSessionManager:
             except:
                 generation = 9
             
-            filters = PokemonFilters()
-            filters.generation = generation
-            filters.mythical = dic_filters['mythical']
-            filters.legendary = dic_filters['legendary']
-            filters.sublegendary = dic_filters['sublegendary']
-            filters.powerhouse = dic_filters['powerhouse']
-            filters.others = dic_filters['others']
-            filters.fully_evolved = dic_filters['fully_evolved']
+            filters = PokemonFilters(
+                generation = generation,
+                mythical = dic_filters['mythical'],
+                legendary = dic_filters['legendary'],
+                sublegendary = dic_filters['sublegendary'],
+                powerhouse = dic_filters['powerhouse'],
+                others = dic_filters['others'],
+                fully_evolved = dic_filters['fully_evolved']
+            )
 
 
         self.game = GameSession(name, options, filters)
@@ -195,7 +205,7 @@ class GameSessionManager:
         self.load_game(name)
         return True
 
-    def load_game(self, name):
+    def load_game(self, name:str):
         # carga los datos guardados
         try:
             game_path = self.get_path_game(name)

@@ -9,9 +9,9 @@ class User:
 
     MAX_GAMES = 128
 
-    def __init__(self, username:str, games_list:list=None):
+    def __init__(self, username:str):
         self.username = username
-        self.games = ClassList(User.MAX_GAMES, games_list)
+        self.games = ClassList(User.MAX_GAMES)
 
 
 class UserSystem:
@@ -21,7 +21,6 @@ class UserSystem:
     def __init__(self):
         self.load_usernames()
         self.active_user = None
-
 
     # usernames
     
@@ -33,11 +32,6 @@ class UserSystem:
             if not isinstance(self.usernames, ClassList):
                 raise TypeError()
 
-            # if len(self.usernames._list)>0:
-            #     for element in self.usernames._list:
-            #         if not isinstance(element, str):
-            #             raise TypeError()
-
         # si hay algún error, crea nuevos datos
         except:
             self.usernames = ClassList(UserSystem.MAX_USERS)
@@ -46,7 +40,7 @@ class UserSystem:
     def save_file_usernames(self):
         pickle.dump( self.usernames, open(const.SAVEDATA_PATH_USERNAMES_FILE, "wb") )
 
-    def add_user_and_save_file(self, username:str):
+    def add_username_and_save_file(self, username:str):
         self.usernames.add(username)
         self.save_file_usernames()
 
@@ -87,11 +81,6 @@ class UserSystem:
 
             if not isinstance(user, User):
                 raise TypeError()
-
-            # if len(user.games)>0:
-            #     for element in user.games._list:
-            #         if not isinstance(element, str):
-            #             raise TypeError()
 
             self.active_user = user
 

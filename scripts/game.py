@@ -131,28 +131,28 @@ class GameSessionManager:
                 if rolls > GameOptions.MAX_ROLLS:
                     rolls = GameOptions.MAX_ROLLS
             except:
-                rolls = None
+                rolls = GameOptions.DEFAULT_ROLLS
 
             try:
                 tickets = int(dic_options['tickets'])
                 if tickets<0:
                     tickets=0
             except:
-                tickets = None
+                tickets = GameOptions.DEFAULT_TICKETS
 
             try:
                 money = int(dic_options['money'])
                 if money<0:
                     money=0
             except:
-                money = None
+                money = GameOptions.DEFAULT_MONEY
 
             try:
                 item_points = int(dic_options['item_points'])
                 if item_points<0:
                     item_points=0
             except:
-                item_points = None
+                item_points = GameOptions.DEFAULT_ITEM_POINTS
 
             options = GameOptions(rolls, tickets, money, item_points)
 
@@ -164,7 +164,7 @@ class GameSessionManager:
                 if generation<0:
                     generation=0
             except:
-                generation = 9
+                generation = PokemonFilters.DEFAULT_GENERATION
             
             filters = PokemonFilters(
                 generation = generation,

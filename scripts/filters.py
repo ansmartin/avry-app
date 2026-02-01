@@ -1,5 +1,7 @@
 
 class PokemonFilters:
+    
+    DEFAULT_GENERATION = 9
 
     def __init__(self,
             # filter by type
@@ -9,7 +11,7 @@ class PokemonFilters:
             any_type:str = None,
 
             # filter by generation
-            generation:int = 9,
+            generation:int = DEFAULT_GENERATION,
 
             # filter by category
             mythical:bool = False,

@@ -542,7 +542,7 @@ class MenuManager():
             elif(option=='5'):
                 self.use_card_comienzo()
             elif(option=='6'):
-                print(f'NO IMPLEMENTADA')
+                self.use_card_powerhouse()
             elif(option=='7'):
                 self.use_card_type()
             elif(option=='8'):
@@ -715,6 +715,16 @@ class MenuManager():
 
         print('\nTiradas reiniciadas.')
         self.game_manager.game.reset_rolls_and_box()
+
+        # guardar archivo de juego
+        self.game_manager.buy_card_and_save_game(card)
+
+    def use_card_powerhouse(self):
+        tag = 'powerhouse'
+        card = self.card_manager.cards.get(tag, None)
+
+        if not self.check_card_conditions(card):
+            return
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save_game(card)

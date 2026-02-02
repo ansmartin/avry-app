@@ -3,7 +3,7 @@ import pickle
 
 import scripts.constants as const
 from scripts.users import UserSystem
-from scripts.database import PokemonDatabaseManager
+from scripts.pokemon import PokemonDatabaseManager
 from scripts.classlist import ClassList
 from scripts.filters import PokemonFilters
 from scripts.cards import Card

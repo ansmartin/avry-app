@@ -1,6 +1,6 @@
 from scripts.users import UserSystem
 from scripts.game import GameSessionManager
-from scripts.database import PokemonDatabaseManager
+from scripts.pokemon import PokemonDatabaseManager
 from scripts.cards import CardManager
 from scripts.menus import MenuManager
 

@@ -3,7 +3,7 @@ from numpy import isnan
 
 from scripts.users import UserSystem
 from scripts.game import GameSessionManager
-from scripts.database import PokemonDatabaseManager
+from scripts.pokemon import PokemonDatabaseManager
 from scripts.cards import Card, CardManager
 from scripts.types import PokemonTypes
 

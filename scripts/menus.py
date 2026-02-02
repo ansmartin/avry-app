@@ -5,7 +5,7 @@ from scripts.users import UserSystem
 from scripts.game import GameSessionManager
 from scripts.pokemon import PokemonDatabaseManager
 from scripts.cards import Card, CardManager
-from scripts.types import PokemonTypes
+from scripts.pokemontypes import PokemonTypes
 
 
 def clear():

@@ -1,7 +1,4 @@
-import os
-import pickle
-
-import scripts.constants as const
+from scripts.db import DatabaseManager
 from scripts.classlist import ClassList
 
 
@@ -18,85 +15,38 @@ class UserSystem:
     
     MAX_USERS = 128
 
-    def __init__(self):
-        self.load_usernames()
+    def __init__(self, db:DatabaseManager):
+        self.db = db
+        self.usernames = ClassList(UserSystem.MAX_USERS, self.db.get_users())
         self.active_user = None
 
-    # usernames
-    
-    def load_usernames(self):
-        # carga los datos guardados
-        try:
-            self.usernames = pickle.load( open(const.SAVEDATA_PATH_USERNAMES_FILE, "rb") )
-
-            if not isinstance(self.usernames, ClassList):
-                raise TypeError()
-
-        # si hay algún error, crea nuevos datos
-        except:
-            self.usernames = ClassList(UserSystem.MAX_USERS)
-            self.save_file_usernames()
-
-    def save_file_usernames(self):
-        pickle.dump( self.usernames, open(const.SAVEDATA_PATH_USERNAMES_FILE, "wb") )
-
-    def add_username_and_save_file(self, username:str):
-        self.usernames.add(username)
-        self.save_file_usernames()
-
-        self.create_and_save_user(username)
-
-    def remove_user(self, position:int) -> bool:
-        if self.usernames.position_is_in_range(position):
-            # borrar archivo de usuario
-            username = self.usernames.get(position)
-            self.delete_file_user(username)
-            # y borrar de la lista de nombres de usuarios
-            self.usernames.remove(position)
-            self.save_file_usernames()
-            return True
-
-        return False
-
-
-    # user
-
-    def get_path_user(self, name:str) -> str:
-        return f'{const.SAVEDATA_PATH_USERS}{name}.p'
-
-    def change_user(self, position:int) -> bool:
-        username = self.usernames.get(position)
-
-        if username is None:
+    def insert_user(self, name:str) -> bool:
+        if self.usernames.contains(name):
             return False
 
-        self.load_user(username)
+        self.usernames.add(name)
+        self.db.insert_user(name)
         return True
 
-    def load_user(self, username:str):
-        # carga los datos guardados
-        try:
-            user_path = self.get_path_user(username)
-            user = pickle.load( open(user_path, "rb") )
+    def delete_user(self, position:int) -> bool:
+        name = self.usernames.get(position)
+        if name is None:
+            return False
 
-            if not isinstance(user, User):
-                raise TypeError()
+        self.usernames.remove(position)
+        self.db.delete_user(name)
+        return True
 
-            self.active_user = user
+    # def delete_user(self, name:str):
+    #     position = self.usernames._list.index(name)
+    #     self.usernames.remove(position)
 
-        # si hay algún error, crea nuevos datos
-        except:
-            self.create_and_save_user(username)
+    #     self.db.delete_user(name)
 
-    def create_and_save_user(self, username:str):
-        self.active_user = User(username)
-        self.save_file_user()
+    def load_user(self, position:int) -> bool:
+        name = self.usernames.get(position)
+        if name is None:
+            return False
 
-    def save_file_user(self):
-        user_path = self.get_path_user(self.active_user.username)
-        pickle.dump( self.active_user, open(user_path, "wb") )
-
-    def delete_file_user(self, username:str):
-        user_path = self.get_path_user(username)
-        if os.path.exists(user_path):
-            os.remove(user_path)
+        self.active_user = User(name)
+        return True

@@ -162,7 +162,7 @@ class MenuManager():
             #- 1: Cargar usuario
             if(option=='1'):
                 
-                if self.user_system.usernames.get_length()==0:
+                if self.user_system.get_length()==0:
                     print('No hay usuarios registrados.')
                     continue
 
@@ -180,7 +180,7 @@ class MenuManager():
                         continue
 
                     # cargar usuario
-                    if self.user_system.change_user(n):
+                    if self.user_system.load_user(n):
                         self.open_menu_game_sessions()
                         break
                     else:
@@ -196,13 +196,12 @@ class MenuManager():
                     while True:
                         name = input()
 
-                        if self.user_system.usernames.contains(name):
+                        if self.user_system.insert_user(name):
+                            clear()
+                            break
+                        else:
                             print('\nEse nombre ya se encuentra en la base de datos, escribe otro diferente:')
                             continue
-                        
-                        self.user_system.add_username_and_save_file(name)
-                        clear()
-                        break
 
                 else:
                     print('La lista de usuarios está llena, borra alguno para hacer hueco.')
@@ -236,7 +235,7 @@ class MenuManager():
                     #     print('No puedes borrar el usuario activo. Elige otro.')
                     #     continue
 
-                    if self.user_system.remove_user(n):
+                    if self.user_system.delete_user(n):
                         clear()
                         break
                     else:
@@ -302,7 +301,7 @@ class MenuManager():
                         continue
 
                     # cargar
-                    if self.game_manager.change_game(n):
+                    if self.game_manager.load_game(n):
                         clear()
                         self.open_menu_game()
                         break
@@ -586,7 +585,7 @@ class MenuManager():
         
         # obtener pokemon y guardar archivo de juego
         if self.get_pokemon(mask):
-            self.game_manager.buy_card_and_save_game(card)
+            self.game_manager.buy_card_and_save(card)
 
     def use_card_fusion(self):
         tag = 'fusion'
@@ -628,7 +627,7 @@ class MenuManager():
         if self.get_pokemon():
             self.game_manager.game.box.remove(position1)
             self.game_manager.game.box.remove(position2)
-            self.game_manager.buy_card_and_save_game(card)
+            self.game_manager.buy_card_and_save(card)
 
     def use_card_intercambio(self):
         tag = 'intercambio'
@@ -657,7 +656,7 @@ class MenuManager():
         # obtener pokemon y guardar archivo de juego
         if self.get_pokemon():
             self.game_manager.game.box.remove(pokemon_position)
-            self.game_manager.buy_card_and_save_game(card)
+            self.game_manager.buy_card_and_save(card)
 
     def use_card_preevo(self):
         tag = 'preevo'
@@ -698,7 +697,7 @@ class MenuManager():
         self.game_manager.game.box._list[pokemon_position] = preevo_id
 
         # guardar archivo de juego
-        self.game_manager.buy_card_and_save_game(card)
+        self.game_manager.buy_card_and_save(card)
 
     def use_card_comienzo(self):
         tag = 'comienzo'
@@ -707,7 +706,7 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        if self.game_manager.game.used_rolls >= 18:
+        if self.game_manager.game.options.used_rolls >= 18:
             print('\nNo se puede usar porque ya se han realizado 18 tiradas o más.')
             return
 
@@ -715,7 +714,7 @@ class MenuManager():
         self.game_manager.game.reset_rolls_and_box()
 
         # guardar archivo de juego
-        self.game_manager.buy_card_and_save_game(card)
+        self.game_manager.buy_card_and_save(card)
 
     def use_card_powerhouse(self):
         tag = 'powerhouse'
@@ -725,7 +724,7 @@ class MenuManager():
             return
 
         # guardar archivo de juego
-        self.game_manager.buy_card_and_save_game(card)
+        self.game_manager.buy_card_and_save(card)
 
     def use_card_type(self):
         tag = 'tipo'
@@ -738,7 +737,7 @@ class MenuManager():
         self.game_manager.game.add_ticket()
 
         # guardar archivo de juego
-        self.game_manager.buy_card_and_save_game(card)
+        self.game_manager.buy_card_and_save(card)
 
     def use_card_aditional(self, rolls:int):
         tag = 'adicional_' + str(rolls)
@@ -751,7 +750,7 @@ class MenuManager():
         self.game_manager.game.add_rolls(rolls)
 
         # guardar archivo de juego
-        self.game_manager.buy_card_and_save_game(card)
+        self.game_manager.buy_card_and_save(card)
 
     def get_pokemon_with_card_selectiva(self):
         tag = 'selectiva'
@@ -819,5 +818,5 @@ class MenuManager():
             
 
         # guardar archivo de juego
-        self.game_manager.buy_card_and_save_game(card)
+        self.game_manager.buy_card_and_save(card)
 

@@ -6,9 +6,9 @@ class User:
 
     MAX_GAMES = 128
 
-    def __init__(self, username:str):
+    def __init__(self, username:str, games:ClassList = None):
         self.username = username
-        self.games = ClassList(User.MAX_GAMES)
+        self.games = games if games else ClassList(User.MAX_GAMES)
 
 
 class UserSystem:
@@ -48,5 +48,7 @@ class UserSystem:
         if name is None:
             return False
 
-        self.active_user = User(name)
+        game_names = self.db.get_game_names(name)
+        games = ClassList(User.MAX_GAMES, game_names)
+        self.active_user = User(name, games)
         return True

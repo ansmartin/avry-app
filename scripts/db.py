@@ -32,12 +32,12 @@ class DatabaseManager:
     def get_users(self) -> list:
         self.cur.execute(f"SELECT username FROM users")
         rows = self.cur.fetchall()
-        return rows
+        return [ x[0] for x in rows ]
 
     def get_game_names(self, username:str) -> list:
         self.cur.execute(f"SELECT gamename FROM games WHERE username=\'{username}\'")
         rows = self.cur.fetchall()
-        return rows
+        return [ x[0] for x in rows ]
 
     def get_game(self, username:str, gamename:str) -> list:
         self.cur.execute(f"SELECT * FROM games WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
@@ -47,16 +47,16 @@ class DatabaseManager:
     def get_rolls(self, game_id:int) -> list:
         self.cur.execute(f"SELECT pokemon_id FROM rolls WHERE game_id={game_id}")
         rows = self.cur.fetchall()
-        return rows
+        return [ x[0] for x in rows ]
 
     def get_used_cards(self, game_id:int) -> list:
         self.cur.execute(f"SELECT card_id FROM used_cards WHERE game_id={game_id}")
         rows = self.cur.fetchall()
-        return rows
+        return [ x[0] for x in rows ]
 
 
     def insert_user(self, username:str):
-        self.cur.execute(f"INSERT INTO users (name) VALUES (\'{username}\')")
+        self.cur.execute(f"INSERT INTO users (username) VALUES (\'{username}\')")
         self.connection.commit()
 
     def insert_game(self, 
@@ -141,7 +141,7 @@ class DatabaseManager:
         self.connection.commit()
 
     def delete_user(self, username:str):
-        self.cur.execute(f"DELETE FROM users WHERE name=\'{username}\'")
+        self.cur.execute(f"DELETE FROM users WHERE username=\'{username}\'")
         self.connection.commit()
 
     def delete_game(self, username:str, gamename:str):

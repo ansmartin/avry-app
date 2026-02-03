@@ -162,7 +162,7 @@ class MenuManager():
             #- 1: Cargar usuario
             if(option=='1'):
                 
-                if self.user_system.get_length()==0:
+                if self.user_system.usernames.get_length()==0:
                     print('No hay usuarios registrados.')
                     continue
 
@@ -405,7 +405,7 @@ class MenuManager():
                     #     print('No puedes borrar el usuario activo. Elige otro.')
                     #     continue
 
-                    if self.game_manager.remove_game(n):
+                    if self.game_manager.delete_game(n):
                         clear()
                         break
                     else:

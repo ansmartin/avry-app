@@ -1,6 +1,2 @@
 DATAFRAME_PATH = '../data/pokemon.parquet'
 DATABASE_PATH = './database/database.db'
-SAVEDATA_PATH = './savedata/'
-SAVEDATA_PATH_USERNAMES_FILE = SAVEDATA_PATH + 'usernames.p'
-SAVEDATA_PATH_USERS = SAVEDATA_PATH + 'users/'
-SAVEDATA_PATH_GAMES = SAVEDATA_PATH + 'games/'

@@ -1,0 +1,30 @@
+CREATE TABLE users(
+    id INTEGER PRIMARY KEY, 
+    name TEXT NOT NULL
+)
+
+CREATE TABLE games(
+    id INTEGER PRIMARY KEY, 
+	user_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+	rolls INTEGER NOT NULL,
+	used_rolls INTEGER NOT NULL,
+	tickets INTEGER NOT NULL,
+	money INTEGER NOT NULL,
+	item_points INTEGER NOT NULL,
+	generation INTEGER NOT NULL,
+	include_mythical BOOLEAN NOT NULL,
+	include_legendary BOOLEAN NOT NULL,
+	include_sublegendary BOOLEAN NOT NULL,
+	include_powerhouse BOOLEAN NOT NULL,
+	include_others BOOLEAN NOT NULL,
+	fully_evolved_only BOOLEAN NOT NULL,
+	FOREIGN KEY(user_id) REFERENCES users(id)
+)
+
+CREATE TABLE rolls(
+	game_id INTEGER NOT NULL,
+	pokemon_id INTEGER NOT NULL,
+	FOREIGN KEY(game_id) REFERENCES games(id),
+	CONSTRAINT pk_game PRIMARY KEY (game_id, pokemon_id)
+)

@@ -1,12 +1,11 @@
 CREATE TABLE users(
-    id INTEGER PRIMARY KEY, 
-    name TEXT NOT NULL
+    username TEXT PRIMARY KEY
 )
 
 CREATE TABLE games(
     id INTEGER PRIMARY KEY, 
-	user_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
+	username TEXT NOT NULL,
+    gamename TEXT NOT NULL,
 	rolls INTEGER NOT NULL,
 	used_rolls INTEGER NOT NULL,
 	tickets INTEGER NOT NULL,
@@ -19,12 +18,19 @@ CREATE TABLE games(
 	include_powerhouse BOOLEAN NOT NULL,
 	include_others BOOLEAN NOT NULL,
 	fully_evolved_only BOOLEAN NOT NULL,
-	FOREIGN KEY(user_id) REFERENCES users(id)
+	FOREIGN KEY (username) REFERENCES users(username)
 )
 
 CREATE TABLE rolls(
 	game_id INTEGER NOT NULL,
 	pokemon_id INTEGER NOT NULL,
-	FOREIGN KEY(game_id) REFERENCES games(id),
-	CONSTRAINT pk_game PRIMARY KEY (game_id, pokemon_id)
+	FOREIGN KEY (game_id) REFERENCES games(id),
+	CONSTRAINT roll_pk PRIMARY KEY (game_id, pokemon_id)
+)
+
+CREATE TABLE used_cards(
+	game_id INTEGER NOT NULL,
+	card_id INTEGER NOT NULL,
+	FOREIGN KEY (game_id) REFERENCES games(id),
+	CONSTRAINT used_card_pk PRIMARY KEY (game_id, card_id)
 )

@@ -16,21 +16,20 @@ class GameOptions:
     DEFAULT_ITEM_POINTS = 200
 
     def __init__(self, 
+            max_rolls:int = DEFAULT_ROLLS, 
             rolls:int = DEFAULT_ROLLS, 
-            used_rolls:int = 0, 
             tickets:int = DEFAULT_TICKETS, 
             money:int = DEFAULT_MONEY, 
             item_points:int = DEFAULT_ITEM_POINTS
         ):
+        self.max_rolls = max_rolls
         self.rolls = rolls
-        self.used_rolls = used_rolls
         self.tickets = tickets
         self.money = money
         self.item_points = item_points
 
     def set_to_default(self):
-        self.rolls = GameOptions.DEFAULT_ROLLS
-        self.used_rolls = 0
+        self.max_rolls = self.rolls = GameOptions.DEFAULT_ROLLS
         self.tickets = GameOptions.DEFAULT_TICKETS
         self.money = GameOptions.DEFAULT_MONEY
         self.item_points = GameOptions.DEFAULT_ITEM_POINTS
@@ -42,15 +41,14 @@ class GameSession:
             name:str, 
             options:GameOptions = None, 
             filters:PokemonFilters = None,
-            box:ClassList = None
+            box:ClassList = None,
+            used_cards:dict = None
         ):
         self.name = name
         self.options = options if options else GameOptions()
         self.filters = filters if filters else PokemonFilters()
-
         self.box = box if box else ClassList()
-        self.rolls_backup = self.options.rolls
-        self.used_cards = {}
+        self.used_cards = used_cards if used_cards else {}
 
 
     def get_rolls(self) -> int:
@@ -64,13 +62,6 @@ class GameSession:
 
     def get_item_points(self) -> int:
         return self.options.item_points
-
-
-    def add_rolls(self, rolls:int):
-        self.options.rolls+=rolls
-
-    def add_ticket(self):
-        self.options.tickets+=1
 
 
     def can_spend_roll(self) -> bool:
@@ -100,13 +91,13 @@ class GameSessionManager:
         if dic_options:
             
             try:
-                rolls = int(dic_options['rolls'])
-                if rolls<0:
-                    rolls=0
-                if rolls > GameOptions.MAX_ROLLS:
-                    rolls = GameOptions.MAX_ROLLS
+                max_rolls = int(dic_options['rolls'])
+                if max_rolls<0:
+                    max_rolls=0
+                if max_rolls > GameOptions.MAX_ROLLS:
+                    max_rolls = GameOptions.MAX_ROLLS
             except:
-                rolls = GameOptions.DEFAULT_ROLLS
+                max_rolls = GameOptions.DEFAULT_ROLLS
 
             try:
                 tickets = int(dic_options['tickets'])
@@ -130,8 +121,8 @@ class GameSessionManager:
                 item_points = GameOptions.DEFAULT_ITEM_POINTS
 
             options = GameOptions(
-                rolls = rolls, 
-                used_rolls = 0, 
+                max_rolls = max_rolls, 
+                rolls = max_rolls, 
                 tickets = tickets, 
                 money = money, 
                 item_points = item_points
@@ -166,8 +157,8 @@ class GameSessionManager:
         self.user_system.db.insert_game(
             self.user_system.active_user.username,
             self.game.name,
+            self.game.options.max_rolls,
             self.game.options.rolls,
-            self.game.options.used_rolls,
             self.game.options.tickets,
             self.game.options.money,
             self.game.options.item_points,
@@ -217,12 +208,14 @@ class GameSessionManager:
         if gamename is None:
             return False
 
+        username = self.user_system.active_user.username
+
         # cargar datos de la sesión de juego
-        game = self.user_system.db.get_game(self.user_system.active_user.username, gamename)
+        game = self.user_system.db.get_game(username, gamename)
 
         options = GameOptions(
-            rolls = game[2], 
-            used_rolls = game[3], 
+            max_rolls = game[2], 
+            rolls = game[3], 
             tickets = game[4], 
             money = game[5], 
             item_points = game[6]
@@ -239,12 +232,20 @@ class GameSessionManager:
         )
 
         pokemon_ids = self.user_system.db.get_pokemon_box(
-            self.user_system.active_user.username,
+            username,
             gamename
         )
         box = ClassList(new_list = pokemon_ids)
 
-        self.game = GameSession(gamename, options, filters, box)
+        used_cards_rows = self.user_system.db.get_used_cards(
+            username,
+            gamename
+        )
+        used_cards = {}
+        for card in used_cards_rows:
+            used_cards[card[0]] = card[1]
+
+        self.game = GameSession(gamename, options, filters, box, used_cards)
         self.database.filter_dataset(self.game.filters)
         return True
 
@@ -272,24 +273,43 @@ class GameSessionManager:
         self.add_used_card(card.tag)
 
     def reset_rolls_and_box(self):
-        self.game.options.rolls = self.game.rolls_backup
+        self.game.options.rolls = self.game.options.max_rolls
         self.user_system.db.update_game(
             self.user_system.active_user.username,
             self.game.name,
             'rolls',
-            self.game.rolls_backup
-        )
-        self.game.options.used_rolls = 0
-        self.user_system.db.update_game(
-            self.user_system.active_user.username,
-            self.game.name,
-            'used_rolls',
-            0
+            self.game.options.max_rolls
         )
         self.game.box.reset()
         self.user_system.db.delete_pokemon_box(
             self.user_system.active_user.username,
             self.game.name
+        )
+
+
+    def add_rolls(self, rolls:int):
+        self.game.options.rolls+=rolls
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'rolls',
+            self.game.options.rolls
+        )
+        self.game.options.max_rolls+=rolls
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'max_rolls',
+            self.game.options.max_rolls
+        )
+
+    def add_tickets(self, tickets:int):
+        self.game.options.tickets+=tickets
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'tickets',
+            self.game.options.tickets
         )
 
 
@@ -300,13 +320,6 @@ class GameSessionManager:
             self.game.name,
             'rolls',
             self.game.options.rolls
-        )
-        self.game.options.used_rolls+=1
-        self.user_system.db.update_game(
-            self.user_system.active_user.username,
-            self.game.name,
-            'used_rolls',
-            self.game.options.used_rolls
         )
 
     def spend_ticket(self):
@@ -338,5 +351,21 @@ class GameSessionManager:
 
 
     def add_used_card(self, tag:str):
-        uses = self.game.used_cards.get(tag, 0) + 1
+        uses = self.game.used_cards.get(tag, None)
+        if uses is None:
+            uses = 1
+            self.user_system.db.insert_used_card(
+                self.user_system.active_user.username,
+                self.game.name,
+                tag,
+                uses
+            )
+        else:
+            uses += 1
+            self.user_system.db.update_used_card(
+                self.user_system.active_user.username,
+                self.game.name,
+                tag,
+                uses
+            )
         self.game.used_cards[tag] = uses

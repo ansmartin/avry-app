@@ -50,9 +50,9 @@ class DatabaseManager:
         return [ x[0] for x in rows ]
 
     def get_used_cards(self, username:str, gamename:str) -> list:
-        self.cur.execute(f"SELECT card_id FROM used_cards WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
+        self.cur.execute(f"SELECT tag, uses FROM used_cards WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
         rows = self.cur.fetchall()
-        return [ x[0] for x in rows ]
+        return rows
 
 
     def insert_user(self, username:str):
@@ -62,8 +62,8 @@ class DatabaseManager:
     def insert_game(self, 
             username:str,
             gamename:str,
+            max_rolls:int,
             rolls:int,
-            used_rolls:int,
             tickets:int,
             money:int,
             item_points:int,
@@ -81,8 +81,8 @@ class DatabaseManager:
             (
                 username,
                 gamename,
+                max_rolls,
                 rolls, 
-                used_rolls,
                 tickets,
                 money,
                 item_points,
@@ -98,8 +98,8 @@ class DatabaseManager:
             (
                 \'{username}\',
                 \'{gamename}\',
+                {max_rolls},
                 {rolls},
-                {used_rolls},
                 {tickets},
                 {money},
                 {item_points},
@@ -125,12 +125,12 @@ class DatabaseManager:
         )
         self.connection.commit()
 
-    def insert_used_card(self, username:str, gamename:str, card_id:int):
+    def insert_used_card(self, username:str, gamename:str, tag:str, uses:int):
         self.cur.execute(
             f"""
             INSERT INTO used_cards 
-            (username, gamename, card_id)
-            VALUES (\'{username}\', \'{gamename}\', {card_id})
+            (username, gamename, tag, uses)
+            VALUES (\'{username}\', \'{gamename}\', \'{tag}\', {uses})
             """
         )
         self.connection.commit()
@@ -160,8 +160,8 @@ class DatabaseManager:
         self.cur.execute(f"DELETE FROM used_cards WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
         self.connection.commit()
 
-    def delete_used_card(self, username:str, gamename:str, card_id:int):
-        self.cur.execute(f"DELETE FROM used_cards WHERE username=\'{username}\' AND gamename=\'{gamename}\' AND card_id={card_id}")
+    def delete_used_card(self, username:str, gamename:str, tag:str):
+        self.cur.execute(f"DELETE FROM used_cards WHERE username=\'{username}\' AND gamename=\'{gamename}\' AND tag=\'{tag}\'")
         self.connection.commit()
 
 
@@ -171,4 +171,8 @@ class DatabaseManager:
 
     def update_game(self, username:str, gamename:str, column:str, value):
         self.cur.execute(f"UPDATE games SET {column}={value} WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
+        self.connection.commit()
+
+    def update_used_card(self, username:str, gamename:str, tag:str, uses:int):
+        self.cur.execute(f"UPDATE used_cards SET uses={uses} WHERE username=\'{username}\' AND gamename=\'{gamename}\' AND tag=\'{tag}\'")
         self.connection.commit()

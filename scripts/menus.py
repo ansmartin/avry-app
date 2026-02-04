@@ -710,7 +710,7 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        if self.game_manager.game.options.used_rolls >= 18:
+        if abs(self.game_manager.game.options.rolls - self.game_manager.game.options.max_rolls) >= 18:
             print('\nNo se puede usar porque ya se han realizado 18 tiradas o más.')
             return
 
@@ -738,7 +738,7 @@ class MenuManager():
             return
 
         print('\nAñadido un tiquet de forzar tipo.')
-        self.game_manager.game.add_ticket()
+        self.game_manager.add_tickets(1)
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save(card)
@@ -751,7 +751,7 @@ class MenuManager():
             return
 
         print(f'\nTiradas adicionales añadidas: {rolls}')
-        self.game_manager.game.add_rolls(rolls)
+        self.game_manager.add_rolls(rolls)
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save(card)

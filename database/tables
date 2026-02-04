@@ -5,8 +5,8 @@ CREATE TABLE users(
 CREATE TABLE games(
 	username TEXT NOT NULL,
     gamename TEXT NOT NULL,
+	max_rolls INTEGER NOT NULL,
 	rolls INTEGER NOT NULL,
-	used_rolls INTEGER NOT NULL,
 	tickets INTEGER NOT NULL,
 	money INTEGER NOT NULL,
 	item_points INTEGER NOT NULL,
@@ -33,8 +33,9 @@ CREATE TABLE pokemon_box(
 CREATE TABLE used_cards(
 	username TEXT NOT NULL,
     gamename TEXT NOT NULL,
-	card_id INTEGER NOT NULL,
+	tag TEXT NOT NULL,
+	uses INTEGER NOT NULL,
 	FOREIGN KEY (username) REFERENCES games(username),
 	FOREIGN KEY (gamename) REFERENCES games(gamename),
-	CONSTRAINT used_card_pk PRIMARY KEY (username, gamename, card_id)
+	CONSTRAINT used_card_pk PRIMARY KEY (username, gamename, tag)
 )

@@ -19,7 +19,7 @@ class DatabaseManager:
         return rows
 
     def print_all_tables(self):
-        tables = ['users', 'games', 'rolls', 'used_rolls']
+        tables = ['users', 'games', 'rolls', 'used_cards']
         for table in tables:
             rows = self.get_table(table)
             print(rows)
@@ -120,7 +120,7 @@ class DatabaseManager:
             f"""
             INSERT INTO rolls 
             (username, gamename, pokemon_id)
-            VALUES ({username}, {gamename}, {pokemon_id})
+            VALUES (\'{username}\', \'{gamename}\', {pokemon_id})
             """
         )
         self.connection.commit()
@@ -130,7 +130,7 @@ class DatabaseManager:
             f"""
             INSERT INTO used_cards 
             (username, gamename, card_id)
-            VALUES ({username}, {gamename}, {card_id})
+            VALUES (\'{username}\', \'{gamename}\', {card_id})
             """
         )
         self.connection.commit()

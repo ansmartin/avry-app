@@ -205,7 +205,7 @@ class GameSessionManager:
         if pokemon_id is None:
             return False
 
-        self.game.box.remove(pokemon_id)
+        self.game.box.remove(position)
         self.user_system.db.delete_pokemon(
             self.user_system.active_user.username,
             self.game.name,

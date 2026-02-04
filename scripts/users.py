@@ -17,7 +17,7 @@ class UserSystem:
 
     def __init__(self, db:DatabaseManager):
         self.db = db
-        self.usernames = ClassList(UserSystem.MAX_USERS, self.db.get_users())
+        self.usernames = ClassList(UserSystem.MAX_USERS, self.db.get_usernames())
         self.active_user = None
 
     def insert_user(self, name:str) -> bool:

@@ -52,11 +52,6 @@ class GameSession:
         self.rolls_backup = self.options.rolls
         self.used_cards = {}
 
-    def reset_rolls_and_box(self):
-        self.options.rolls = self.rolls_backup
-        self.options.used_rolls = 0
-        self.box.reset()
-
 
     def get_rolls(self) -> int:
         return self.options.rolls
@@ -185,9 +180,9 @@ class GameSessionManager:
             self.game.filters.fully_evolved,
         )
 
-    def insert_roll(self, pokemon_id:int):
+    def insert_pokemon(self, pokemon_id:int):
         self.game.box.add(pokemon_id)
-        self.user_system.db.insert_roll(
+        self.user_system.db.insert_pokemon(
             self.user_system.active_user.username,
             self.game.name,
             pokemon_id
@@ -199,16 +194,19 @@ class GameSessionManager:
             return False
 
         self.user_system.active_user.games.remove(position)
-        self.user_system.db.delete_game(self.user_system.active_user.username, gamename)
+        username = self.user_system.active_user.username
+        self.user_system.db.delete_game(username, gamename)
+        self.user_system.db.delete_pokemon_box(username, gamename)
+        self.user_system.db.delete_all_used_cards(username, gamename)
         return True
 
-    def delete_roll(self, position:int) -> bool:
+    def delete_pokemon(self, position:int) -> bool:
         pokemon_id = self.game.box.get(position)
         if pokemon_id is None:
             return False
 
         self.game.box.remove(pokemon_id)
-        self.user_system.db.delete_roll(
+        self.user_system.db.delete_pokemon(
             self.user_system.active_user.username,
             self.game.name,
             pokemon_id
@@ -240,7 +238,7 @@ class GameSessionManager:
             fully_evolved = game[13]
         )
 
-        pokemon_ids = self.user_system.db.get_rolls(
+        pokemon_ids = self.user_system.db.get_pokemon_box(
             self.user_system.active_user.username,
             gamename
         )
@@ -272,6 +270,27 @@ class GameSessionManager:
         # usar carta
         self.spend_money(card.price)
         self.add_used_card(card.tag)
+
+    def reset_rolls_and_box(self):
+        self.game.options.rolls = self.game.rolls_backup
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'rolls',
+            self.game.rolls_backup
+        )
+        self.game.options.used_rolls = 0
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'used_rolls',
+            0
+        )
+        self.game.box.reset()
+        self.user_system.db.delete_pokemon_box(
+            self.user_system.active_user.username,
+            self.game.name
+        )
 
 
     def spend_roll(self):

@@ -19,7 +19,7 @@ class DatabaseManager:
         return rows
 
     def print_all_tables(self):
-        tables = ['users', 'games', 'rolls', 'used_cards']
+        tables = ['users', 'games', 'pokemon_box', 'used_cards']
         for table in tables:
             rows = self.get_table(table)
             print(rows)
@@ -29,8 +29,13 @@ class DatabaseManager:
         self.connection.commit()
 
 
-    def get_users(self) -> list:
+    def get_usernames(self) -> list:
         self.cur.execute(f"SELECT username FROM users")
+        rows = self.cur.fetchall()
+        return [ x[0] for x in rows ]
+
+    def get_gamenames(self, username:str) -> list:
+        self.cur.execute(f"SELECT gamename FROM games WHERE username=\'{username}\'")
         rows = self.cur.fetchall()
         return [ x[0] for x in rows ]
 
@@ -39,13 +44,8 @@ class DatabaseManager:
         rows = self.cur.fetchall()
         return rows[0]
 
-    def get_gamenames(self, username:str) -> list:
-        self.cur.execute(f"SELECT gamename FROM games WHERE username=\'{username}\'")
-        rows = self.cur.fetchall()
-        return [ x[0] for x in rows ]
-
-    def get_rolls(self, username:str, gamename:str) -> list:
-        self.cur.execute(f"SELECT pokemon_id FROM rolls WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
+    def get_pokemon_box(self, username:str, gamename:str) -> list:
+        self.cur.execute(f"SELECT pokemon_id FROM pokemon_box WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
         rows = self.cur.fetchall()
         return [ x[0] for x in rows ]
 
@@ -115,10 +115,10 @@ class DatabaseManager:
         )
         self.connection.commit()
 
-    def insert_roll(self, username:str, gamename:str, pokemon_id:int):
+    def insert_pokemon(self, username:str, gamename:str, pokemon_id:int):
         self.cur.execute(
             f"""
-            INSERT INTO rolls 
+            INSERT INTO pokemon_box 
             (username, gamename, pokemon_id)
             VALUES (\'{username}\', \'{gamename}\', {pokemon_id})
             """
@@ -148,8 +148,16 @@ class DatabaseManager:
         self.cur.execute(f"DELETE FROM games WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
         self.connection.commit()
 
-    def delete_roll(self, username:str, gamename:str, pokemon_id:int):
-        self.cur.execute(f"DELETE FROM rolls WHERE username=\'{username}\' AND gamename=\'{gamename}\' AND pokemon_id={pokemon_id}")
+    def delete_pokemon_box(self, username:str, gamename:str):
+        self.cur.execute(f"DELETE FROM pokemon_box WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
+        self.connection.commit()
+
+    def delete_pokemon(self, username:str, gamename:str, pokemon_id:int):
+        self.cur.execute(f"DELETE FROM pokemon_box WHERE username=\'{username}\' AND gamename=\'{gamename}\' AND pokemon_id={pokemon_id}")
+        self.connection.commit()
+
+    def delete_all_used_cards(self, username:str, gamename:str):
+        self.cur.execute(f"DELETE FROM used_cards WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
         self.connection.commit()
 
     def delete_used_card(self, username:str, gamename:str, card_id:int):

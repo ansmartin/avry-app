@@ -21,7 +21,7 @@ CREATE TABLE games(
 	CONSTRAINT game_pk PRIMARY KEY (username, gamename)
 )
 
-CREATE TABLE rolls(
+CREATE TABLE pokemon_box(
 	username TEXT NOT NULL,
     gamename TEXT NOT NULL,
 	pokemon_id INTEGER NOT NULL,

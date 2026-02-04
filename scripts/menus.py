@@ -143,7 +143,7 @@ class MenuManager():
 
         # guardar pokemon
         pokemon_id = pokemon['id']
-        self.game_manager.insert_roll(pokemon_id)
+        self.game_manager.insert_pokemon(pokemon_id)
         return True
 
 
@@ -626,8 +626,8 @@ class MenuManager():
 
         # obtener pokemon y guardar archivo de juego
         if self.get_pokemon():
-            self.game_manager.delete_roll(position1)
-            self.game_manager.delete_roll(position2)
+            self.game_manager.delete_pokemon(position1)
+            self.game_manager.delete_pokemon(position2)
             self.game_manager.buy_card_and_save(card)
 
     def use_card_intercambio(self):
@@ -656,7 +656,7 @@ class MenuManager():
 
         # obtener pokemon y guardar archivo de juego
         if self.get_pokemon():
-            self.game_manager.delete_roll(pokemon_position)
+            self.game_manager.delete_pokemon(pokemon_position)
             self.game_manager.buy_card_and_save(card)
 
     def use_card_preevo(self):
@@ -697,8 +697,8 @@ class MenuManager():
         self.print_pokemon(pokemon)
 
         pokemon_id = pokemon['id']
-        self.game_manager.insert_roll(pokemon_id)
-        self.game_manager.delete_roll(pokemon_position)
+        self.game_manager.insert_pokemon(pokemon_id)
+        self.game_manager.delete_pokemon(pokemon_position)
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save(card)
@@ -715,7 +715,7 @@ class MenuManager():
             return
 
         print('\nTiradas reiniciadas.')
-        self.game_manager.game.reset_rolls_and_box()
+        self.game_manager.reset_rolls_and_box()
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save(card)
@@ -813,7 +813,7 @@ class MenuManager():
             print('\nTirada gastada.')
             pokemon = pokemon_list.pop(pokemon_position)
             pokemon_id = pokemon['id']
-            self.game_manager.insert_roll(pokemon_id)
+            self.game_manager.insert_pokemon(pokemon_id)
             self.game_manager.spend_roll()
             picks+=1
 

@@ -138,9 +138,12 @@ class MenuManager():
             print('\nNingún Pokémon cumple con los criterios de búsqueda.')
             return False
         
-        # mostrar y guardar pokemon
+        # mostrar
         self.print_pokemon(pokemon)
-        self.game_manager.game.box.add(pokemon['id'])
+
+        # guardar pokemon
+        pokemon_id = pokemon['id']
+        self.game_manager.insert_roll(pokemon_id)
         return True
 
 
@@ -623,8 +626,8 @@ class MenuManager():
 
         # obtener pokemon y guardar archivo de juego
         if self.get_pokemon():
-            self.game_manager.game.box.remove(position1)
-            self.game_manager.game.box.remove(position2)
+            self.game_manager.delete_roll(position1)
+            self.game_manager.delete_roll(position2)
             self.game_manager.buy_card_and_save(card)
 
     def use_card_intercambio(self):
@@ -653,7 +656,7 @@ class MenuManager():
 
         # obtener pokemon y guardar archivo de juego
         if self.get_pokemon():
-            self.game_manager.game.box.remove(pokemon_position)
+            self.game_manager.delete_roll(pokemon_position)
             self.game_manager.buy_card_and_save(card)
 
     def use_card_preevo(self):
@@ -692,7 +695,10 @@ class MenuManager():
 
         # mostrar y guardar pokemon
         self.print_pokemon(pokemon)
-        self.game_manager.game.box._list[pokemon_position] = preevo_id
+
+        pokemon_id = pokemon['id']
+        self.game_manager.insert_roll(pokemon_id)
+        self.game_manager.delete_roll(pokemon_position)
 
         # guardar archivo de juego
         self.game_manager.buy_card_and_save(card)
@@ -806,7 +812,8 @@ class MenuManager():
             clear()
             print('\nTirada gastada.')
             pokemon = pokemon_list.pop(pokemon_position)
-            self.game_manager.game.box.add(pokemon['id'])
+            pokemon_id = pokemon['id']
+            self.game_manager.insert_roll(pokemon_id)
             self.game_manager.spend_roll()
             picks+=1
 

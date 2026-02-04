@@ -41,13 +41,14 @@ class GameSession:
     def __init__(self, 
             name:str, 
             options:GameOptions = None, 
-            filters:PokemonFilters = None
+            filters:PokemonFilters = None,
+            box:ClassList = None
         ):
         self.name = name
         self.options = options if options else GameOptions()
         self.filters = filters if filters else PokemonFilters()
 
-        self.box = ClassList()
+        self.box = box if box else ClassList()
         self.rolls_backup = self.options.rolls
         self.used_cards = {}
 
@@ -97,7 +98,7 @@ class GameSessionManager:
         self.database = database
         self.game = None
 
-    def create_game_session(self, name:str, dic_options:dict=None, dic_filters:dict=None):
+    def create_game_session(self, gamename:str, dic_options:dict=None, dic_filters:dict=None):
         options = None
         filters = None
 
@@ -162,7 +163,7 @@ class GameSessionManager:
             )
 
 
-        self.game = GameSession(name, options, filters)
+        self.game = GameSession(gamename, options, filters)
         self.insert_game()
 
     def insert_game(self):
@@ -184,6 +185,14 @@ class GameSessionManager:
             self.game.filters.fully_evolved,
         )
 
+    def insert_roll(self, pokemon_id:int):
+        self.game.box.add(pokemon_id)
+        self.user_system.db.insert_roll(
+            self.user_system.active_user.username,
+            self.game.name,
+            pokemon_id
+        )
+
     def delete_game(self, position:int) -> bool:
         gamename = self.user_system.active_user.games.get(position)
         if gamename is None:
@@ -193,6 +202,17 @@ class GameSessionManager:
         self.user_system.db.delete_game(self.user_system.active_user.username, gamename)
         return True
 
+    def delete_roll(self, position:int) -> bool:
+        pokemon_id = self.game.box.get(position)
+        if pokemon_id is None:
+            return False
+
+        self.game.box.remove(pokemon_id)
+        self.user_system.db.delete_roll(
+            self.user_system.active_user.username,
+            self.game.name,
+            pokemon_id
+        )
 
     def load_game(self, position:int) -> bool:
         gamename = self.user_system.active_user.games.get(position)
@@ -220,7 +240,13 @@ class GameSessionManager:
             fully_evolved = game[13]
         )
 
-        self.game = GameSession(gamename, options, filters)
+        pokemon_ids = self.user_system.db.get_rolls(
+            self.user_system.active_user.username,
+            gamename
+        )
+        box = ClassList(new_list = pokemon_ids)
+
+        self.game = GameSession(gamename, options, filters, box)
         self.database.filter_dataset(self.game.filters)
         return True
 

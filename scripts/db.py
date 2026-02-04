@@ -19,7 +19,7 @@ class DatabaseManager:
         return rows
 
     def print_all_tables(self):
-        tables = ['users', 'games', 'rolls']
+        tables = ['users', 'games', 'rolls', 'used_rolls']
         for table in tables:
             rows = self.get_table(table)
             print(rows)
@@ -34,23 +34,23 @@ class DatabaseManager:
         rows = self.cur.fetchall()
         return [ x[0] for x in rows ]
 
-    def get_game_names(self, username:str) -> list:
-        self.cur.execute(f"SELECT gamename FROM games WHERE username=\'{username}\'")
-        rows = self.cur.fetchall()
-        return [ x[0] for x in rows ]
-
     def get_game(self, username:str, gamename:str) -> list:
         self.cur.execute(f"SELECT * FROM games WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
         rows = self.cur.fetchall()
         return rows[0]
 
-    def get_rolls(self, game_id:int) -> list:
-        self.cur.execute(f"SELECT pokemon_id FROM rolls WHERE game_id={game_id}")
+    def get_gamenames(self, username:str) -> list:
+        self.cur.execute(f"SELECT gamename FROM games WHERE username=\'{username}\'")
         rows = self.cur.fetchall()
         return [ x[0] for x in rows ]
 
-    def get_used_cards(self, game_id:int) -> list:
-        self.cur.execute(f"SELECT card_id FROM used_cards WHERE game_id={game_id}")
+    def get_rolls(self, username:str, gamename:str) -> list:
+        self.cur.execute(f"SELECT pokemon_id FROM rolls WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
+        rows = self.cur.fetchall()
+        return [ x[0] for x in rows ]
+
+    def get_used_cards(self, username:str, gamename:str) -> list:
+        self.cur.execute(f"SELECT card_id FROM used_cards WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
         rows = self.cur.fetchall()
         return [ x[0] for x in rows ]
 
@@ -115,22 +115,22 @@ class DatabaseManager:
         )
         self.connection.commit()
 
-    def insert_roll(self, game_id:int, pokemon_id:int):
+    def insert_roll(self, username:str, gamename:str, pokemon_id:int):
         self.cur.execute(
             f"""
             INSERT INTO rolls 
-            (game_id, pokemon_id)
-            VALUES ({game_id}, {pokemon_id})
+            (username, gamename, pokemon_id)
+            VALUES ({username}, {gamename}, {pokemon_id})
             """
         )
         self.connection.commit()
 
-    def insert_used_card(self, game_id:int, card_id:int):
+    def insert_used_card(self, username:str, gamename:str, card_id:int):
         self.cur.execute(
             f"""
             INSERT INTO used_cards 
-            (game_id, card_id)
-            VALUES ({game_id}, {card_id})
+            (username, gamename, card_id)
+            VALUES ({username}, {gamename}, {card_id})
             """
         )
         self.connection.commit()
@@ -148,15 +148,19 @@ class DatabaseManager:
         self.cur.execute(f"DELETE FROM games WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
         self.connection.commit()
 
-    def delete_roll(self, game_id:int, pokemon_id:int):
-        self.cur.execute(f"DELETE FROM rolls WHERE game_id={game_id} AND pokemon_id={pokemon_id}")
+    def delete_roll(self, username:str, gamename:str, pokemon_id:int):
+        self.cur.execute(f"DELETE FROM rolls WHERE username=\'{username}\' AND gamename=\'{gamename}\' AND pokemon_id={pokemon_id}")
         self.connection.commit()
 
-    def delete_used_card(self, game_id:int, card_id:int):
-        self.cur.execute(f"DELETE FROM used_cards WHERE game_id={game_id} AND card_id={card_id}")
+    def delete_used_card(self, username:str, gamename:str, card_id:int):
+        self.cur.execute(f"DELETE FROM used_cards WHERE username=\'{username}\' AND gamename=\'{gamename}\' AND card_id={card_id}")
         self.connection.commit()
 
 
     def update(self, table:str, column:str, new_value, check_column, check_column_value):
         self.cur.execute(f"UPDATE {table} SET {column}={new_value} WHERE {check_column}={check_column_value}")
+        self.connection.commit()
+
+    def update_game(self, username:str, gamename:str, column:str, value):
+        self.cur.execute(f"UPDATE games SET {column}={value} WHERE username=\'{username}\' AND gamename=\'{gamename}\'")
         self.connection.commit()

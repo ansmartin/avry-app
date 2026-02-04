@@ -44,11 +44,10 @@ class GameSession:
             filters:PokemonFilters = None
         ):
         self.name = name
-        self.box = ClassList()
-
         self.options = options if options else GameOptions()
         self.filters = filters if filters else PokemonFilters()
 
+        self.box = ClassList()
         self.rolls_backup = self.options.rolls
         self.used_cards = {}
 
@@ -89,25 +88,6 @@ class GameSession:
 
     def can_spend_item_points(self, points:int) -> bool:
         return self.options.item_points >= points
-
-
-    def spend_roll(self):
-        self.options.rolls-=1
-        self.options.used_rolls+=1
-
-    def spend_ticket(self):
-        self.options.tickets-=1
-
-    def spend_money(self, price:int):
-        self.options.money-=price
-
-    def spend_item_points(self, points:int):
-        self.options.item_points-=points
-
-
-    def add_used_card(self, tag:str):
-        uses = self.used_cards.get(tag, 0) + 1
-        self.used_cards[tag] = uses
 
 
 class GameSessionManager:
@@ -223,21 +203,21 @@ class GameSessionManager:
         game = self.user_system.db.get_game(self.user_system.active_user.username, gamename)
 
         options = GameOptions(
-            rolls = game[3], 
-            used_rolls = game[4], 
-            tickets = game[5], 
-            money = game[6], 
-            item_points = game[7]
+            rolls = game[2], 
+            used_rolls = game[3], 
+            tickets = game[4], 
+            money = game[5], 
+            item_points = game[6]
         )
 
         filters = PokemonFilters(
-            generation = game[8],
-            mythical = game[9],
-            legendary = game[10],
-            sublegendary = game[11],
-            powerhouse = game[12],
-            others = game[13],
-            fully_evolved = game[14]
+            generation = game[7],
+            mythical = game[8],
+            legendary = game[9],
+            sublegendary = game[10],
+            powerhouse = game[11],
+            others = game[12],
+            fully_evolved = game[13]
         )
 
         self.game = GameSession(gamename, options, filters)
@@ -264,5 +244,54 @@ class GameSessionManager:
 
     def buy_card_and_save(self, card:Card):
         # usar carta
-        self.game.spend_money(card.price)
-        self.game.add_used_card(card.tag)
+        self.spend_money(card.price)
+        self.add_used_card(card.tag)
+
+
+    def spend_roll(self):
+        self.game.options.rolls-=1
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'rolls',
+            self.game.options.rolls
+        )
+        self.game.options.used_rolls+=1
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'used_rolls',
+            self.game.options.used_rolls
+        )
+
+    def spend_ticket(self):
+        self.game.options.tickets-=1
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'tickets',
+            self.game.options.tickets
+        )
+
+    def spend_money(self, price:int):
+        self.game.options.money-=price
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'money',
+            self.game.options.money
+        )
+
+    def spend_item_points(self, points:int):
+        self.game.options.item_points-=points
+        self.user_system.db.update_game(
+            self.user_system.active_user.username,
+            self.game.name,
+            'item_points',
+            self.game.options.item_points
+        )
+
+
+    def add_used_card(self, tag:str):
+        uses = self.game.used_cards.get(tag, 0) + 1
+        self.game.used_cards[tag] = uses

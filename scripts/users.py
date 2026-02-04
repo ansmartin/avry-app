@@ -48,7 +48,7 @@ class UserSystem:
         if name is None:
             return False
 
-        game_names = self.db.get_game_names(name)
+        game_names = self.db.get_gamenames(name)
         games = ClassList(User.MAX_GAMES, game_names)
         self.active_user = User(name, games)
         return True

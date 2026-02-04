@@ -467,10 +467,9 @@ class MenuManager():
             print('\nNo quedan tiradas.')
             return
 
-        # obtener pokemon y guardar archivo de juego
+        # obtener pokemon y gastar tirada
         if self.get_pokemon():
-            self.game_manager.game.spend_roll()
-            self.game_manager.save_file_game()
+            self.game_manager.spend_roll()
 
     def roll_with_type(self):
         if self.game_manager.game.get_rolls()==0:
@@ -492,11 +491,10 @@ class MenuManager():
             (self.database.df_filtered.second_type==pokemon_type)
         )
 
-        # obtener pokemon y guardar archivo de juego
+        # obtener pokemon, gastar ticket y tirada
         if self.get_pokemon(mask):
-            self.game_manager.game.spend_ticket()
-            self.game_manager.game.spend_roll()
-            self.game_manager.save_file_game()
+            self.game_manager.spend_ticket()
+            self.game_manager.spend_roll()
 
     def open_menu_cards(self):
         
@@ -809,7 +807,7 @@ class MenuManager():
             print('\nTirada gastada.')
             pokemon = pokemon_list.pop(pokemon_position)
             self.game_manager.game.box.add(pokemon['id'])
-            self.game_manager.game.spend_roll()
+            self.game_manager.spend_roll()
             picks+=1
 
             # termina

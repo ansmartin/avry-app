@@ -23,17 +23,17 @@ class PokemonFilters:
             # filter by stage
             fully_evolved:bool = True
         ):
-        self.filter_by_type = filter_by_type
+        self.filter_by_type = bool(filter_by_type)
         self.first_type = first_type
         self.second_type = second_type
         self.any_type = any_type
         self.generation = generation
-        self.mythical = mythical
-        self.legendary = legendary
-        self.sublegendary = sublegendary
-        self.powerhouse = powerhouse
-        self.others = others
-        self.fully_evolved = fully_evolved
+        self.mythical = bool(mythical)
+        self.legendary = bool(legendary)
+        self.sublegendary = bool(sublegendary)
+        self.powerhouse = bool(powerhouse)
+        self.others = bool(others)
+        self.fully_evolved = bool(fully_evolved)
         # self.has_mega = False
         # self.has_gmax = False
         # self.random_ability_same_pokemon = False

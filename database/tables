@@ -1,9 +1,12 @@
 CREATE TABLE users(
-    username TEXT PRIMARY KEY
+    user_id INTEGER PRIMARY KEY,
+	username TEXT NOT NULL,
+	UNIQUE (username)
 )
 
 CREATE TABLE games(
-	username TEXT NOT NULL,
+    game_id INTEGER PRIMARY KEY,
+	user_id INTEGER NOT NULL,
     gamename TEXT NOT NULL,
 	max_rolls INTEGER NOT NULL,
 	rolls INTEGER NOT NULL,
@@ -17,25 +20,22 @@ CREATE TABLE games(
 	include_powerhouse BOOLEAN NOT NULL,
 	include_others BOOLEAN NOT NULL,
 	fully_evolved_only BOOLEAN NOT NULL,
-	FOREIGN KEY (username) REFERENCES users(username),
-	CONSTRAINT game_pk PRIMARY KEY (username, gamename)
+	FOREIGN KEY (user_id) REFERENCES users(user_id),
+	UNIQUE (user_id, gamename)
 )
 
 CREATE TABLE pokemon_box(
-	username TEXT NOT NULL,
-    gamename TEXT NOT NULL,
+    game_id INTEGER NOT NULL,
 	pokemon_id INTEGER NOT NULL,
-	FOREIGN KEY (username) REFERENCES games(username),
-	FOREIGN KEY (gamename) REFERENCES games(gamename),
-	CONSTRAINT roll_pk PRIMARY KEY (username, gamename, pokemon_id)
+	FOREIGN KEY (game_id) REFERENCES games(game_id),
+	CONSTRAINT roll_pk PRIMARY KEY (game_id, pokemon_id)
 )
 
 CREATE TABLE used_cards(
-	username TEXT NOT NULL,
-    gamename TEXT NOT NULL,
+    game_id INTEGER NOT NULL,
 	tag TEXT NOT NULL,
 	uses INTEGER NOT NULL,
-	FOREIGN KEY (username) REFERENCES games(username),
-	FOREIGN KEY (gamename) REFERENCES games(gamename),
-	CONSTRAINT used_card_pk PRIMARY KEY (username, gamename, tag)
+	FOREIGN KEY (game_id) REFERENCES games(game_id),
+	CONSTRAINT used_card_pk PRIMARY KEY (game_id, tag),
+	UNIQUE (tag)
 )

@@ -147,7 +147,8 @@ class GameSessionManager:
                 sublegendary = dic_filters['sublegendary'],
                 powerhouse = dic_filters['powerhouse'],
                 others = dic_filters['others'],
-                fully_evolved = dic_filters['fully_evolved']
+                fully_evolved = dic_filters['fully_evolved'],
+                random_ability = dic_filters['random_ability']
             )
 
         game = GameSession(gamename, options, filters)
@@ -166,14 +167,16 @@ class GameSessionManager:
             game.filters.powerhouse,
             game.filters.others,
             game.filters.fully_evolved,
+            game.filters.random_ability
         )
         self.user_system.active_user.games.add(gamename)
 
-    def insert_pokemon(self, pokemon_id:int):
+    def insert_pokemon(self, pokemon_id:int, ability_id:int=None):
         self.game.box.add(pokemon_id)
         self.user_system.db.insert_pokemon(
             self.game.game_id,
-            pokemon_id
+            pokemon_id,
+            ability_id
         )
 
     def delete_game(self, position:int) -> bool:
@@ -227,7 +230,8 @@ class GameSessionManager:
             sublegendary = game[11],
             powerhouse = game[12],
             others = game[13],
-            fully_evolved = game[14]
+            fully_evolved = game[14],
+            random_ability = game[15]
         )
 
         pokemon_ids = self.user_system.db.get_pokemon_box(game_id)
@@ -270,7 +274,9 @@ class GameSessionManager:
 
     def buy_card_and_save(self, card:Card):
         self.spend_money(card.price)
-        self.add_used_card(card.tag)
+        
+        if card.limit>0:
+            self.add_used_card(card.tag)
 
     def reset_rolls_and_box(self):
         self.game.options.rolls = self.game.options.max_rolls

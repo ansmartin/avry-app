@@ -114,13 +114,16 @@ class MenuManager():
             types += f' / {second_type.capitalize()}'
         print(types)
         
-        abilities = f'\tHabilidad: {capitalize_all_words(first_ability)}'
-        if(second_ability is not None):
-            abilities += f' / {capitalize_all_words(second_ability)}'
-        print(abilities)
-
-        if(hidden_ability is not None):
-            print(f'\tHabilidad oculta: {capitalize_all_words(hidden_ability)}')
+        random_ability = pokemon.get('random_ability', None)
+        if random_ability:
+            print(f'\tHabilidad (random): {random_ability}')
+        else:
+            abilities = f'\tHabilidad: {capitalize_all_words(first_ability)}'
+            if(second_ability is not None):
+                abilities += f' / {capitalize_all_words(second_ability)}'
+            print(abilities)
+            if(hidden_ability is not None):
+                print(f'\tHabilidad oculta: {capitalize_all_words(hidden_ability)}')
 
         print(f'\tIlustración: {sprite_default}')
 
@@ -138,12 +141,18 @@ class MenuManager():
             print('\nNingún Pokémon cumple con los criterios de búsqueda.')
             return False
         
+        ability_id = None
+        if self.game_manager.game.filters.random_ability:
+            ability = self.database.get_random_ability()
+            pokemon['random_ability'] = ability['ability_name']
+            ability_id = ability['ability_id']
+
         # mostrar
         self.print_pokemon(pokemon)
 
         # guardar pokemon
         pokemon_id = pokemon['id']
-        self.game_manager.insert_pokemon(pokemon_id)
+        self.game_manager.insert_pokemon(pokemon_id, ability_id)
         return True
 
 
@@ -373,6 +382,9 @@ class MenuManager():
                         print('¿Incluir solamente Pokémon en su última etapa evolutiva? Escribe 1 para si, escribe otra cosa para no.')
                         filters['fully_evolved'] = input()=='1'
 
+                        print('\n¿Obtener habilidades randomizadas? (De cualquier Pokémon posible) Escribe 1 para si, escribe otra cosa para no.')
+                        filters['random_ability'] = input()=='1'
+
                     self.game_manager.create_game_session(name, options, filters)
                     clear()
                             
@@ -456,6 +468,8 @@ class MenuManager():
             elif(option=='m'):
                 pokemon = self.database.get_random_pokemon(self.game_manager.game.box._list)
                 if pokemon is not None:
+                    if self.game_manager.game.filters.random_ability:
+                        pokemon['random_ability'] = self.database.get_random_ability()
                     self.print_pokemon(pokemon)
                     print('\nDictionary:')
                     for k,v in pokemon.items():
@@ -693,11 +707,17 @@ class MenuManager():
         #get_pokemon()
         pokemon = self.database.df.loc[preevo_id].to_dict()
 
+        ability_id = None
+        if self.game_manager.game.filters.random_ability:
+            ability = self.database.get_random_ability()
+            pokemon['random_ability'] = ability['ability_name']
+            ability_id = ability['ability_id']
+
         # mostrar y guardar pokemon
         self.print_pokemon(pokemon)
 
         pokemon_id = pokemon['id']
-        self.game_manager.insert_pokemon(pokemon_id)
+        self.game_manager.insert_pokemon(pokemon_id, ability_id)
         self.game_manager.delete_pokemon(pokemon_position)
 
         # guardar archivo de juego
@@ -775,6 +795,11 @@ class MenuManager():
             if pokemon is None:
                 break
 
+            if self.game_manager.game.filters.random_ability:
+                ability = self.database.get_random_ability()
+                pokemon['random_ability'] = ability['ability_name']
+                pokemon['random_ability_id'] = ability['ability_id']
+
             pokemon_list.append(pokemon)
 
         if len(pokemon_list)==0:
@@ -813,7 +838,8 @@ class MenuManager():
             print('\nTirada gastada.')
             pokemon = pokemon_list.pop(pokemon_position)
             pokemon_id = pokemon['id']
-            self.game_manager.insert_pokemon(pokemon_id)
+            ability_id = pokemon.get('random_ability_id',None)
+            self.game_manager.insert_pokemon(pokemon_id, ability_id)
             self.game_manager.spend_roll()
             picks+=1
 

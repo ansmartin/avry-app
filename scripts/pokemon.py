@@ -8,8 +8,10 @@ from scripts.filters import PokemonFilters
 class PokemonDatabaseManager:
 
     def __init__(self):
-        self.df = pd.read_parquet(const.DATAFRAME_PATH)
+        self.df = pd.read_parquet(const.DF_POKEMON_PATH)
         self.df_filtered = None
+        self.abilities = pd.read_parquet(const.DF_ABILITIES_PATH)
+        self.abilities_filtered = None
 
     def get_fullname(self, pokemon_id:int) -> str:
         pokemon = self.df.loc[pokemon_id]
@@ -29,7 +31,7 @@ class PokemonDatabaseManager:
         if self.df_filtered is None:
             dataframe = self.df
         else:
-            if len(self.df_filtered)==0:
+            if self.df_filtered.shape[0]==0:
                 return None
             dataframe = self.df_filtered
 
@@ -53,27 +55,27 @@ class PokemonDatabaseManager:
         dataframe = self.df
 
         # type
-        if filters.filter_by_type:
-            if filters.any_type:
-                mask = (
-                    (dataframe.first_type==filters.any_type)
-                    |
-                    (dataframe.second_type==filters.any_type)
-                )
-                dataframe = dataframe.loc[mask]
-            elif filters.first_type and filters.second_type:
-                mask = (
-                    (dataframe.first_type==filters.first_type)
-                    &
-                    (dataframe.second_type==filters.second_type)
-                )
-                dataframe = dataframe.loc[mask]
-            elif filters.first_type:
-                mask = dataframe.first_type==filters.first_type
-                dataframe = dataframe.loc[mask]
-            elif filters.second_type:
-                mask = dataframe.second_type==filters.second_type
-                dataframe = dataframe.loc[mask]
+        # if filters.filter_by_type:
+        #     if filters.any_type:
+        #         mask = (
+        #             (dataframe.first_type==filters.any_type)
+        #             |
+        #             (dataframe.second_type==filters.any_type)
+        #         )
+        #         dataframe = dataframe.loc[mask]
+        #     elif filters.first_type and filters.second_type:
+        #         mask = (
+        #             (dataframe.first_type==filters.first_type)
+        #             &
+        #             (dataframe.second_type==filters.second_type)
+        #         )
+        #         dataframe = dataframe.loc[mask]
+        #     elif filters.first_type:
+        #         mask = dataframe.first_type==filters.first_type
+        #         dataframe = dataframe.loc[mask]
+        #     elif filters.second_type:
+        #         mask = dataframe.second_type==filters.second_type
+        #         dataframe = dataframe.loc[mask]
 
         # generation
         if filters.generation != PokemonFilters.DEFAULT_GENERATION:
@@ -124,8 +126,25 @@ class PokemonDatabaseManager:
             )
         dataframe = dataframe.loc[mask]
 
+        # filtrar habilidades
+        if filters.random_ability:
+            self.filter_abilities(filters.generation)
+
         # nuevo conjunto de datos filtrados
         self.df_filtered = dataframe
+
+    def filter_abilities(self, generation:int):
+        dataframe = self.abilities
+        mask = dataframe.generation.apply(lambda x : x <= generation)
+        self.abilities_filtered = dataframe.loc[mask]
+
+    def get_random_ability(self) -> dict:
+        if self.abilities_filtered.shape[0]==0:
+            return None
+
+        n = random.randint(0, self.abilities_filtered.shape[0]-1)
+        row = self.abilities_filtered.iloc[n]
+        return row.to_dict()
 
     # def deactivate_filters(self):
     #     self.dfFiltered = None

@@ -131,7 +131,8 @@ class DatabaseManager:
             include_sublegendary:bool,
             include_powerhouse:bool,
             include_others:bool,
-            fully_evolved_only:bool
+            fully_evolved_only:bool,
+	        random_ability:bool,
         ):
         self.cur.execute(
             f"""
@@ -150,7 +151,8 @@ class DatabaseManager:
                 include_sublegendary,
                 include_powerhouse,
                 include_others,
-                fully_evolved_only
+                fully_evolved_only,
+                random_ability
             )
             VALUES 
             (
@@ -167,18 +169,26 @@ class DatabaseManager:
                 {int(include_sublegendary)},
                 {int(include_powerhouse)},
                 {int(include_others)},
-                {int(fully_evolved_only)}
+                {int(fully_evolved_only)},
+                {int(random_ability)}
             )
             """
         )
         self.connection.commit()
 
-    def insert_pokemon(self, game_id:int, pokemon_id:int):
+    def insert_pokemon(self, game_id:int, pokemon_id:int, ability_id:int=None):
+        if ability_id:
+            columns = "game_id, pokemon_id, ability_id"
+            values = f"{game_id}, {pokemon_id}, {ability_id}"
+        else:
+            columns = "game_id, pokemon_id"
+            values = f"{game_id}, {pokemon_id}"
+
         self.cur.execute(
             f"""
             INSERT INTO pokemon_box 
-            (game_id, pokemon_id)
-            VALUES ({game_id}, {pokemon_id})
+            ({columns})
+            VALUES ({values})
             """
         )
         self.connection.commit()

@@ -20,6 +20,7 @@ CREATE TABLE games(
 	include_powerhouse BOOLEAN NOT NULL,
 	include_others BOOLEAN NOT NULL,
 	fully_evolved_only BOOLEAN NOT NULL,
+	random_ability BOOLEAN NOT NULL,
 	FOREIGN KEY (user_id) REFERENCES users(user_id),
 	UNIQUE (user_id, gamename)
 )
@@ -27,6 +28,7 @@ CREATE TABLE games(
 CREATE TABLE pokemon_box(
     game_id INTEGER NOT NULL,
 	pokemon_id INTEGER NOT NULL,
+	ability_id INTEGER,
 	FOREIGN KEY (game_id) REFERENCES games(game_id),
 	CONSTRAINT roll_pk PRIMARY KEY (game_id, pokemon_id)
 )

@@ -177,18 +177,14 @@ class DatabaseManager:
         self.connection.commit()
 
     def insert_pokemon(self, game_id:int, pokemon_id:int, ability_id:int=None):
-        if ability_id:
-            columns = "game_id, pokemon_id, ability_id"
-            values = f"{game_id}, {pokemon_id}, {ability_id}"
-        else:
-            columns = "game_id, pokemon_id"
-            values = f"{game_id}, {pokemon_id}"
+        if ability_id is None:
+            ability_id = 'NULL'
 
         self.cur.execute(
             f"""
             INSERT INTO pokemon_box 
-            ({columns})
-            VALUES ({values})
+            (game_id, pokemon_id, ability_id)
+            VALUES ({game_id}, {pokemon_id}, {ability_id})
             """
         )
         self.connection.commit()

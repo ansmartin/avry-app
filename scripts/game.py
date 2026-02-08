@@ -1,6 +1,5 @@
 from scripts.users import UserSystem
 from scripts.pokemon import PokemonDatabaseManager
-from scripts.classlist import ClassList
 from scripts.filters import PokemonFilters
 from scripts.cards import Card
 
@@ -40,15 +39,15 @@ class GameSession:
             name:str, 
             options:GameOptions = None, 
             filters:PokemonFilters = None,
-            box:ClassList = None,
+            box:dict = None,
             used_cards:dict = None,
             game_id:int = None,
-            user_id:int = None,
+            user_id:int = None
         ):
         self.name = name
         self.options = options if options else GameOptions()
         self.filters = filters if filters else PokemonFilters()
-        self.box = box if box else ClassList()
+        self.box = box if box else {}
         self.used_cards = used_cards if used_cards else {}
         self.game_id = game_id
         self.user_id = user_id
@@ -172,7 +171,7 @@ class GameSessionManager:
         self.user_system.active_user.games.add(gamename)
 
     def insert_pokemon(self, pokemon_id:int, ability_id:int=None):
-        self.game.box.add(pokemon_id)
+        self.game.box[pokemon_id] = ability_id
         self.user_system.db.insert_pokemon(
             self.game.game_id,
             pokemon_id,
@@ -191,12 +190,12 @@ class GameSessionManager:
         self.user_system.db.delete_all_used_cards(self.game.game_id)
         return True
 
-    def delete_pokemon(self, position:int) -> bool:
-        pokemon_id = self.game.box.get(position)
-        if pokemon_id is None:
+    def delete_pokemon(self, pokemon_id:int):
+        pokemon = self.game.box.get(pokemon_id)
+        if pokemon is None:
             return False
 
-        self.game.box.remove(position)
+        self.game.box.pop(pokemon_id)
         self.user_system.db.delete_pokemon(
             self.game.game_id,
             pokemon_id
@@ -234,8 +233,8 @@ class GameSessionManager:
             random_ability = game[15]
         )
 
-        pokemon_ids = self.user_system.db.get_pokemon_box(game_id)
-        box = ClassList(new_list = pokemon_ids)
+        pokemons_list = self.user_system.db.get_pokemon_box(game_id)
+        box = { x[0]:x[1] for x in pokemons_list }
 
         used_cards_rows = self.user_system.db.get_used_cards(game_id)
         used_cards = {}
@@ -255,11 +254,8 @@ class GameSessionManager:
         return True
 
 
-    def get_namelist_of_obtained_pokemon(self) -> list:
-        return [ 
-            self.database.get_fullname(pokemon_id)
-            for pokemon_id in self.game.box._list
-        ]
+    def get_obtained_pokemon(self) -> list:
+        return list(self.game.box.items())
 
     def can_use_card(self, card:Card) -> bool:
         if card is None:
@@ -348,7 +344,7 @@ class GameSessionManager:
 
 
     def add_used_card(self, tag:str):
-        uses = self.game.used_cards.get(tag, None)
+        uses = self.game.used_cards.get(tag)
         if uses is None:
             uses = 1
             self.user_system.db.insert_used_card(

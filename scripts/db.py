@@ -101,9 +101,9 @@ class DatabaseManager:
         return [ x[0] for x in rows ]
 
     def get_pokemon_box(self, game_id:int) -> list:
-        self.cur.execute(f"SELECT pokemon_id FROM pokemon_box WHERE game_id={game_id}")
+        self.cur.execute(f"SELECT pokemon_id, ability_id FROM pokemon_box WHERE game_id={game_id}")
         rows = self.cur.fetchall()
-        return [ x[0] for x in rows ]
+        return rows
 
     def get_used_cards(self, game_id:int) -> list:
         self.cur.execute(f"SELECT tag, uses FROM used_cards WHERE game_id={game_id}")

@@ -140,11 +140,14 @@ class PokemonDatabaseManager:
 
     def get_random_ability(self) -> dict:
         if self.abilities_filtered.shape[0]==0:
-            return None
+            return {}
 
         n = random.randint(0, self.abilities_filtered.shape[0]-1)
         row = self.abilities_filtered.iloc[n]
         return row.to_dict()
+
+    def get_ability_name(self, ability_id:int):
+        return self.abilities.loc[ability_id].ability_name
 
     # def deactivate_filters(self):
     #     self.dfFiltered = None

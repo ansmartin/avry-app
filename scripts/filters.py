@@ -24,7 +24,7 @@ class PokemonFilters:
             fully_evolved:bool = True,
 
             # random ability
-            random_ability:bool = True
+            random_ability:bool = False
         ):
         # self.filter_by_type = bool(filter_by_type)
         # self.first_type = first_type
@@ -62,7 +62,7 @@ class PokemonFilters:
         print(f'   - el resto de Pokémon: {self.others}')
 
         print(f' - obtener sólo Pokémon completamente evolucionados: {self.fully_evolved}')
-        print(f' - obtener habilidades randomizadas: {self.fully_evolved}')
+        print(f' - obtener habilidades randomizadas: {self.random_ability}')
 
         # print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {self.has_mega}')
         # print(f' - obtener sólo Pokémon que puedan gigamaxizar: {self.has_gmax}')

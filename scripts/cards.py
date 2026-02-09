@@ -97,3 +97,4 @@ class CardManager:
 
     def __init__(self):
         self.cards = CardManager.get_all_cards()
+        self.cards_list = list(self.cards.keys())

@@ -133,12 +133,6 @@ class MenuManager():
         print(f'\tIlustración: {sprite_default}')
 
 
-    # def box_is_full(self):
-    #     if self.game_manager.game.box.is_full():
-    #         maxSizeBox = self.game_manager.game.box.max_size
-    #         print(f'\nSe ha alcanzado el límite de Pokémon en la caja ({maxSizeBox}/{maxSizeBox}). No se pueden obtener más Pokémon.')
-    #         return True
-
     def get_pokemon(self, mask=None) -> bool:
         pokemon = self.database.get_random_pokemon(self.game_manager.game.box.keys(), mask)
 
@@ -160,6 +154,10 @@ class MenuManager():
         self.game_manager.insert_pokemon(pokemon_id, ability_id)
         return True
 
+
+
+    # MENU MANAGE USERS
+    # =======================================================================
 
     def open_menu_users(self):
 
@@ -248,10 +246,6 @@ class MenuManager():
                         print('Número no reconocido.')
                         continue
 
-                    # if self.user_system.active_user.username == self.user_system.usernames[n]:
-                    #     print('No puedes borrar el usuario activo. Elige otro.')
-                    #     continue
-
                     if self.user_system.delete_user(n):
                         clear()
                         break
@@ -276,6 +270,10 @@ class MenuManager():
         for n, gamename in enumerate(self.user_system.active_user.games._list):
             print(f' - {n+1}:\t{gamename}')
 
+
+
+    # MENU MANAGE GAME SESSIONS
+    # =======================================================================
 
     def open_menu_game_sessions(self):
 
@@ -421,10 +419,6 @@ class MenuManager():
                         print('Número no reconocido.')
                         continue
 
-                    # if self.user_system.active_user.username == self.user_system.usernames[n]:
-                    #     print('No puedes borrar el usuario activo. Elige otro.')
-                    #     continue
-
                     if self.game_manager.delete_game(n):
                         clear()
                         break
@@ -439,6 +433,10 @@ class MenuManager():
             else:
                 print('Opción no reconocida.')
 
+
+
+    # MENU GAME
+    # =======================================================================
 
     def open_menu_game(self):
         while(True):
@@ -464,6 +462,7 @@ class MenuManager():
                 self.game_manager.game.filters.print_options()
 
             elif(option=='9'):
+                self.game_manager.game = None
                 clear()
                 return
             elif(option=='0'):
@@ -483,6 +482,7 @@ class MenuManager():
                 print('Opción no reconocida.')
 
             print(MenuManager.TEXT_LINE)
+
 
     def roll(self):
         if self.game_manager.game.get_rolls()==0:
@@ -518,6 +518,11 @@ class MenuManager():
             self.game_manager.spend_ticket()
             self.game_manager.spend_roll()
 
+
+
+    # MENU CARDS
+    # =======================================================================
+
     def open_menu_cards(self):
         
         clear()
@@ -528,7 +533,7 @@ class MenuManager():
             print(MenuManager.TEXT_LINE)
 
             print('\n    Lista de cartas de ventaja:')
-            for n, card in enumerate(self.card_manager.cards.values()):
+            for n, card in enumerate(self.card_manager.cards_list):
                 print(f'\n    - {n+1}: {card.name}')
                 print(f'        {card.description}')
 

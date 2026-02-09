@@ -38,6 +38,5 @@ CREATE TABLE used_cards(
 	tag TEXT NOT NULL,
 	uses INTEGER NOT NULL,
 	FOREIGN KEY (game_id) REFERENCES games(game_id),
-	CONSTRAINT used_card_pk PRIMARY KEY (game_id, tag),
-	UNIQUE (tag)
+	CONSTRAINT used_card_pk PRIMARY KEY (game_id, tag)
 )

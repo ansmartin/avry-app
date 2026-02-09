@@ -281,7 +281,7 @@ class GameSessionManager:
             'rolls',
             self.game.options.max_rolls
         )
-        self.game.box.reset()
+        self.game.box = {}
         self.user_system.db.delete_pokemon_box(
             self.game.game_id
         )

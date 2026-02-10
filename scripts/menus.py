@@ -1,5 +1,4 @@
 from os import system
-from numpy import isnan
 
 from scripts.users import UserSystem
 from scripts.game import GameSessionManager
@@ -61,6 +60,17 @@ class MenuManager():
     """
     TEXT_MENU_PLAY_GAME = TEXT_LINE + TEXT_MENU_PLAY_GAME + TEXT_LINE
 
+    TEXT_POKEMON_SEARCH_ERROR = '\nNingún Pokémon cumple con los criterios de búsqueda.'
+
+    def print_users(self):
+        print('\nUsuarios registrados:')
+        for n, username in enumerate(self.user_system.usernames._list):
+            print(f' - {n+1}:\t{username}')
+
+    def print_games(self):
+        print('\nSesiones de juego registradas:')
+        for n, gamename in enumerate(self.user_system.active_user.games._list):
+            print(f' - {n+1}:\t{gamename}')
 
     def print_active_user(self):
         print(f'\nUsuario: {self.user_system.active_user.username}')
@@ -76,7 +86,6 @@ class MenuManager():
 
     def print_box(self, pokemon_list:list):
         # pokemon_list = self.game_manager.get_obtained_pokemon()
-
         if len(pokemon_list)==0:
             print(f'\nLa lista de Pokémon obtenidos está vacía.')
         else:
@@ -84,25 +93,25 @@ class MenuManager():
             for n, pokemon in enumerate(pokemon_list):
                 pokemon_id = int(pokemon[0])
                 ability_id = pokemon[1]
-                row = f' - {n+1}:\t{self.database.get_fullname(pokemon_id)}   (ID: {pokemon_id})'
+                row = f' - {n+1}:\t{self.database.get_fullname(pokemon_id)}'#   (ID: {pokemon_id})'
                 if ability_id:
                     row += f'   (Habilidad: {self.database.get_ability_name(ability_id)})'
                 print(row)
 
     def print_pokemon(self, pokemon : dict):
-
+        # nombre
         species_name = pokemon['species_name']
         form_name_text = pokemon['form_name_text']
-
+        # generacion
         pokemon_generation_number = pokemon['pokemon_generation_number']
-
+        # tipos
         first_type = pokemon['first_type']
         second_type = pokemon['second_type']
-
+        # habilidades
         first_ability = pokemon['first_ability']
         second_ability = pokemon['second_ability']
         hidden_ability = pokemon['hidden_ability']
-
+        # sprite
         sprite_default = pokemon['sprite_default']
 
         print('\nPokémon obtenido:')
@@ -119,7 +128,7 @@ class MenuManager():
             types += f' / {second_type.capitalize()}'
         print(types)
         
-        random_ability = pokemon.get('random_ability')
+        random_ability = pokemon.get('random_ability_name')
         if random_ability:
             print(f'\tHabilidad (random): {random_ability}')
         else:
@@ -131,29 +140,6 @@ class MenuManager():
                 print(f'\tHabilidad oculta: {capitalize_all_words(hidden_ability)}')
 
         print(f'\tIlustración: {sprite_default}')
-
-
-    def get_pokemon(self, mask=None) -> bool:
-        pokemon = self.database.get_random_pokemon(self.game_manager.game.box.keys(), mask)
-
-        if pokemon is None:
-            print('\nNingún Pokémon cumple con los criterios de búsqueda.')
-            return False
-        
-        ability_id = None
-        if self.game_manager.game.filters.random_ability:
-            ability = self.database.get_random_ability()
-            pokemon['random_ability'] = ability.get('ability_name')
-            ability_id = ability.get('ability_id')
-
-        # mostrar
-        self.print_pokemon(pokemon)
-
-        # guardar pokemon
-        pokemon_id = pokemon['id']
-        self.game_manager.insert_pokemon(pokemon_id, ability_id)
-        return True
-
 
 
     # MENU MANAGE USERS
@@ -260,17 +246,6 @@ class MenuManager():
                 print('Opción no reconocida.')
 
 
-    def print_users(self):
-        print('\nUsuarios registrados:')
-        for n, username in enumerate(self.user_system.usernames._list):
-            print(f' - {n+1}:\t{username}')
-
-    def print_games(self):
-        print('\nSesiones de juego registradas:')
-        for n, gamename in enumerate(self.user_system.active_user.games._list):
-            print(f' - {n+1}:\t{gamename}')
-
-
 
     # MENU MANAGE GAME SESSIONS
     # =======================================================================
@@ -316,7 +291,7 @@ class MenuManager():
                         continue
 
                     # cargar
-                    if self.game_manager.load_game(n):
+                    if self.game_manager.load_game_session(n):
                         clear()
                         self.open_menu_game()
                         break
@@ -419,7 +394,7 @@ class MenuManager():
                         print('Número no reconocido.')
                         continue
 
-                    if self.game_manager.delete_game(n):
+                    if self.game_manager.delete_game_session(n):
                         clear()
                         break
                     else:
@@ -442,7 +417,7 @@ class MenuManager():
         while(True):
             self.print_active_user()
             self.print_game_info()
-            self.print_box(self.game_manager.get_obtained_pokemon())
+            self.print_box(self.game_manager.get_list_obtained_pokemon())
             
             print(MenuManager.TEXT_MENU_PLAY_GAME)
 
@@ -470,14 +445,13 @@ class MenuManager():
                 quit()
 
             elif(option=='m'):
-                pokemon = self.database.get_random_pokemon(self.game_manager.game.box.keys())
-                if pokemon is not None:
-                    if self.game_manager.game.filters.random_ability:
-                        pokemon['random_ability'] = self.database.get_random_ability()
-                    self.print_pokemon(pokemon)
-                    print('\nDictionary:')
-                    for k,v in pokemon.items():
-                        print(f' - {k}: {v}')
+                pokemon = self.game_manager.get_random_pokemon()
+                if not pokemon:
+                    continue
+                self.print_pokemon(pokemon)
+                # print('\nDictionary:')
+                # for k,v in pokemon.items():
+                #     print(f' - {k}: {v}')
             else:
                 print('Opción no reconocida.')
 
@@ -485,19 +459,23 @@ class MenuManager():
 
 
     def roll(self):
-        if self.game_manager.game.get_rolls()==0:
+        if self.game_manager.game.options.rolls==0:
             print('\nNo quedan tiradas.')
             return
 
-        # obtener pokemon y gastar tirada
-        if self.get_pokemon():
-            self.game_manager.spend_roll()
+        pokemon = self.game_manager.do_roll()
+        if not pokemon:
+            print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
+            return
+
+        # mostrar
+        self.print_pokemon(pokemon)
 
     def roll_with_type(self):
-        if self.game_manager.game.get_rolls()==0:
+        if self.game_manager.game.options.rolls==0:
             print('\nNo quedan tiradas.')
             return
-        if self.game_manager.game.get_tickets()==0:
+        if self.game_manager.game.options.tickets==0:
             print('\nNo quedan tiquets.')
             return
 
@@ -507,16 +485,13 @@ class MenuManager():
             print('\nError: Tipo no identificado.')
             return
 
-        mask = (
-            (self.database.df_filtered.first_type==pokemon_type) 
-            | 
-            (self.database.df_filtered.second_type==pokemon_type)
-        )
+        pokemon = self.game_manager.do_roll_with_type(pokemon_type)
+        if not pokemon:
+            print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
+            return
 
-        # obtener pokemon, gastar ticket y tirada
-        if self.get_pokemon(mask):
-            self.game_manager.spend_ticket()
-            self.game_manager.spend_roll()
+        # mostrar
+        self.print_pokemon(pokemon)
 
 
 
@@ -533,11 +508,11 @@ class MenuManager():
             print(MenuManager.TEXT_LINE)
 
             print('\n    Lista de cartas de ventaja:')
-            for n, card in enumerate(self.card_manager.cards_list):
+            for n, card in enumerate(self.card_manager.cards.values()):
                 print(f'\n    - {n+1}: {card.name}')
                 print(f'        {card.description}')
 
-                if not self.game_manager.can_use_card(card):
+                if not self.game_manager.game.can_use_card(card):
                     print(f'        (AGOTADA)')
                     continue
                 print(f'        Precio: {card.price} monedas')
@@ -573,7 +548,7 @@ class MenuManager():
             elif(option=='10'):
                 self.use_card_aditional(3)
             elif(option=='11'):
-                self.get_pokemon_with_card_selectiva()
+                self.use_card_selectiva()
             
             #- 0: Salir
             elif(option=='0'):
@@ -586,7 +561,7 @@ class MenuManager():
         if card is None:
             return False
 
-        if not self.game_manager.can_use_card(card):
+        if not self.game_manager.game.can_use_card(card):
             print('\nNo puedes usar esa carta porque ya has superado su límite de usos.')
             return False
 
@@ -603,11 +578,13 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        mask = self.database.df_filtered.has_mega
-        
-        # obtener pokemon y guardar archivo de juego
-        if self.get_pokemon(mask):
-            self.game_manager.buy_card_and_save(card)
+        pokemon = self.game_manager.use_card_mega()
+        if not pokemon:
+            print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
+            return
+
+        # mostrar
+        self.print_pokemon(pokemon)
 
     def use_card_fusion(self):
         tag = 'fusion'
@@ -620,7 +597,7 @@ class MenuManager():
             print('\nNo se puede usar porque no tienes más de 2 Pokémon.')
             return
 
-        pokemon_list = self.game_manager.get_obtained_pokemon()
+        pokemon_list = self.game_manager.get_list_obtained_pokemon()
         self.print_box(pokemon_list)
 
         try:
@@ -644,13 +621,16 @@ class MenuManager():
             print('\nError: Posiciones no detectadas.')
             return
 
-        # obtener pokemon y guardar archivo de juego
-        if self.get_pokemon():
-            pokemon_id1 = pokemon_list[position1][0]
+        pokemon = self.game_manager.use_card_fusion(
+            pokemon_id1 = pokemon_list[position1][0],
             pokemon_id2 = pokemon_list[position2][0]
-            self.game_manager.delete_pokemon(pokemon_id1)
-            self.game_manager.delete_pokemon(pokemon_id2)
-            self.game_manager.buy_card_and_save(card)
+        )
+        if not pokemon:
+            print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
+            return
+
+        # mostrar
+        self.print_pokemon(pokemon)
 
     def use_card_intercambio(self):
         tag = 'intercambio'
@@ -663,7 +643,7 @@ class MenuManager():
             print('\nNo se puede usar porque no tienes ningún Pokémon.')
             return
 
-        pokemon_list = self.game_manager.get_obtained_pokemon()
+        pokemon_list = self.game_manager.get_list_obtained_pokemon()
         self.print_box(pokemon_list)
 
         try:
@@ -679,11 +659,14 @@ class MenuManager():
             print('\nError: Posición no detectada.')
             return
 
-        # obtener pokemon y guardar archivo de juego
-        if self.get_pokemon():
-            pokemon_id = pokemon_list[pokemon_position][0]
-            self.game_manager.delete_pokemon(pokemon_id)
-            self.game_manager.buy_card_and_save(card)
+        pokemon_id = pokemon_list[pokemon_position][0]
+        pokemon = self.game_manager.use_card_intercambio(pokemon_id)
+        if not pokemon:
+            print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
+            return
+
+        # mostrar
+        self.print_pokemon(pokemon)
 
     def use_card_preevo(self):
         tag = 'preevo'
@@ -696,7 +679,7 @@ class MenuManager():
             print('\nNo se puede usar porque no tienes ningún Pokémon.')
             return
 
-        pokemon_list = self.game_manager.get_obtained_pokemon()
+        pokemon_list = self.game_manager.get_list_obtained_pokemon()
         self.print_box(pokemon_list)
 
         try:
@@ -705,37 +688,21 @@ class MenuManager():
         except:
             print('\nError: Posición no detectada.')
             return
-        
+
         if (
             pokemon_position<0 or pokemon_position>len(pokemon_list)
         ):
             print('\nError: Posición no detectada.')
             return
-        
-        pokemon_id = pokemon_list[pokemon_position][0]
-        preevo_id = self.database.df.loc[pokemon_id].evolves_from_pokemon_id
 
-        if isnan(preevo_id):
-            print('\nError: El Pokémon seleccionado no tiene pre-evolución.')
+        pokemon_id = pokemon_list[pokemon_position][0]
+        pokemon = self.game_manager.use_card_preevo(pokemon_id)
+        if not pokemon:
+            print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        #get_pokemon()
-        pokemon = self.database.df.loc[preevo_id].to_dict()
-
-        ability_id = None
-        if self.game_manager.game.filters.random_ability:
-            ability = self.database.get_random_ability()
-            pokemon['random_ability'] = ability.get('ability_name')
-            ability_id = ability.get('ability_id')
-
-        # mostrar y guardar pokemon
+        # mostrar
         self.print_pokemon(pokemon)
-
-        self.game_manager.delete_pokemon(pokemon_id)
-        self.game_manager.insert_pokemon(preevo_id, ability_id)
-
-        # guardar archivo de juego
-        self.game_manager.buy_card_and_save(card)
 
     def use_card_comienzo(self):
         tag = 'comienzo'
@@ -748,11 +715,8 @@ class MenuManager():
             print('\nNo se puede usar porque ya se han realizado 18 tiradas o más.')
             return
 
+        self.game_manager.use_card_comienzo()
         print('\nTiradas reiniciadas.')
-        self.game_manager.reset_rolls_and_box()
-
-        # guardar archivo de juego
-        self.game_manager.buy_card_and_save(card)
 
     def use_card_powerhouse(self):
         tag = 'powerhouse'
@@ -761,8 +725,7 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        # guardar archivo de juego
-        self.game_manager.buy_card_and_save(card)
+        self.game_manager.use_card_powerhouse()
 
     def use_card_type(self):
         tag = 'tipo'
@@ -771,11 +734,7 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        print('\nAñadido un tiquet de forzar tipo.')
-        self.game_manager.add_tickets(1)
-
-        # guardar archivo de juego
-        self.game_manager.buy_card_and_save(card)
+        self.game_manager.use_card_type()
 
     def use_card_aditional(self, rolls:int):
         tag = 'adicional_' + str(rolls)
@@ -784,46 +743,37 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
+        self.game_manager.use_card_aditional(rolls)
         print(f'\nTiradas adicionales añadidas: {rolls}')
-        self.game_manager.add_rolls(rolls)
 
-        # guardar archivo de juego
-        self.game_manager.buy_card_and_save(card)
-
-    def get_pokemon_with_card_selectiva(self):
+    def use_card_selectiva(self):
         tag = 'selectiva'
         card = self.card_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
 
-        if self.game_manager.game.get_rolls() < 6:
+        if self.game_manager.game.options.rolls < 6:
             return
 
         pokemon_list = []
 
         for n in range(6):
-            #self.get_pokemon()
-            pokemon = self.database.get_random_pokemon(self.game_manager.game.box.keys())
+            pokemon = self.game_manager.get_random_pokemon()
 
-            if pokemon is None:
-                break
-
-            if self.game_manager.game.filters.random_ability:
-                ability = self.database.get_random_ability()
-                pokemon['random_ability'] = ability.get('ability_name')
-                pokemon['random_ability_id'] = ability.get('ability_id')
+            if not pokemon:
+                continue
 
             pokemon_list.append(pokemon)
 
         if len(pokemon_list)==0:
-            print('\nNingún Pokémon cumple con los criterios de búsqueda.')
+            print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
         clear()
         picks = 0
         while(True):
-            print(f'\nTiradas restantes: {self.game_manager.game.get_rolls()}\n')
+            print(f'\nTiradas restantes: {self.game_manager.game.options.rolls}\n')
             
             # mostrar pokemons
             for n, pokemon in enumerate(pokemon_list):
@@ -860,8 +810,6 @@ class MenuManager():
             # termina
             if picks==5 or len(pokemon_list)==0:
                 break
-            
 
-        # guardar archivo de juego
-        self.game_manager.buy_card_and_save(card)
+        self.game_manager.buy_card(card)
 

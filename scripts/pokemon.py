@@ -25,14 +25,14 @@ class PokemonDatabaseManager:
 
         return name
 
-    def get_random_pokemon(self, box_list:list, mask=None):
+    def get_random_pokemon(self, box_list:list, mask=None) -> dict:
 
         # escoger dataframe
         if self.df_filtered is None:
             dataframe = self.df
         else:
             if self.df_filtered.shape[0]==0:
-                return None
+                return {}
             dataframe = self.df_filtered
 
         # pasar filtros adicionales
@@ -44,7 +44,7 @@ class PokemonDatabaseManager:
         dataframe = dataframe.loc[new_mask]
 
         if dataframe.shape[0]==0:
-            return None
+            return {}
 
         # obtener pokemon aleatorio
         n = random.randint(0, dataframe.shape[0]-1)

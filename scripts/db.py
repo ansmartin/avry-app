@@ -59,7 +59,7 @@ class DatabaseManager:
         rows = self.cur.fetchall()
         return rows
 
-    def get_user_id(self, username:str):
+    def get_user_id(self, username:str) -> int|None:
         self.cur.execute(f"SELECT user_id FROM users WHERE username=\'{username}\'")
         rows = self.cur.fetchall()
         if rows:
@@ -82,7 +82,7 @@ class DatabaseManager:
         rows = self.cur.fetchall()
         return rows
 
-    def get_game_id(self, user_id:int, gamename:str) -> list:
+    def get_game_id(self, user_id:int, gamename:str) -> int|None:
         self.cur.execute(f"SELECT game_id FROM games WHERE user_id={user_id} AND gamename=\'{gamename}\'")
         rows = self.cur.fetchall()
         if rows:

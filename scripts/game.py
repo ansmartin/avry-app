@@ -1,7 +1,9 @@
+from numpy import isnan
+
 from scripts.users import UserSystem
 from scripts.pokemon import PokemonDatabaseManager
 from scripts.filters import PokemonFilters
-from scripts.cards import Card
+from scripts.cards import Card, CardManager
 
 
 class GameOptions:
@@ -52,20 +54,6 @@ class GameSession:
         self.game_id = game_id
         self.user_id = user_id
 
-
-    def get_rolls(self) -> int:
-        return self.options.rolls
-
-    def get_tickets(self) -> int:
-        return self.options.tickets
-
-    def get_money(self) -> int:
-        return self.options.money
-
-    def get_item_points(self) -> int:
-        return self.options.item_points
-
-
     def can_spend_roll(self) -> bool:
         return self.options.rolls > 0
 
@@ -78,12 +66,25 @@ class GameSession:
     def can_spend_item_points(self, points:int) -> bool:
         return self.options.item_points >= points
 
+    def can_use_card(self, card:Card) -> bool:
+        if card.limit==0: 
+            # sin limite
+            return True
+
+        uses = self.used_cards.get(card.tag, 0)
+        return uses < card.limit
+
 
 class GameSessionManager:
     
-    def __init__(self, user_system:UserSystem, database:PokemonDatabaseManager):
+    def __init__(self, 
+            user_system:UserSystem, 
+            database:PokemonDatabaseManager, 
+            card_manager:CardManager
+        ):
         self.user_system = user_system
         self.database = database
+        self.card_manager = card_manager
         self.game = None
 
     def create_game_session(self, gamename:str, dic_options:dict=None, dic_filters:dict=None):
@@ -170,38 +171,24 @@ class GameSessionManager:
         )
         self.user_system.active_user.games.add(gamename)
 
-    def insert_pokemon(self, pokemon_id:int, ability_id:int=None):
-        self.game.box[pokemon_id] = ability_id
-        self.user_system.db.insert_pokemon(
-            self.game.game_id,
-            pokemon_id,
-            ability_id
-        )
-
-    def delete_game(self, position:int) -> bool:
+    def delete_game_session(self, position:int) -> bool:
         gamename = self.user_system.active_user.games.get(position)
         if gamename is None:
             return False
 
-        self.user_system.active_user.games.remove(position)
-
-        self.user_system.db.delete_game(self.game.game_id)
-        self.user_system.db.delete_pokemon_box(self.game.game_id)
-        self.user_system.db.delete_all_used_cards(self.game.game_id)
-        return True
-
-    def delete_pokemon(self, pokemon_id:int):
-        pokemon = self.game.box.get(pokemon_id)
-        if pokemon is None:
+        user_id = self.user_system.active_user.user_id
+        game_id = self.user_system.db.get_game_id(user_id, gamename)
+        if game_id is None:
             return False
 
-        self.game.box.pop(pokemon_id)
-        self.user_system.db.delete_pokemon(
-            self.game.game_id,
-            pokemon_id
-        )
+        self.user_system.active_user.games.remove(position)
 
-    def load_game(self, position:int) -> bool:
+        self.user_system.db.delete_game(game_id)
+        self.user_system.db.delete_pokemon_box(game_id)
+        self.user_system.db.delete_all_used_cards(game_id)
+        return True
+
+    def load_game_session(self, position:int) -> bool:
         gamename = self.user_system.active_user.games.get(position)
         if gamename is None:
             return False
@@ -254,25 +241,60 @@ class GameSessionManager:
         return True
 
 
-    def get_obtained_pokemon(self) -> list:
+    def get_list_obtained_pokemon(self) -> list:
         return list(self.game.box.items())
 
-    def can_use_card(self, card:Card) -> bool:
-        if card is None:
+    def get_random_pokemon(self, mask=None) -> dict:
+        pokemon = self.database.get_random_pokemon(self.game.box.keys(), mask)
+
+        if not pokemon:
+            return {}
+
+        if self.game.filters.random_ability:
+            ability = self.database.get_random_ability()
+            pokemon['random_ability_id'] = ability.get('ability_id')
+            pokemon['random_ability_name'] = ability.get('ability_name')
+
+        return pokemon
+
+    def get_random_pokemon_and_save(self, mask=None) -> dict:
+        pokemon = self.database.get_random_pokemon(self.game.box.keys(), mask)
+
+        if not pokemon:
+            return {}
+
+        if self.game.filters.random_ability:
+            ability = self.database.get_random_ability()
+            pokemon['random_ability_id'] = ability.get('ability_id')
+            pokemon['random_ability_name'] = ability.get('ability_name')
+
+        # guardar pokemon
+        self.insert_pokemon(
+            pokemon.get('id'), 
+            pokemon.get('random_ability_id')
+        )
+
+        return pokemon
+
+    def insert_pokemon(self, pokemon_id:int, ability_id:int=None):
+        self.game.box[pokemon_id] = ability_id
+        self.user_system.db.insert_pokemon(
+            self.game.game_id,
+            pokemon_id,
+            ability_id
+        )
+
+    def delete_pokemon(self, pokemon_id:int):
+        pokemon = self.game.box.get(pokemon_id)
+        if pokemon is None:
             return False
 
-        # sin limite
-        if card.limit==0:
-            return True
+        self.game.box.pop(pokemon_id)
+        self.user_system.db.delete_pokemon(
+            self.game.game_id,
+            pokemon_id
+        )
 
-        uses = self.game.used_cards.get(card.tag, 0)
-        return uses < card.limit
-
-    def buy_card_and_save(self, card:Card):
-        self.spend_money(card.price)
-        
-        if card.limit>0:
-            self.add_used_card(card.tag)
 
     def reset_rolls_and_box(self):
         self.game.options.rolls = self.game.options.max_rolls
@@ -360,3 +382,201 @@ class GameSessionManager:
                 uses
             )
         self.game.used_cards[tag] = uses
+
+
+    # Rolls
+
+    def do_roll(self) -> dict:
+        if self.game.options.rolls==0:
+            return {}
+
+        # obtener pokemon
+        pokemon = self.get_random_pokemon_and_save()
+        if not pokemon:
+            return {}
+
+        # gastar tirada
+        self.spend_roll()
+
+        return pokemon
+
+    def do_roll_with_type(self, pokemon_type:str) -> dict:
+        if self.game.options.rolls==0:
+            return {}
+
+        if self.game.options.tickets==0:
+            return
+
+        mask = (
+            (self.database.df_filtered.first_type==pokemon_type) 
+            | 
+            (self.database.df_filtered.second_type==pokemon_type)
+        )
+
+        # obtener pokemon
+        pokemon = self.get_random_pokemon_and_save(mask)
+        if not pokemon:
+            return {}
+
+        # gastar tirada
+        self.spend_ticket()
+        self.spend_roll()
+
+        return pokemon
+
+
+    # Cards
+
+    def buy_card(self, card:Card):
+        self.spend_money(card.price)
+        
+        if card.limit>0:
+            self.add_used_card(card.tag)
+
+    def check_card_conditions(self, card:Card) -> bool:
+        if card is None:
+            return False
+
+        if not self.game.can_use_card(card):
+            return False
+
+        if not self.game.can_spend_money(card.price):
+            return False
+
+        return True
+
+    def use_card_mega(self):
+        tag = 'mega'
+        card = self.card_manager.cards.get(tag)
+
+        if not self.check_card_conditions(card):
+            return {}
+
+        # obtener pokemon
+        mask = self.database.df_filtered.has_mega
+        pokemon = self.get_random_pokemon_and_save(mask)
+        if not pokemon:
+            return {}
+
+        self.buy_card(card)
+
+        return pokemon
+
+    def use_card_fusion(self, pokemon_id1:int, pokemon_id2:int):
+        tag = 'fusion'
+        card = self.card_manager.cards.get(tag)
+
+        if not self.check_card_conditions(card):
+            return {}
+
+        if len(self.game.box)<2:
+            return {}
+
+        # obtener pokemon
+        pokemon = self.get_random_pokemon_and_save()
+        if not pokemon:
+            return {}
+
+        # borrar pokemons
+        self.delete_pokemon(pokemon_id1)
+        self.delete_pokemon(pokemon_id2)
+
+        self.buy_card(card)
+
+        return pokemon
+
+    def use_card_intercambio(self, pokemon_id:int):
+        tag = 'intercambio'
+        card = self.card_manager.cards.get(tag)
+
+        if not self.check_card_conditions(card):
+            return {}
+
+        if len(self.game.box)==0:
+            return {}
+
+        # obtener pokemon
+        pokemon = self.get_random_pokemon_and_save()
+        if not pokemon:
+            return {}
+
+        # borrar pokemon
+        self.delete_pokemon(pokemon_id)
+
+        self.buy_card(card)
+
+        return pokemon
+
+    def use_card_preevo(self, pokemon_id:int):
+        tag = 'preevo'
+        card = self.card_manager.cards.get(tag)
+
+        if not self.check_card_conditions(card):
+            return
+
+        if len(self.game.box)==0:
+            return
+
+        preevo_id = self.database.df.loc[pokemon_id].evolves_from_pokemon_id
+
+        if isnan(preevo_id):
+            return
+
+        pokemon = self.database.df.loc[preevo_id].to_dict()
+
+        ability_id = None
+        if self.game.filters.random_ability:
+            ability = self.database.get_random_ability()
+            pokemon['random_ability_id'] = ability.get('ability_id')
+            pokemon['random_ability_name'] = ability.get('ability_name')
+            ability_id = ability.get('ability_id')
+
+        # borrar pokemon e insertar preevo
+        self.delete_pokemon(pokemon_id)
+        self.insert_pokemon(preevo_id, ability_id)
+
+        self.buy_card(card)
+
+        return pokemon
+
+    def use_card_comienzo(self):
+        tag = 'comienzo'
+        card = self.card_manager.cards.get(tag)
+
+        if not self.check_card_conditions(card):
+            return
+
+        if abs(self.game.options.rolls - self.game.options.max_rolls) >= 18:
+            return
+
+        self.reset_rolls_and_box()
+        self.buy_card(card)
+
+    def use_card_powerhouse(self):
+        tag = 'powerhouse'
+        card = self.card_manager.cards.get(tag)
+
+        if not self.check_card_conditions(card):
+            return
+
+        self.buy_card(card)
+
+    def use_card_type(self):
+        tag = 'tipo'
+        card = self.card_manager.cards.get(tag)
+
+        if not self.check_card_conditions(card):
+            return
+
+        self.add_tickets(1)
+        self.buy_card(card)
+
+    def use_card_aditional(self, rolls:int):
+        tag = 'adicional_' + str(rolls)
+        card = self.card_manager.cards.get(tag)
+
+        if not self.check_card_conditions(card):
+            return
+
+        self.add_rolls(rolls)
+        self.buy_card(card)

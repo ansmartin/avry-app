@@ -8,9 +8,9 @@ from scripts.menus import MenuManager
 try:
     db = DatabaseManager()
     database = PokemonDatabaseManager()
-    user_system = UserSystem(db)
-    game_manager = GameSessionManager(user_system, database)
     card_manager = CardManager()
+    user_system = UserSystem(db)
+    game_manager = GameSessionManager(user_system, database, card_manager)
 
     menu = MenuManager(user_system, game_manager, database, card_manager)
     menu.open_menu_users()

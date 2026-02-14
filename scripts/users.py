@@ -18,28 +18,21 @@ class UserSystem:
 
     def __init__(self, db:DatabaseManager):
         self.db = db
-        self.usernames = ClassList(UserSystem.MAX_USERS, self.db.get_usernames())
-        self.active_user = None
 
 
     def insert_user(self, username:str) -> bool:
-        if self.usernames.contains(username):
+        user_id = self.db.get_user_id(username)
+        if user_id is not None:
             return False
 
-        self.usernames.add(username)
         self.db.insert_user(username)
         return True
 
-    def delete_user(self, position:int) -> bool:
-        username = self.usernames.get(position)
-        if username is None:
-            return False
-
+    def delete_user(self, username:str) -> bool:
         user_id = self.db.get_user_id(username)
         if user_id is None:
             return False
 
-        self.usernames.remove(position)
         self.db.delete_user(user_id)
 
         games_ids_list = self.db.get_game_ids(user_id)
@@ -50,16 +43,14 @@ class UserSystem:
 
         return True
 
-    def load_user(self, position:int) -> bool:
-        username = self.usernames.get(position)
-        if username is None:
-            return False
-
+    def get_user(self, username:str) -> dict:
         user_id = self.db.get_user_id(username)
         if user_id is None:
-            return False
+            return {}
 
-        gamenames_list = self.db.get_gamenames(user_id)
-        games = ClassList(User.MAX_GAMES, gamenames_list)
-        self.active_user = User(user_id, username, games)
-        return True
+        user = {
+            'user_id' : user_id,
+            'username' : username,
+            'games' : self.db.get_gamenames(user_id)
+        }
+        return user

@@ -40,29 +40,3 @@ class PokemonFilters:
         self.random_ability = bool(random_ability)
         # self.has_mega = False
         # self.has_gmax = False
-
-
-    def print_options(self):
-        print('\nFiltros:')
-
-        # print(f' - filtrar por tipo: {self.filter_by_type}')
-        # if self.filter_by_type:
-        #     print(f'   - first_type: {self.first_type}')
-        #     print(f'   - second_type: {self.second_type}')
-        #     print(f'   - any_type: {self.any_type}')
-
-        print(f' - filtrar por generación')
-        print(f'   - obtener Pokémon hasta la generación: {self.generation}')
-
-        print(f' - filtrar por categoría')
-        print(f'   - mythical: {self.mythical}')
-        print(f'   - legendary: {self.legendary}')
-        print(f'   - sublegendary: {self.sublegendary}')
-        print(f'   - powerhouse: {self.powerhouse}')
-        print(f'   - el resto de Pokémon: {self.others}')
-
-        print(f' - obtener sólo Pokémon completamente evolucionados: {self.fully_evolved}')
-        print(f' - obtener habilidades randomizadas: {self.random_ability}')
-
-        # print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {self.has_mega}')
-        # print(f' - obtener sólo Pokémon que puedan gigamaxizar: {self.has_gmax}')

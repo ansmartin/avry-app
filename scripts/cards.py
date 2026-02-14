@@ -95,6 +95,6 @@ class CardManager:
         return cards
 
 
-    def __init__(self):
-        self.cards = CardManager.get_all_cards()
-        self.cards_list = list(self.cards.keys())
+    # def __init__(self):
+    #     self.cards = CardManager.get_all_cards()
+    #     self.cards_list = list(self.cards.keys())

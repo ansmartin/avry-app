@@ -81,8 +81,7 @@ class GameSessionManager:
         self.db = db
         self.pokemon_db = PokemonDatabaseManager()
         self.user_system = UserSystem(db)
-        self.card_manager = CardManager()
-        self.game = None
+        self.cards = CardManager.get_all_cards()
 
     def create_game_session(self, user_id:int, gamename:str, dic_options:dict=None, dic_filters:dict=None):
         options = None
@@ -419,7 +418,7 @@ class GameSessionManager:
 
     def use_card_mega(self):
         tag = 'mega'
-        card = self.card_manager.cards.get(tag)
+        card = self.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return {}
@@ -436,7 +435,7 @@ class GameSessionManager:
 
     def use_card_fusion(self, pokemon_id1:int, pokemon_id2:int):
         tag = 'fusion'
-        card = self.card_manager.cards.get(tag)
+        card = self.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return {}
@@ -459,7 +458,7 @@ class GameSessionManager:
 
     def use_card_intercambio(self, pokemon_id:int):
         tag = 'intercambio'
-        card = self.card_manager.cards.get(tag)
+        card = self.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return {}
@@ -481,7 +480,7 @@ class GameSessionManager:
 
     def use_card_preevo(self, pokemon_id:int):
         tag = 'preevo'
-        card = self.card_manager.cards.get(tag)
+        card = self.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
@@ -513,7 +512,7 @@ class GameSessionManager:
 
     def use_card_comienzo(self):
         tag = 'comienzo'
-        card = self.card_manager.cards.get(tag)
+        card = self.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
@@ -526,7 +525,7 @@ class GameSessionManager:
 
     def use_card_powerhouse(self):
         tag = 'powerhouse'
-        card = self.card_manager.cards.get(tag)
+        card = self.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
@@ -535,7 +534,7 @@ class GameSessionManager:
 
     def use_card_type(self):
         tag = 'tipo'
-        card = self.card_manager.cards.get(tag)
+        card = self.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
@@ -545,7 +544,7 @@ class GameSessionManager:
 
     def use_card_aditional(self, rolls:int):
         tag = 'adicional_' + str(rolls)
-        card = self.card_manager.cards.get(tag)
+        card = self.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return

@@ -1,4 +1,5 @@
 import sqlite3
+import random
 
 import scripts.constants as const
 
@@ -153,6 +154,28 @@ class DatabaseManager:
         self.cur.execute(f"SELECT tag, uses FROM used_cards WHERE game_id={game_id}")
         rows = self.cur.fetchall()
         return rows
+
+    def get_random_ability(self, generation:int) -> int|None:
+        self.cur.execute(f"SELECT ability_id FROM abilities WHERE generation<={generation}")
+        rows = self.cur.fetchall()
+        if not rows:
+            return None
+
+        abilities_ids = [ x[0] for x in rows ]
+        n = random.randint(0, len(abilities_ids)-1)
+        ability = abilities_ids[n]
+        return ability
+
+    def get_ability_name(self, ability_id:int) -> str|None:
+        if ability_id is None:
+            return None
+
+        self.cur.execute(f"SELECT ability_name FROM abilities WHERE ability_id={ability_id}")
+        rows = self.cur.fetchall()
+        if rows:
+            return rows[0][0]
+        else:
+            return None
 
 
     # INSERT

@@ -105,10 +105,12 @@ class MenuManager():
             print(f'\nLista de Pokémon obtenidos:')
             for n, pokemon in enumerate(self.game.pokemon_box):
                 pokemon_id = pokemon[0]
-                ability_id = pokemon[1]
-                row = f' - {n+1}:\t{self.game_manager.pokemon_db.get_fullname(pokemon_id)}'#   (ID: {pokemon_id})'
+                pokemon_name = pokemon[1]
+                ability_id = pokemon[2]
+                ability_name = pokemon[3]
+                row = f' - {n+1}:\t{pokemon_name}'#   (ID: {pokemon_id})'
                 if ability_id:
-                    row += f'   (Habilidad: {self.game_manager.pokemon_db.get_ability_name(ability_id)})'
+                    row += f'   (Habilidad: {ability_name})'
                 print(row)
 
     def print_pokemon(self, pokemon:dict):
@@ -494,7 +496,8 @@ class MenuManager():
             elif(option=='m'):
                 pokemon = self.game_manager.get_random_pokemon(
                     [ x[0] for x in self.game.pokemon_box ], 
-                    self.game.filters.random_ability
+                    self.game.filters.random_ability,
+                    self.game.filters.generation
                 )
                 if pokemon:
                     self.print_pokemon(pokemon)
@@ -509,17 +512,23 @@ class MenuManager():
             print('\nNo quedan tiradas.')
             return
 
-        #obtained_pokemon_list = [ x[0] for x in self.game_manager.db.get_pokemon_box(game.game_id) ]
-        pokemon_list = [ x[0] for x in self.game.pokemon_box ]
-        pokemon = self.game_manager.do_roll(self.game, pokemon_list)
+        obtained_pokemon_list = [ x[0] for x in self.game.pokemon_box ]
+
+        pokemon = self.game_manager.do_roll(
+            self.game.game_id, 
+            obtained_pokemon_list,
+            self.game.filters.random_ability,
+            self.game.filters.generation,
+            self.game.options.rolls
+        )
+
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        self.game.pokemon_box.append(
-            (pokemon.get('id'), pokemon.get('random_ability_id'))
-        )
+        self.game.options.rolls-=1
 
+        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
     def roll_with_type(self):
@@ -536,20 +545,37 @@ class MenuManager():
             print('\nError: Tipo no identificado.')
             return
 
-        #obtained_pokemon_list = [ x[0] for x in self.game_manager.db.get_pokemon_box(game.game_id) ]
-        pokemon_list = [ x[0] for x in self.game.pokemon_box ]
-        pokemon = self.game_manager.do_roll_with_type(self.game, pokemon_list, pokemon_type)
+        obtained_pokemon_list = [ x[0] for x in self.game.pokemon_box ]
+        
+        pokemon = self.game_manager.do_roll_with_type(
+            self.game.game_id, 
+            obtained_pokemon_list,
+            self.game.filters.random_ability,
+            self.game.filters.generation,
+            self.game.options.rolls,
+            self.game.options.tickets,
+            pokemon_type
+        )
+
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        self.game.pokemon_box.append(
-            (pokemon.get('id'), pokemon.get('random_ability_id'))
-        )
+        self.game.options.rolls-=1
+        self.game.options.tickets-=1
 
+        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
 
+    def save_pokemon_in_box(self, pokemon:dict):
+        self.game.pokemon_box.append(
+            self.game_manager.get_pokemon_tuple(
+                pokemon.get('id'), 
+                pokemon.get('random_ability_id')
+            )
+        )
+        
 
     # MENU CARDS
     # =======================================================================
@@ -816,7 +842,8 @@ class MenuManager():
         for n in range(6):
             pokemon = self.game_manager.get_random_pokemon(
                 obtained_pokemon_list,
-                self.game.filters.random_ability
+                self.game.filters.random_ability,
+                self.game.filters.generation
             )
 
             if not pokemon:

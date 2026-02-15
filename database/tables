@@ -40,3 +40,9 @@ CREATE TABLE used_cards(
 	FOREIGN KEY (game_id) REFERENCES games(game_id),
 	CONSTRAINT used_card_pk PRIMARY KEY (game_id, tag)
 )
+
+CREATE TABLE abilities(
+    ability_id INTEGER PRIMARY KEY,
+    ability_name TEXT NOT NULL,
+	generation INTEGER NOT NULL
+)

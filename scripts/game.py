@@ -203,7 +203,11 @@ class GameSessionManager:
             random_ability = game.get('random_ability')
         )
 
-        pokemon_box = self.db.get_pokemon_box(game_id)
+        pokemon_box = [
+            self.get_pokemon_tuple(pokemon_id, ability_id)
+            for pokemon_id, ability_id in
+            self.db.get_pokemon_box(game_id)
+        ]
 
         used_cards = {
             tag : uses
@@ -222,30 +226,31 @@ class GameSessionManager:
         self.pokemon_db.filter_dataset(game.filters)
         return game
 
+    def get_pokemon_tuple(self, pokemon_id:int, ability_id:int):
+        tuple = (
+            pokemon_id,
+            self.pokemon_db.get_fullname(pokemon_id),
+            ability_id, 
+            self.db.get_ability_name(ability_id)
+        )
+        return tuple
 
-    def get_random_pokemon(self, obtained_pokemon_list:list, random_ability:bool=False, mask=None) -> dict:
+    def get_random_pokemon(self, obtained_pokemon_list:list, random_ability:bool=False, generation:int=None, mask=None) -> dict:
         pokemon = self.pokemon_db.get_random_pokemon(obtained_pokemon_list, mask)
-
         if not pokemon:
             return {}
 
         if random_ability:
-            ability = self.pokemon_db.get_random_ability()
-            pokemon['random_ability_id'] = ability.get('ability_id')
-            pokemon['random_ability_name'] = ability.get('ability_name')
+            ability_id = self.db.get_random_ability(generation)
+            pokemon['random_ability_id'] = ability_id
+            pokemon['random_ability_name'] = self.db.get_ability_name(ability_id)
 
         return pokemon
 
-    def get_random_pokemon_and_save(self, game_id:int, obtained_pokemon_list:list, random_ability:bool=False, mask=None) -> dict:
-        pokemon = self.pokemon_db.get_random_pokemon(obtained_pokemon_list, mask)
-
+    def get_random_pokemon_and_save(self, game_id:int, obtained_pokemon_list:list, random_ability:bool=False, generation:int=None, mask=None) -> dict:
+        pokemon = self.get_random_pokemon(obtained_pokemon_list, random_ability, generation, mask)
         if not pokemon:
             return {}
-
-        if random_ability:
-            ability = self.pokemon_db.get_random_ability()
-            pokemon['random_ability_id'] = ability.get('ability_id')
-            pokemon['random_ability_name'] = ability.get('ability_name')
 
         # guardar pokemon
         self.db.insert_pokemon(
@@ -264,7 +269,7 @@ class GameSessionManager:
             'rolls',
             game.options.max_rolls
         )
-        game.pokemon_box = {}
+        game.pokemon_box = []
         self.db.delete_pokemon_box(
             game.game_id
         )
@@ -348,7 +353,7 @@ class GameSessionManager:
 
     # Rolls
 
-    def do_roll(self, game_id:int, rolls:int, obtained_pokemon_list:list, random_ability:bool) -> dict:
+    def do_roll(self, game_id:int, obtained_pokemon_list:list, random_ability:bool, generation:int, rolls:int) -> dict:
         if rolls==0:
             return {}
 
@@ -356,7 +361,8 @@ class GameSessionManager:
         pokemon = self.get_random_pokemon_and_save(
             game_id,
             obtained_pokemon_list,
-            random_ability
+            random_ability,
+            generation
         )
         if not pokemon:
             return {}
@@ -370,7 +376,7 @@ class GameSessionManager:
 
         return pokemon
 
-    def do_roll_with_type(self, game_id:int, rolls:int, tickets:int, obtained_pokemon_list:list, random_ability:bool, pokemon_type:str) -> dict:
+    def do_roll_with_type(self, game_id:int, obtained_pokemon_list:list, random_ability:bool, generation:int, rolls:int, tickets:int, pokemon_type:str) -> dict:
         if rolls==0:
             return {}
 
@@ -388,6 +394,7 @@ class GameSessionManager:
             game_id,
             obtained_pokemon_list,
             random_ability,
+            generation,
             mask
         )
         if not pokemon:
@@ -509,7 +516,7 @@ class GameSessionManager:
 
         ability_id = None
         if self.game.filters.random_ability:
-            ability = self.pokemon_db.get_random_ability()
+            ability = self.db.get_random_ability()
             pokemon['random_ability_id'] = ability.get('ability_id')
             pokemon['random_ability_name'] = ability.get('ability_name')
             ability_id = ability.get('ability_id')

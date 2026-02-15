@@ -41,7 +41,7 @@ class GameSession:
             name:str, 
             options:GameOptions = None, 
             filters:PokemonFilters = None,
-            box:dict = None,
+            pokemon_box:list = None,
             used_cards:dict = None,
             game_id:int = None,
             user_id:int = None
@@ -49,7 +49,7 @@ class GameSession:
         self.name = name
         self.options = options if options else GameOptions()
         self.filters = filters if filters else PokemonFilters()
-        self.box = box if box else {}
+        self.pokemon_box = pokemon_box if pokemon_box else []
         self.used_cards = used_cards if used_cards else {}
         self.game_id = game_id
         self.user_id = user_id
@@ -83,11 +83,11 @@ class GameSessionManager:
         self.user_system = UserSystem(db)
         self.cards = CardManager.get_all_cards()
 
-    def create_game_session(self, user_id:int, gamename:str, dic_options:dict=None, dic_filters:dict=None):
+    def create_game_session(self, user_id:int, gamename:str, dic_options:dict):
         options = None
         filters = None
 
-        if dic_options:
+        if not dic_options.get('default_options'):
             
             try:
                 max_rolls = int(dic_options['rolls'])
@@ -127,10 +127,10 @@ class GameSessionManager:
                 item_points = item_points
             )
 
-        if dic_filters:
+        if not dic_options.get('default_filters'):
             
             try:
-                generation = int(dic_filters['generation'])
+                generation = int(dic_options['generation'])
                 if generation<0:
                     generation=0
             except:
@@ -138,13 +138,13 @@ class GameSessionManager:
             
             filters = PokemonFilters(
                 generation = generation,
-                mythical = dic_filters['mythical'],
-                legendary = dic_filters['legendary'],
-                sublegendary = dic_filters['sublegendary'],
-                powerhouse = dic_filters['powerhouse'],
-                others = dic_filters['others'],
-                fully_evolved = dic_filters['fully_evolved'],
-                random_ability = dic_filters['random_ability']
+                mythical = dic_options['mythical'],
+                legendary = dic_options['legendary'],
+                sublegendary = dic_options['sublegendary'],
+                powerhouse = dic_options['powerhouse'],
+                others = dic_options['others'],
+                fully_evolved = dic_options['fully_evolved'],
+                random_ability = dic_options['random_ability']
             )
 
         game = GameSession(gamename, options, filters)
@@ -185,37 +185,36 @@ class GameSessionManager:
         game = self.db.get_game(game_id)
 
         options = GameOptions(
-            max_rolls = game[3], 
-            rolls = game[4], 
-            tickets = game[5], 
-            money = game[6], 
-            item_points = game[7]
+            max_rolls = game.get('max_rolls'), 
+            rolls = game.get('rolls'), 
+            tickets = game.get('tickets'), 
+            money = game.get('money'), 
+            item_points = game.get('item_points')
         )
 
         filters = PokemonFilters(
-            generation = game[8],
-            mythical = game[9],
-            legendary = game[10],
-            sublegendary = game[11],
-            powerhouse = game[12],
-            others = game[13],
-            fully_evolved = game[14],
-            random_ability = game[15]
+            generation = game.get('generation'),
+            mythical = game.get('mythical'),
+            legendary = game.get('legendary'),
+            sublegendary = game.get('sublegendary'),
+            powerhouse = game.get('powerhouse'),
+            others = game.get('others'),
+            fully_evolved = game.get('fully_evolved'),
+            random_ability = game.get('random_ability')
         )
 
-        pokemons_list = self.db.get_pokemon_box(game_id)
-        box = { x[0]:x[1] for x in pokemons_list }
+        pokemon_box = self.db.get_pokemon_box(game_id)
 
-        used_cards_rows = self.db.get_used_cards(game_id)
-        used_cards = {}
-        for card in used_cards_rows:
-            used_cards[card[0]] = card[1]
+        used_cards = {
+            tag : uses
+            for tag, uses in self.db.get_used_cards(game_id)
+        }
 
         game = GameSession(
             gamename, 
             options, 
             filters, 
-            box, 
+            pokemon_box, 
             used_cards, 
             game_id, 
             user_id
@@ -265,7 +264,7 @@ class GameSessionManager:
             'rolls',
             game.options.max_rolls
         )
-        game.box = {}
+        game.pokemon_box = {}
         self.db.delete_pokemon_box(
             game.game_id
         )
@@ -293,7 +292,7 @@ class GameSessionManager:
             game.options.tickets
         )
 
-
+    """
     def spend_roll(self, game:GameSession):
         game.options.rolls-=1
         self.db.update_game(
@@ -325,6 +324,7 @@ class GameSessionManager:
             'item_points',
             game.options.item_points
         )
+    """
 
 
     def add_used_card(self, game:GameSession, tag:str):
@@ -348,29 +348,33 @@ class GameSessionManager:
 
     # Rolls
 
-    def do_roll(self, game:GameSession, obtained_pokemon_list:list) -> dict:
-        if game.options.rolls==0:
+    def do_roll(self, game_id:int, rolls:int, obtained_pokemon_list:list, random_ability:bool) -> dict:
+        if rolls==0:
             return {}
 
         # obtener pokemon
         pokemon = self.get_random_pokemon_and_save(
-            game.game_id,
+            game_id,
             obtained_pokemon_list,
-            game.filters.random_ability
+            random_ability
         )
         if not pokemon:
             return {}
 
         # gastar tirada
-        self.spend_roll(game)
+        self.db.update_game(
+            game_id,
+            'rolls',
+            rolls-1
+        )
 
         return pokemon
 
-    def do_roll_with_type(self, game:GameSession, obtained_pokemon_list:list, pokemon_type:str) -> dict:
-        if game.options.rolls==0:
+    def do_roll_with_type(self, game_id:int, rolls:int, tickets:int, obtained_pokemon_list:list, random_ability:bool, pokemon_type:str) -> dict:
+        if rolls==0:
             return {}
 
-        if game.options.tickets==0:
+        if tickets==0:
             return
 
         mask = (
@@ -381,17 +385,25 @@ class GameSessionManager:
 
         # obtener pokemon
         pokemon = self.get_random_pokemon_and_save(
-            game.game_id,
+            game_id,
             obtained_pokemon_list,
-            game.filters.random_ability,
+            random_ability,
             mask
         )
         if not pokemon:
             return {}
 
         # gastar tirada
-        self.spend_ticket(game)
-        self.spend_roll(game)
+        self.db.update_game(
+            game_id,
+            'rolls',
+            rolls-1
+        )
+        self.db.update_game(
+            game_id,
+            'tickets',
+            tickets-1
+        )
 
         return pokemon
 
@@ -404,14 +416,14 @@ class GameSessionManager:
         if card.limit>0:
             self.add_used_card(card.tag)
 
-    def check_card_conditions(self, card:Card) -> bool:
+    def check_card_conditions(self, game:GameSession, card:Card) -> bool:
         if card is None:
             return False
 
-        if not self.game.can_use_card(card):
+        if not game.can_use_card(card):
             return False
 
-        if not self.game.can_spend_money(card.price):
+        if not game.can_spend_money(card.price):
             return False
 
         return True
@@ -539,7 +551,11 @@ class GameSessionManager:
         if not self.check_card_conditions(card):
             return
 
-        self.add_tickets(1)
+        self.db.update_game(
+            game_id,
+            'tickets',
+            tickets+1
+        )
         self.buy_card(card)
 
     def use_card_aditional(self, rolls:int):

@@ -23,6 +23,8 @@ class MenuManager():
 
     def __init__(self, game_manager : GameSessionManager):
         self.game_manager = game_manager
+        self.user:User = None
+        self.game:GameSession = None
 
 
     TEXT_LINE = '\n------------------------------------'
@@ -65,21 +67,21 @@ class MenuManager():
         for n, username in enumerate(usernames):
             print(f' - {n+1}:\t{username}')
 
-    def print_games(self, gamenames:list):
+    def print_games(self):
         print('\nSesiones de juego registradas:')
-        for n, gamename in enumerate(gamenames):
+        for n, gamename in enumerate(self.user.games):
             print(f' - {n+1}:\t{gamename}')
 
-    def print_user(self, username:str):
-        print(f'\nUsuario: {username}')
+    def print_user(self):
+        print(f'\nUsuario: {self.user.username}')
 
-    def print_game_info(self, game:GameSession):
-        print(f'\nSesión de juego: {game.name}')
+    def print_game_info(self):
+        print(f'\nSesión de juego: {self.game.name}')
         print(f'\n   Datos de la sesión de juego')
-        print(f'      Tiradas restantes: {game.options.rolls}')
-        print(f'      Tiquets para forzar tipo: {game.options.tickets}')
-        print(f'      Dinero: {game.options.money} monedas')
-        print(f'      Puntos de items: {game.options.item_points}')
+        print(f'      Tiradas restantes: {self.game.options.rolls}')
+        print(f'      Tiquets para forzar tipo: {self.game.options.tickets}')
+        print(f'      Dinero: {self.game.options.money} monedas')
+        print(f'      Puntos de items: {self.game.options.item_points}')
 
     def print_filters(self, filters:PokemonFilters):
         print('\nFiltros:')
@@ -96,13 +98,12 @@ class MenuManager():
         # print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {filters.has_mega}')
         # print(f' - obtener sólo Pokémon que puedan gigamaxizar: {filters.has_gmax}')
 
-    def print_box(self, pokemon_list:list):
-        # pokemon_list = self.game_manager.get_obtained_pokemon()
-        if len(pokemon_list)==0:
+    def print_box(self):
+        if len(self.game.pokemon_box)==0:
             print(f'\nLa lista de Pokémon obtenidos está vacía.')
         else:
             print(f'\nLista de Pokémon obtenidos:')
-            for n, pokemon in enumerate(pokemon_list):
+            for n, pokemon in enumerate(self.game.pokemon_box):
                 pokemon_id = pokemon[0]
                 ability_id = pokemon[1]
                 row = f' - {n+1}:\t{self.game_manager.pokemon_db.get_fullname(pokemon_id)}'#   (ID: {pokemon_id})'
@@ -110,7 +111,7 @@ class MenuManager():
                     row += f'   (Habilidad: {self.game_manager.pokemon_db.get_ability_name(ability_id)})'
                 print(row)
 
-    def print_pokemon(self, pokemon : dict):
+    def print_pokemon(self, pokemon:dict):
         # nombre
         species_name:str = pokemon['species_name']
         form_name_text:str = pokemon['form_name_text']
@@ -200,7 +201,12 @@ class MenuManager():
                         # cargar usuario
                         user = self.game_manager.user_system.get_user(username)
                         if user:
-                            self.open_menu_game_sessions(user)
+                            self.user = User(
+                                user_id = user.get('user_id'),
+                                username = user.get('username'),
+                                games = user.get('games')
+                            )
+                            self.open_menu_game_sessions()
                             break
                         else:
                             print('Usuario no encontrado.')
@@ -277,21 +283,17 @@ class MenuManager():
     # MENU MANAGE GAME SESSIONS
     # =======================================================================
 
-    def open_menu_game_sessions(self, active_user:dict):
+    def open_menu_game_sessions(self):
 
         clear()
 
-        user_id:int = active_user.get('user_id')
-        username:str = active_user.get('username')
-        games:list = active_user.get('games')
-
         while(True):
-            self.print_user(username)
+            self.print_user()
 
-            if len(games)==0:
+            if len(self.user.games)==0:
                 print('\nEste usuario todavía no tiene sesiones de juego registradas.')
             else:
-                self.print_games(games)
+                self.print_games()
 
             print(MenuManager.TEXT_MENU_MANAGE_GAMES)
 
@@ -304,11 +306,11 @@ class MenuManager():
             #- 1: Cargar sesión de juego
             if(option=='1'):
                 
-                if len(games)==0:
+                if len(self.user.games)==0:
                     print('No hay sesiones de juego registradas.')
                     continue
 
-                self.print_games(games)
+                self.print_games()
 
                 while(True):
                     print('\nEscribe el número de la sesión de juego que quieres cargar:')
@@ -321,12 +323,14 @@ class MenuManager():
                         print('Número no reconocido.')
                         continue
 
-                    if n>=0 and n<len(games):
-                        gamename = games[n]
-                        game = self.game_manager.get_game_session(user_id, gamename)
-                        if game is not None:
+                    if n>=0 and n<len(self.user.games):
+                        gamename = self.user.games[n]
+
+                        # cargar partida
+                        self.game = self.game_manager.get_game_session(self.user.user_id, gamename)
+                        if self.game is not None:
                             clear()
-                            self.open_menu_game(game)
+                            self.open_menu_game()
                             break
                         else:
                             print('Sesión de juego no encontrada.')
@@ -335,22 +339,25 @@ class MenuManager():
 
             #- 2: Crear nueva sesión de juego
             elif(option=='2'):
-                if len(games)>0:
-                    self.print_games(games)
+                if len(self.user.games)>0:
+                    self.print_games()
 
-                if len(games) <= User.MAX_GAMES:
+                if len(self.user.games) <= User.MAX_GAMES:
                     
                     print('\nEscribe un nombre para la sesión de juego:')
                     name = input()
 
-                    if name in games:
+                    if name in self.user.games:
                         print('\nEse nombre ya se encuentra registrado.')
                         continue
+
+                    options = {}
 
                     print('\n¿Valores de juego por defecto? Escribe 1 para si, escribe otra cosa para no.')
                     default_options = input()
 
-                    options = {}
+                    options['default_options'] = default_options=='1'
+
                     if default_options!='1':
                         print('\nEscribe el número de tiradas disponibles:')
                         options['rolls'] = input()
@@ -368,37 +375,38 @@ class MenuManager():
                     print('\n¿Valores de filtros por defecto? Escribe 1 para si, escribe otra cosa para no.')
                     default_filters = input()
 
-                    filters = {}
+                    options['default_filters'] = default_filters=='1'
+
                     if default_filters!='1':
                         print('\nFiltrar por generación del Pokémon.')
                         print('Escribe el número de hasta qué generación aparecen los Pokémon:')
-                        filters['generation'] = input()
+                        options['generation'] = input()
 
                         print('\nFiltrar por categoría del Pokémon.')
                         print('¿Incluir míticos? Escribe 1 para si, escribe otra cosa para no.')
-                        filters['mythical'] = input()=='1'
+                        options['mythical'] = input()=='1'
 
                         print('\n¿Incluir legendarios? Escribe 1 para si, escribe otra cosa para no.')
-                        filters['legendary'] = input()=='1'
+                        options['legendary'] = input()=='1'
 
                         print('\n¿Incluir sublegendarios? Escribe 1 para si, escribe otra cosa para no.')
-                        filters['sublegendary'] = input()=='1'
+                        options['sublegendary'] = input()=='1'
 
                         print('\n¿Incluir pesos pesados? Escribe 1 para si, escribe otra cosa para no.')
-                        filters['powerhouse'] = input()=='1'
+                        options['powerhouse'] = input()=='1'
 
                         print('\n¿Incluir los demás Pokémon que no pertenezcan a estas categorías? Escribe 1 para si, escribe otra cosa para no.')
-                        filters['others'] = input()=='1'
+                        options['others'] = input()=='1'
 
                         print('\nFiltrar por etapa evolutiva del Pokémon.')
                         print('¿Incluir solamente Pokémon en su última etapa evolutiva? Escribe 1 para si, escribe otra cosa para no.')
-                        filters['fully_evolved'] = input()=='1'
+                        options['fully_evolved'] = input()=='1'
 
                         print('\n¿Obtener habilidades randomizadas? (De cualquier Pokémon posible) Escribe 1 para si, escribe otra cosa para no.')
-                        filters['random_ability'] = input()=='1'
+                        options['random_ability'] = input()=='1'
 
-                    self.game_manager.create_game_session(user_id, name, options, filters)
-                    games.append(name)
+                    self.game_manager.create_game_session(self.user.user_id, name, options)
+                    self.user.games.append(name)
                     clear()
                             
                 else:
@@ -407,11 +415,11 @@ class MenuManager():
             #- 3: Eliminar sesión de juego
             elif(option=='3'):
                 
-                if len(games)==0:
+                if len(self.user.games)==0:
                     print('No hay sesiones de juego registradas.')
                     continue
 
-                self.print_games(games)
+                self.print_games()
 
                 print('\nEscribe el número de la sesión de juego que quieres eliminar.\nEscribe 0 para cancelar.')
 
@@ -429,10 +437,10 @@ class MenuManager():
                         print('Número no reconocido.')
                         continue
 
-                    if n>=0 and n<len(games):
-                        gamename = games[n]
-                        if self.game_manager.delete_game_session(user_id, gamename):
-                            games.pop(n)
+                    if n>=0 and n<len(self.user.games):
+                        gamename = self.user.games[n]
+                        if self.game_manager.delete_game_session(self.user.user_id, gamename):
+                            self.user.games.pop(n)
                             clear()
                             break
                         else:
@@ -452,14 +460,12 @@ class MenuManager():
     # MENU GAME
     # =======================================================================
 
-    def open_menu_game(self, game:GameSession):
-        
-        pokemon_box = self.game_manager.db.get_pokemon_box(game.game_id)
+    def open_menu_game(self):
 
         while(True):
-            #self.print_user(game.user_id)
-            self.print_game_info(game)
-            self.print_box(pokemon_box)
+            self.print_user()
+            self.print_game_info()
+            self.print_box()
 
             print(MenuManager.TEXT_MENU_PLAY_GAME)
 
@@ -470,11 +476,11 @@ class MenuManager():
             print(f'Seleccionada opción {option}')
 
             if(option=='1'):
-                self.roll(game, pokemon_box)
+                self.roll()
             elif(option=='2'):
-                self.roll_with_type(game, pokemon_box)
+                self.roll_with_type()
             elif(option=='3'):
-                self.open_menu_cards(game)
+                self.open_menu_cards()
             elif(option=='4'):
                 self.print_filters()
 
@@ -487,8 +493,8 @@ class MenuManager():
 
             elif(option=='m'):
                 pokemon = self.game_manager.get_random_pokemon(
-                    [ x[0] for x in pokemon_box ], 
-                    game.filters.random_ability
+                    [ x[0] for x in self.game.pokemon_box ], 
+                    self.game.filters.random_ability
                 )
                 if pokemon:
                     self.print_pokemon(pokemon)
@@ -498,29 +504,29 @@ class MenuManager():
             print(MenuManager.TEXT_LINE)
 
 
-    def roll(self, game:GameSession, pokemon_box:list):
-        if game.options.rolls==0:
+    def roll(self):
+        if self.game.options.rolls==0:
             print('\nNo quedan tiradas.')
             return
 
         #obtained_pokemon_list = [ x[0] for x in self.game_manager.db.get_pokemon_box(game.game_id) ]
-        pokemon_list = [ x[0] for x in pokemon_box ]
-        pokemon = self.game_manager.do_roll(game, pokemon_list)
+        pokemon_list = [ x[0] for x in self.game.pokemon_box ]
+        pokemon = self.game_manager.do_roll(self.game, pokemon_list)
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        pokemon_box.append(
+        self.game.pokemon_box.append(
             (pokemon.get('id'), pokemon.get('random_ability_id'))
         )
 
         self.print_pokemon(pokemon)
 
-    def roll_with_type(self, game:GameSession, pokemon_box:list):
-        if game.options.rolls==0:
+    def roll_with_type(self):
+        if self.game.options.rolls==0:
             print('\nNo quedan tiradas.')
             return
-        if game.options.tickets==0:
+        if self.game.options.tickets==0:
             print('\nNo quedan tiquets.')
             return
 
@@ -531,13 +537,13 @@ class MenuManager():
             return
 
         #obtained_pokemon_list = [ x[0] for x in self.game_manager.db.get_pokemon_box(game.game_id) ]
-        pokemon_list = [ x[0] for x in pokemon_box ]
-        pokemon = self.game_manager.do_roll_with_type(game, pokemon_list, pokemon_type)
+        pokemon_list = [ x[0] for x in self.game.pokemon_box ]
+        pokemon = self.game_manager.do_roll_with_type(self.game, pokemon_list, pokemon_type)
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        pokemon_box.append(
+        self.game.pokemon_box.append(
             (pokemon.get('id'), pokemon.get('random_ability_id'))
         )
 
@@ -548,21 +554,21 @@ class MenuManager():
     # MENU CARDS
     # =======================================================================
 
-    def open_menu_cards(self, game:GameSession):
+    def open_menu_cards(self):
         
         clear()
 
         while(True):
-            #self.print_user(active_user.username)
-            self.print_game_info(game)
+            self.print_user()
+            self.print_game_info()
             print(MenuManager.TEXT_LINE)
 
             print('\n    Lista de cartas de ventaja:')
-            for n, card in enumerate(self.game_manager.card_manager.cards.values()):
+            for n, card in enumerate(self.game_manager.cards.values()):
                 print(f'\n    - {n+1}: {card.name}')
                 print(f'        {card.description}')
 
-                if not game.can_use_card(card):
+                if not self.game.can_use_card(card):
                     print(f'        (AGOTADA)')
                     continue
                 print(f'        Precio: {card.price} monedas')
@@ -611,11 +617,11 @@ class MenuManager():
         if card is None:
             return False
 
-        if not self.game_manager.game.can_use_card(card):
+        if not self.game.can_use_card(card):
             print('\nNo puedes usar esa carta porque ya has superado su límite de usos.')
             return False
 
-        if not self.game_manager.game.can_spend_money(card.price):
+        if not self.game.can_spend_money(card.price):
             print('\nNo tienes suficiente dinero para comprar esa carta.')
             return False
 
@@ -623,7 +629,7 @@ class MenuManager():
 
     def use_card_mega(self):
         tag = 'mega'
-        card = self.game_manager.card_manager.cards.get(tag)
+        card = self.game_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
@@ -638,17 +644,16 @@ class MenuManager():
 
     def use_card_fusion(self):
         tag = 'fusion'
-        card = self.game_manager.card_manager.cards.get(tag)
+        card = self.game_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
 
-        if len(self.game_manager.game.box)<2:
+        if len(self.game.pokemon_box)<2:
             print('\nNo se puede usar porque no tienes más de 2 Pokémon.')
             return
 
-        pokemon_list = self.get_list_obtained_pokemon()
-        self.print_box(pokemon_list)
+        self.print_box()
 
         try:
             print('\nEscribe el número de la posición del primer Pokémon a eliminar:')
@@ -663,17 +668,18 @@ class MenuManager():
             print('\nError: Las posiciones tienen que ser diferentes.')
             return
 
+        box_length = len(self.game.pokemon_box)
         if (
-            (position1<0 or position1>len(pokemon_list)) 
+            (position1<0 or position1>box_length) 
             or 
-            (position2<0 or position2>len(pokemon_list)) 
+            (position2<0 or position2>box_length) 
         ):
             print('\nError: Posiciones no detectadas.')
             return
 
         pokemon = self.game_manager.use_card_fusion(
-            pokemon_id1 = pokemon_list[position1][0],
-            pokemon_id2 = pokemon_list[position2][0]
+            pokemon_id1 = self.game.pokemon_box[position1][0],
+            pokemon_id2 = self.game.pokemon_box[position2][0]
         )
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
@@ -684,17 +690,16 @@ class MenuManager():
 
     def use_card_intercambio(self):
         tag = 'intercambio'
-        card = self.game_manager.card_manager.cards.get(tag)
+        card = self.game_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
 
-        if len(self.game_manager.game.box)==0:
+        if len(self.game.pokemon_box)==0:
             print('\nNo se puede usar porque no tienes ningún Pokémon.')
             return
 
-        pokemon_list = self.get_list_obtained_pokemon()
-        self.print_box(pokemon_list)
+        self.print_box()
 
         try:
             print('\nEscribe el número de la posición del Pokémon a intercambiar:')
@@ -704,12 +709,12 @@ class MenuManager():
             return
         
         if (
-            pokemon_position<0 or pokemon_position>len(pokemon_list)
+            pokemon_position<0 or pokemon_position>len(self.game.pokemon_box)
         ):
             print('\nError: Posición no detectada.')
             return
 
-        pokemon_id = pokemon_list[pokemon_position][0]
+        pokemon_id = self.game.pokemon_box[pokemon_position][0]
         pokemon = self.game_manager.use_card_intercambio(pokemon_id)
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
@@ -720,17 +725,16 @@ class MenuManager():
 
     def use_card_preevo(self):
         tag = 'preevo'
-        card = self.game_manager.card_manager.cards.get(tag)
+        card = self.game_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
 
-        if len(self.game_manager.game.box)==0:
+        if len(self.game.pokemon_box)==0:
             print('\nNo se puede usar porque no tienes ningún Pokémon.')
             return
 
-        pokemon_list = self.get_list_obtained_pokemon()
-        self.print_box(pokemon_list)
+        self.print_box()
 
         try:
             print('\nEscribe el número de la posición del Pokémon que quieres cambiar por su pre-evolución:')
@@ -740,12 +744,12 @@ class MenuManager():
             return
 
         if (
-            pokemon_position<0 or pokemon_position>len(pokemon_list)
+            pokemon_position<0 or pokemon_position>len(self.game.pokemon_box)
         ):
             print('\nError: Posición no detectada.')
             return
 
-        pokemon_id = pokemon_list[pokemon_position][0]
+        pokemon_id = self.game.pokemon_box[pokemon_position][0]
         pokemon = self.game_manager.use_card_preevo(pokemon_id)
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
@@ -756,12 +760,12 @@ class MenuManager():
 
     def use_card_comienzo(self):
         tag = 'comienzo'
-        card = self.game_manager.card_manager.cards.get(tag)
+        card = self.game_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
 
-        if abs(self.game_manager.game.options.rolls - self.game_manager.game.options.max_rolls) >= 18:
+        if abs(self.game.options.rolls - self.game.options.max_rolls) >= 18:
             print('\nNo se puede usar porque ya se han realizado 18 tiradas o más.')
             return
 
@@ -770,7 +774,7 @@ class MenuManager():
 
     def use_card_powerhouse(self):
         tag = 'powerhouse'
-        card = self.game_manager.card_manager.cards.get(tag)
+        card = self.game_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
@@ -779,7 +783,7 @@ class MenuManager():
 
     def use_card_type(self):
         tag = 'tipo'
-        card = self.game_manager.card_manager.cards.get(tag)
+        card = self.game_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
@@ -788,7 +792,7 @@ class MenuManager():
 
     def use_card_aditional(self, rolls:int):
         tag = 'adicional_' + str(rolls)
-        card = self.game_manager.card_manager.cards.get(tag)
+        card = self.game_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
@@ -798,7 +802,7 @@ class MenuManager():
 
     def use_card_selectiva(self, game:GameSession):
         tag = 'selectiva'
-        card = self.game_manager.card_manager.cards.get(tag)
+        card = self.game_manager.cards.get(tag)
 
         if not self.check_card_conditions(card):
             return
@@ -807,14 +811,19 @@ class MenuManager():
             return
 
         pokemon_list = []
+        obtained_pokemon_list = [ x[0] for x in self.game.pokemon_box ]
 
         for n in range(6):
-            pokemon = self.game_manager.get_random_pokemon()
+            pokemon = self.game_manager.get_random_pokemon(
+                obtained_pokemon_list,
+                self.game.filters.random_ability
+            )
 
             if not pokemon:
                 continue
 
             pokemon_list.append(pokemon)
+            obtained_pokemon_list.append(pokemon.get('id'))
 
         if len(pokemon_list)==0:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)

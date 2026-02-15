@@ -72,10 +72,54 @@ class DatabaseManager:
         rows = self.cur.fetchall()
         return [ x[0] for x in rows ]
 
-    def get_game(self, game_id:int) -> list:
-        self.cur.execute(f"SELECT * FROM games WHERE game_id={game_id}")
+    def get_game(self, game_id:int) -> dict:
+        self.cur.execute(
+            f"""
+            SELECT 
+                game_id,
+                user_id,
+                gamename,
+                max_rolls,
+                rolls,
+                tickets,
+                money,
+                item_points,
+                generation,
+                include_mythical,
+                include_legendary,
+                include_sublegendary,
+                include_powerhouse,
+                include_others,
+                fully_evolved_only,
+                random_ability
+            FROM games 
+            WHERE game_id={game_id}
+            """
+        )
         rows = self.cur.fetchall()
-        return rows[0]
+        if not rows:
+            return {}
+
+        game = rows[0]
+        game_dic = {
+            'game_id' : game[0],
+            'user_id' : game[1],
+            'gamename' : game[2],
+            'max_rolls' : game[3], 
+            'rolls' : game[4], 
+            'tickets' : game[5], 
+            'money' : game[6], 
+            'item_points' : game[7],
+            'generation' : game[8],
+            'mythical' : game[9],
+            'legendary' : game[10],
+            'sublegendary' : game[11],
+            'powerhouse' : game[12],
+            'others' : game[13],
+            'fully_evolved' : game[14],
+            'random_ability' : game[15]
+        }
+        return game_dic
 
     def get_games(self, user_id:int) -> list:
         self.cur.execute(f"SELECT game_id, gamename FROM games WHERE user_id={user_id}")
@@ -90,22 +134,22 @@ class DatabaseManager:
         else:
             return None
 
-    def get_game_ids(self, user_id:int) -> list:
+    def get_game_ids(self, user_id:int) -> list[int]:
         self.cur.execute(f"SELECT game_id FROM games WHERE user_id={user_id}")
         rows = self.cur.fetchall()
         return [ x[0] for x in rows ]
 
-    def get_gamenames(self, user_id:int) -> list:
+    def get_gamenames(self, user_id:int) -> list[str]:
         self.cur.execute(f"SELECT gamename FROM games WHERE user_id={user_id}")
         rows = self.cur.fetchall()
         return [ x[0] for x in rows ]
 
-    def get_pokemon_box(self, game_id:int) -> list:
+    def get_pokemon_box(self, game_id:int) -> list[(int,int)]:
         self.cur.execute(f"SELECT pokemon_id, ability_id FROM pokemon_box WHERE game_id={game_id}")
         rows = self.cur.fetchall()
         return rows
 
-    def get_used_cards(self, game_id:int) -> list:
+    def get_used_cards(self, game_id:int) -> list[(str,int)]:
         self.cur.execute(f"SELECT tag, uses FROM used_cards WHERE game_id={game_id}")
         rows = self.cur.fetchall()
         return rows

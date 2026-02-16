@@ -150,7 +150,7 @@ class DatabaseManager:
         rows = self.cur.fetchall()
         return rows
 
-    def get_used_cards(self, game_id:int) -> list[(str,int)]:
+    def get_used_cards(self, game_id:int) -> list:
         self.cur.execute(f"SELECT tag, uses FROM used_cards WHERE game_id={game_id}")
         rows = self.cur.fetchall()
         return rows

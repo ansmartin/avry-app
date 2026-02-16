@@ -23,7 +23,7 @@ class PokemonDatabaseManager:
 
         return name
 
-    def get_random_pokemon(self, box_list:list, mask=None) -> dict:
+    def get_random_pokemon(self, obtained_pokemon_list:list, mask=None) -> dict:
 
         # escoger dataframe
         if self.df_filtered is None:
@@ -38,7 +38,7 @@ class PokemonDatabaseManager:
             dataframe = dataframe.loc[mask]
 
         # quitar ya obtenidos
-        new_mask = dataframe.id.apply(lambda x : x not in box_list)
+        new_mask = dataframe.id.apply(lambda x : x not in obtained_pokemon_list)
         dataframe = dataframe.loc[new_mask]
 
         if dataframe.shape[0]==0:

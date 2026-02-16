@@ -76,27 +76,27 @@ class MenuManager():
         print(f'\nUsuario: {self.user.username}')
 
     def print_game_info(self):
-        print(f'\nSesión de juego: {self.game.name}')
+        print(f'\nSesión de juego: {self.game.gamename}')
         print(f'\n   Datos de la sesión de juego')
         print(f'      Tiradas restantes: {self.game.options.rolls}')
         print(f'      Tiquets para forzar tipo: {self.game.options.tickets}')
         print(f'      Dinero: {self.game.options.money} monedas')
         print(f'      Puntos de items: {self.game.options.item_points}')
 
-    def print_filters(self, filters:PokemonFilters):
+    def print_filters(self):
         print('\nFiltros:')
         print(f' - filtrar por generación')
-        print(f'   - obtener Pokémon hasta la generación: {filters.generation}')
+        print(f'   - obtener Pokémon hasta la generación: {self.game.filters.generation}')
         print(f' - filtrar por categoría')
-        print(f'   - mythical: {filters.mythical}')
-        print(f'   - legendary: {filters.legendary}')
-        print(f'   - sublegendary: {filters.sublegendary}')
-        print(f'   - powerhouse: {filters.powerhouse}')
-        print(f'   - el resto de Pokémon: {filters.others}')
-        print(f' - obtener sólo Pokémon completamente evolucionados: {filters.fully_evolved}')
-        print(f' - obtener habilidades randomizadas: {filters.random_ability}')
-        # print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {filters.has_mega}')
-        # print(f' - obtener sólo Pokémon que puedan gigamaxizar: {filters.has_gmax}')
+        print(f'   - mythical: {self.game.filters.mythical}')
+        print(f'   - legendary: {self.game.filters.legendary}')
+        print(f'   - sublegendary: {self.game.filters.sublegendary}')
+        print(f'   - powerhouse: {self.game.filters.powerhouse}')
+        print(f'   - el resto de Pokémon: {self.game.filters.others}')
+        print(f' - obtener sólo Pokémon completamente evolucionados: {self.game.filters.fully_evolved}')
+        print(f' - obtener habilidades randomizadas: {self.game.filters.random_ability}')
+        # print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {self.game.filters.has_mega}')
+        # print(f' - obtener sólo Pokémon que puedan gigamaxizar: {self.game.filters.has_gmax}')
 
     def print_box(self):
         if len(self.game.pokemon_box)==0:
@@ -480,7 +480,7 @@ class MenuManager():
             if(option=='1'):
                 self.roll()
             elif(option=='2'):
-                self.roll_with_type()
+                self.roll(spend_ticket=True)
             elif(option=='3'):
                 self.open_menu_cards()
             elif(option=='4'):
@@ -494,11 +494,7 @@ class MenuManager():
                 quit()
 
             elif(option=='m'):
-                pokemon = self.game_manager.get_random_pokemon(
-                    [ x[0] for x in self.game.pokemon_box ], 
-                    self.game.filters.random_ability,
-                    self.game.filters.generation
-                )
+                pokemon = self.game_manager.get_random_pokemon(self.game)
                 if pokemon:
                     self.print_pokemon(pokemon)
             else:
@@ -507,62 +503,32 @@ class MenuManager():
             print(MenuManager.TEXT_LINE)
 
 
-    def roll(self):
+    def roll(self, spend_ticket:bool=False):
         if self.game.options.rolls==0:
             print('\nNo quedan tiradas.')
             return
 
-        obtained_pokemon_list = [ x[0] for x in self.game.pokemon_box ]
+        pokemon_type = None
+        if spend_ticket:
+            if self.game.options.tickets==0:
+                print('\nNo quedan tiquets.')
+                return
+            
+            print('\nEscribe el tipo del Pokémon:')
+            pokemon_type = input().lower()
+            if pokemon_type not in PokemonTypes.TYPE_LIST:
+                print('\nError: Tipo no identificado.')
+                return
 
+        # obtener pokemon
         pokemon = self.game_manager.do_roll(
-            self.game.game_id, 
-            obtained_pokemon_list,
-            self.game.filters.random_ability,
-            self.game.filters.generation,
-            self.game.options.rolls
-        )
-
-        if not pokemon:
-            print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
-            return
-
-        self.game.options.rolls-=1
-
-        self.save_pokemon_in_box(pokemon)
-        self.print_pokemon(pokemon)
-
-    def roll_with_type(self):
-        if self.game.options.rolls==0:
-            print('\nNo quedan tiradas.')
-            return
-        if self.game.options.tickets==0:
-            print('\nNo quedan tiquets.')
-            return
-
-        print('\nEscribe el tipo del Pokémon:')
-        pokemon_type = input().lower()
-        if pokemon_type not in PokemonTypes.TYPE_LIST:
-            print('\nError: Tipo no identificado.')
-            return
-
-        obtained_pokemon_list = [ x[0] for x in self.game.pokemon_box ]
-        
-        pokemon = self.game_manager.do_roll_with_type(
-            self.game.game_id, 
-            obtained_pokemon_list,
-            self.game.filters.random_ability,
-            self.game.filters.generation,
-            self.game.options.rolls,
-            self.game.options.tickets,
+            self.game,
             pokemon_type
         )
 
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
-
-        self.game.options.rolls-=1
-        self.game.options.tickets-=1
 
         self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
@@ -665,7 +631,7 @@ class MenuManager():
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        # mostrar
+        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
     def use_card_fusion(self):
@@ -711,7 +677,7 @@ class MenuManager():
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        # mostrar
+        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
     def use_card_intercambio(self):
@@ -746,7 +712,7 @@ class MenuManager():
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        # mostrar
+        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
     def use_card_preevo(self):
@@ -781,7 +747,7 @@ class MenuManager():
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        # mostrar
+        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
     def use_card_comienzo(self):
@@ -840,11 +806,7 @@ class MenuManager():
         obtained_pokemon_list = [ x[0] for x in self.game.pokemon_box ]
 
         for n in range(6):
-            pokemon = self.game_manager.get_random_pokemon(
-                obtained_pokemon_list,
-                self.game.filters.random_ability,
-                self.game.filters.generation
-            )
+            pokemon = self.game_manager.get_random_pokemon(self.game)
 
             if not pokemon:
                 continue

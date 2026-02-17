@@ -41,6 +41,27 @@ CREATE TABLE used_cards(
 	CONSTRAINT used_card_pk PRIMARY KEY (game_id, tag)
 )
 
+CREATE TABLE pokemon(
+	pokemon_id INTEGER PRIMARY KEY,
+	pokemon_name TEXT NOT NULL,
+	form_name TEXT,
+	generation INTEGER NOT NULL,
+	evolves_from_pokemon_id INTEGER,
+	first_type TEXT NOT NULL,
+	second_type TEXT,
+	first_ability INTEGER NOT NULL,
+	second_ability INTEGER, 
+	hidden_ability INTEGER,
+	is_mythical BOOLEAN NOT NULL, 
+	is_legendary BOOLEAN NOT NULL, 
+	is_sublegendary BOOLEAN NOT NULL, 
+	is_powerhouse BOOLEAN NOT NULL, 
+	is_fully_evolved BOOLEAN NOT NULL,
+	has_mega BOOLEAN NOT NULL, 
+	has_gmax BOOLEAN NOT NULL, 
+	sprite INTEGER
+)
+
 CREATE TABLE abilities(
     ability_id INTEGER PRIMARY KEY,
     ability_name TEXT NOT NULL,

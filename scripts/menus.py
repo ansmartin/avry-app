@@ -25,6 +25,7 @@ class MenuManager():
         self.game_manager = game_manager
         self.user:User = None
         self.game:GameSession = None
+        self.pokemon_box=[]
 
 
     TEXT_LINE = '\n------------------------------------'
@@ -164,7 +165,7 @@ class MenuManager():
 
         clear()
 
-        usernames_list = self.game_manager.user_system.db.get_usernames()
+        usernames_list = self.game_manager.user_system.db.users.get_usernames()
 
         while(True):
             self.print_users(usernames_list)
@@ -851,7 +852,7 @@ class MenuManager():
             pokemon = pokemon_list.pop(pokemon_position)
             pokemon_id = pokemon.get('id')
             ability_id = pokemon.get('random_ability_id')
-            self.game_manager.user_system.db.insert_pokemon(game.game_id, pokemon_id, ability_id)
+            self.game_manager.user_system.db.rolls.insert_pokemon(game.game_id, pokemon_id, ability_id)
             self.game_manager.spend_roll(game)
             picks+=1
 

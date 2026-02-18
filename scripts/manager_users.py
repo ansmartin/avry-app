@@ -1,5 +1,5 @@
 from scripts.db import DatabaseManager
-from scripts.game import GameSessionManager
+from scripts.manager_games import GameSessionManager
 
 class User:
 

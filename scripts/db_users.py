@@ -14,19 +14,16 @@ class UsersDatabase:
         rows = self.cur.fetchall()
         return rows
 
-    def get_user(self, 
-            user_id:int = None, 
-            username:str = None
-        ) -> list:
-
+    def get_user(self, user_id:int=None, username:str=None) -> list:
+        # buscar por id o por nombre de usuario
         if user_id is not None:
-            query = (f"SELECT * FROM users WHERE user_id={user_id}")
+            condition = f"user_id={user_id}"
         elif username is not None:
-            query = (f"SELECT * FROM users WHERE username=\'{username}\'")
+            condition = f"username=\'{username}\'"
         else:
             return []
 
-        self.cur.execute(query)
+        self.cur.execute(f"SELECT * FROM users WHERE {condition}")
         rows = self.cur.fetchall()
         return rows
 

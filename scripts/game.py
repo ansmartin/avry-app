@@ -1,9 +1,7 @@
 from numpy import isnan
 
 from scripts.db import DatabaseManager
-from scripts.users import User, UserSystem
 from scripts.pokemon import PokemonDatabaseManager
-from scripts.filters import PokemonFilters
 from scripts.cards import Card, CardManager
 
 class GameOptions:
@@ -34,6 +32,39 @@ class GameOptions:
         self.money = GameOptions.DEFAULT_MONEY
         self.item_points = GameOptions.DEFAULT_ITEM_POINTS
 
+class PokemonFilters:
+    
+    DEFAULT_GENERATION = 9
+
+    def __init__(self,
+            # filter by generation
+            generation:int = DEFAULT_GENERATION,
+            # filter by category
+            mythical:bool = False,
+            legendary:bool = False,
+            sublegendary:bool = True,
+            powerhouse:bool = True,
+            others:bool = True,
+            # filter by stage
+            fully_evolved:bool = True,
+            # random ability
+            random_ability:bool = False
+        ):
+        self.generation = generation
+        self.mythical = bool(mythical)
+        self.legendary = bool(legendary)
+        self.sublegendary = bool(sublegendary)
+        self.powerhouse = bool(powerhouse)
+        self.others = bool(others)
+        self.fully_evolved = bool(fully_evolved)
+        self.random_ability = bool(random_ability)
+
+class PokemonBox:
+    
+    def __init__(self, pokemon_list:list, advanced:bool=False):
+        self.list = pokemon_list
+        self.advanced = advanced
+
 
 class GameSession:
     
@@ -43,15 +74,15 @@ class GameSession:
             gamename:str, 
             options:GameOptions = None, 
             filters:PokemonFilters = None,
-            pokemon_box:list = None,
-            used_cards:dict = None,
+            pokemon_box:PokemonBox = None,
+            used_cards:dict = None
         ):
         self.game_id = game_id
         self.user_id = user_id
         self.gamename = gamename
         self.options = options if options else GameOptions()
         self.filters = filters if filters else PokemonFilters()
-        self.pokemon_box = pokemon_box if pokemon_box else []
+        self.pokemon_box = pokemon_box if pokemon_box else PokemonBox()
         self.used_cards = used_cards if used_cards else {}
 
     def can_spend_roll(self) -> bool:
@@ -77,109 +108,23 @@ class GameSession:
 
 class GameSessionManager:
     
-    def __init__(self, connection):
-        self.db = DatabaseManager(connection)
-        self.pokemon_db = PokemonDatabaseManager()
-        self.user_system = UserSystem(self.db)
+    def __init__(self, db:DatabaseManager):
+        self.db = db
         self.cards = CardManager.get_all_cards()
+        self.pokemon_db = PokemonDatabaseManager()
 
-    def create_game_session(self, user_id:int, gamename:str, dic_options:dict):
-        options = None
-        filters = None
 
-        if not dic_options.get('default_options'):
-            
-            try:
-                max_rolls = int(dic_options['rolls'])
-                if max_rolls<0:
-                    max_rolls=0
-                if max_rolls > GameOptions.MAX_ROLLS:
-                    max_rolls = GameOptions.MAX_ROLLS
-            except:
-                max_rolls = GameOptions.DEFAULT_ROLLS
+    # GET
 
-            try:
-                tickets = int(dic_options['tickets'])
-                if tickets<0:
-                    tickets=0
-            except:
-                tickets = GameOptions.DEFAULT_TICKETS
-
-            try:
-                money = int(dic_options['money'])
-                if money<0:
-                    money=0
-            except:
-                money = GameOptions.DEFAULT_MONEY
-
-            try:
-                item_points = int(dic_options['item_points'])
-                if item_points<0:
-                    item_points=0
-            except:
-                item_points = GameOptions.DEFAULT_ITEM_POINTS
-
-            options = GameOptions(
-                max_rolls = max_rolls, 
-                rolls = max_rolls, 
-                tickets = tickets, 
-                money = money, 
-                item_points = item_points
-            )
-
-        if not dic_options.get('default_filters'):
-            
-            try:
-                generation = int(dic_options['generation'])
-                if generation<0:
-                    generation=0
-            except:
-                generation = PokemonFilters.DEFAULT_GENERATION
-            
-            filters = PokemonFilters(
-                generation = generation,
-                mythical = dic_options['mythical'],
-                legendary = dic_options['legendary'],
-                sublegendary = dic_options['sublegendary'],
-                powerhouse = dic_options['powerhouse'],
-                others = dic_options['others'],
-                fully_evolved = dic_options['fully_evolved'],
-                random_ability = dic_options['random_ability']
-            )
-
-        game = GameSession(0, user_id, gamename, options, filters)
-        self.db.games.insert_game(
-            user_id,
-            game.gamename,
-            game.options.max_rolls,
-            game.options.rolls,
-            game.options.tickets,
-            game.options.money,
-            game.options.item_points,
-            game.filters.generation,
-            game.filters.mythical,
-            game.filters.legendary,
-            game.filters.sublegendary,
-            game.filters.powerhouse,
-            game.filters.others,
-            game.filters.fully_evolved,
-            game.filters.random_ability
-        )
-
-    def delete_game_session(self, user_id:int, gamename:str) -> bool:
-        game_id = self.db.games.get_game_id(user_id, gamename)
+    def get_game_session(self, 
+            game_id:int=None, 
+            user_id:int=None, gamename:str=None, 
+            advanced_pokemon_box:bool=False
+        ) -> GameSession:
         if game_id is None:
-            return False
-
-        self.db.games.delete_game(game_id)
-        self.db.rolls.delete_pokemon_box(game_id)
-        self.db.cards.delete_all_used_cards(game_id)
-        return True
-
-    def get_game_session(self, user_id:int, gamename:str) -> GameSession:
-        game_id = self.db.games.get_game_id(user_id, gamename)
-        if game_id is None:
-            return None
+            game_id = self.db.games.get_game_id(user_id, gamename)
+            if game_id is None:
+                return None
 
         # cargar datos de la sesión de juego
         game = self.db.games.get_game(game_id)
@@ -203,11 +148,14 @@ class GameSessionManager:
             random_ability = game.get('random_ability')
         )
 
-        pokemon_box = [
-            self.get_pokemon_tuple(pokemon_id, ability_id)
-            for pokemon_id, ability_id in
-            self.db.rolls.get_pokemon_box(game_id)
-        ]
+        box = self.db.rolls.get_pokemon_box(game_id)
+        if advanced_pokemon_box:
+            pokemon_box = [
+                self.get_pokemon_tuple(pokemon_id, ability_id)
+                for pokemon_id, ability_id in box
+            ]
+        else:
+            pokemon_box = [ x[0] for x in box ]
 
         used_cards = {
             tag : uses
@@ -257,18 +205,111 @@ class GameSessionManager:
         return pokemon
 
 
-    def reset_rolls_and_box(self, game:GameSession):
-        game.options.rolls = game.options.max_rolls
-        self.db.games.update_game(
-            game.game_id,
-            'rolls',
-            game.options.max_rolls
-        )
-        game.pokemon_box = []
-        self.db.rolls.delete_pokemon_box(
-            game.game_id
+    # INSERT
+
+    def create_game_session(self, user_id:int, gamename:str, dic_options:dict):
+        options = None
+        filters = None
+
+        if dic_options.get('default_options'):
+            options = GameOptions()
+        else:
+            try:
+                max_rolls = int(dic_options['rolls'])
+                if max_rolls<0:
+                    max_rolls=0
+                elif max_rolls > GameOptions.MAX_ROLLS:
+                    max_rolls = GameOptions.MAX_ROLLS
+            except:
+                max_rolls = GameOptions.DEFAULT_ROLLS
+
+            try:
+                tickets = int(dic_options['tickets'])
+                if tickets<0:
+                    tickets=0
+            except:
+                tickets = GameOptions.DEFAULT_TICKETS
+
+            try:
+                money = int(dic_options['money'])
+                if money<0:
+                    money=0
+            except:
+                money = GameOptions.DEFAULT_MONEY
+
+            try:
+                item_points = int(dic_options['item_points'])
+                if item_points<0:
+                    item_points=0
+            except:
+                item_points = GameOptions.DEFAULT_ITEM_POINTS
+
+            options = GameOptions(
+                max_rolls = max_rolls, 
+                rolls = max_rolls, 
+                tickets = tickets, 
+                money = money, 
+                item_points = item_points
+            )
+
+        if dic_options.get('default_filters'):
+            filters = PokemonFilters()
+        else:
+            try:
+                generation = int(dic_options['generation'])
+                if generation<0:
+                    generation=0
+                elif generation>PokemonFilters.DEFAULT_GENERATION:
+                    generation = PokemonFilters.DEFAULT_GENERATION
+            except:
+                generation = PokemonFilters.DEFAULT_GENERATION
+            
+            filters = PokemonFilters(
+                generation = generation,
+                mythical = dic_options['mythical'],
+                legendary = dic_options['legendary'],
+                sublegendary = dic_options['sublegendary'],
+                powerhouse = dic_options['powerhouse'],
+                others = dic_options['others'],
+                fully_evolved = dic_options['fully_evolved'],
+                random_ability = dic_options['random_ability']
+            )
+
+        self.db.games.insert_game(
+            user_id,
+            gamename,
+            options.max_rolls,
+            options.rolls,
+            options.tickets,
+            options.money,
+            options.item_points,
+            filters.generation,
+            filters.mythical,
+            filters.legendary,
+            filters.sublegendary,
+            filters.powerhouse,
+            filters.others,
+            filters.fully_evolved,
+            filters.random_ability
         )
 
+
+    # DELETE
+
+
+    def delete_game_session(self, game_id:int=None, user_id:int=None, gamename:str=None) -> bool:
+        if game_id is None:
+            game_id = self.db.games.get_game_id(user_id, gamename)
+            if game_id is None:
+                return False
+
+        self.db.games.delete_game(game_id)
+        self.db.rolls.delete_pokemon_box(game_id)
+        self.db.cards.delete_all_used_cards(game_id)
+        return True 
+
+
+    # UPDATE
 
     def add_rolls(self, game:GameSession, quantity:int):
         game.options.rolls+=quantity
@@ -380,6 +421,18 @@ class GameSessionManager:
             self.spend_ticket(game)
 
         return pokemon
+
+    def reset_rolls_and_box(self, game:GameSession):
+        game.options.rolls = game.options.max_rolls
+        self.db.games.update_game(
+            game.game_id,
+            'rolls',
+            game.options.max_rolls
+        )
+        game.pokemon_box = []
+        self.db.rolls.delete_pokemon_box(
+            game.game_id
+        )
 
 
     # Cards

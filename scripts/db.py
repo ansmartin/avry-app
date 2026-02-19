@@ -5,9 +5,10 @@ from scripts.db_games import GamesDatabase
 from scripts.db_rolls import RollsDatabase
 from scripts.db_cards import CardsDatabase
 from scripts.db_pokemon import PokemonDatabase
+from scripts.db_abilities import AbilitiesDatabase
 
 
-class DatabaseManager:
+class DatabaseModel:
     
     def __init__(self, connection:Connection):
         self.connection = connection
@@ -18,3 +19,4 @@ class DatabaseManager:
         self.rolls = RollsDatabase(self.connection, self.cur)
         self.cards = CardsDatabase(self.connection, self.cur)
         self.pokemon = PokemonDatabase(self.connection, self.cur)
+        self.abilities = AbilitiesDatabase(self.connection, self.cur)

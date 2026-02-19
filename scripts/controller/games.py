@@ -1,5 +1,5 @@
 from scripts.db import DatabaseModel
-from scripts.controller_pokemon import PokemonController
+from scripts.controller.pokemon import PokemonController
 from scripts.game import GameOptions, PokemonFilters, GameSession
 from scripts.cards import Card, CardManager
 
@@ -172,7 +172,6 @@ class GamesController:
 
     # DELETE
 
-
     def delete_game_session(self, game_id:int=None, user_id:int=None, gamename:str=None) -> bool:
         if game_id is None:
             game_id = self.db_games.get_game_id(user_id, gamename)
@@ -281,9 +280,8 @@ class GamesController:
             )
 
         # obtener pokemon
-        pokemon = self.get_random_pokemon(
+        pokemon = self.pokemon.get_random_pokemon(
             game,
-            mask,
             save=True
         )
         if not pokemon:
@@ -343,9 +341,8 @@ class GamesController:
         # obtained_pokemon_list = [ x[0] for x in self.db.get_pokemon_box(game.game_id) ]
         mask = self.pokemon_db.df_filtered.has_mega
 
-        pokemon = self.get_random_pokemon(
+        pokemon = self.pokemon.get_random_pokemon(
             game,
-            mask,
             save=True
         )
         if not pokemon:
@@ -366,7 +363,7 @@ class GamesController:
             return {}
 
         # obtener pokemon
-        pokemon = self.get_random_pokemon(
+        pokemon = self.pokemon.get_random_pokemon(
             game,
             save=True
         )
@@ -392,7 +389,7 @@ class GamesController:
             return {}
 
         # obtener pokemon
-        pokemon = self.get_random_pokemon(
+        pokemon = self.pokemon.get_random_pokemon(
             game,
             save=True
         )
@@ -416,18 +413,21 @@ class GamesController:
         if len(game.pokemon_box)==0:
             return
 
-        preevo_id = self.pokemon_db.df.loc[pokemon_id].evolves_from_pokemon_id
+        pokemon = self.pokemon.db_pokemon.get_pokemon(pokemon_id)
+        if not pokemon:
+            return
 
+        preevo_id = pokemon.get('evolves_from_pokemon_id')
         if preevo_id is None:
             return
 
-        pokemon = self.pokemon_db.df.loc[preevo_id].to_dict()
+        preevo = self.pokemon.db_pokemon.get_pokemon(preevo_id)
 
         ability_id = None
         if game.filters.random_ability:
-            ability_id = self.abilities_manager.get_random_ability(game.filters.generation)
-            pokemon['random_ability_id'] = ability_id
-            pokemon['random_ability_name'] = self.abilities_manager.get_ability_name(ability_id)
+            ability_id = self.pokemon.abilities.get_random_ability(game.filters.generation)
+            preevo['random_ability_id'] = ability_id
+            preevo['random_ability_name'] = self.pokemon.abilities.get_ability_name(ability_id)
 
         # borrar pokemon e insertar preevo
         self.db_rolls.delete_roll(game.game_id, pokemon_id)
@@ -435,7 +435,7 @@ class GamesController:
 
         self.buy_card(game, card)
 
-        return pokemon
+        return preevo
 
     def use_card_comienzo(self, game:GameSession):
         tag = 'comienzo'

@@ -1,11 +1,11 @@
 from sqlite3 import Connection, Cursor
 
-from scripts.db_users import UsersDatabase
-from scripts.db_games import GamesDatabase
-from scripts.db_rolls import RollsDatabase
-from scripts.db_cards import CardsDatabase
-from scripts.db_pokemon import PokemonDatabase
-from scripts.db_abilities import AbilitiesDatabase
+from scripts.database.users import UsersDatabase
+from scripts.database.games import GamesDatabase
+from scripts.database.rolls import RollsDatabase
+from scripts.database.cards import CardsDatabase
+from scripts.database.pokemon import PokemonDatabase
+from scripts.database.abilities import AbilitiesDatabase
 
 
 class DatabaseModel:

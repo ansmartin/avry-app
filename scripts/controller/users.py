@@ -1,5 +1,5 @@
 from scripts.db import DatabaseModel
-from scripts.controller_games import GamesController
+from scripts.controller.games import GamesController
 
 class UsersController:
 

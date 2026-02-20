@@ -9,7 +9,7 @@ class Card:
         self.limit = limit
 
 
-class CardManager:
+class Cards:
 
     @staticmethod
     def get_all_cards():
@@ -93,8 +93,3 @@ class CardManager:
         cards[tag] = Card(tag,name,description,price,limit)
 
         return cards
-
-
-    # def __init__(self):
-    #     self.cards = CardManager.get_all_cards()
-    #     self.cards_list = list(self.cards.keys())

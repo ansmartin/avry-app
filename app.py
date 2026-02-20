@@ -1,7 +1,7 @@
 import sqlite3
 
 import scripts.constants as const
-from scripts.controller import AppController
+from scripts.app_controller import AppController
 from scripts.menus import MenuManager
 
 try:

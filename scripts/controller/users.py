@@ -5,9 +5,9 @@ class UsersController:
 
     MAX_USERS = 128
 
-    def __init__(self, db:DatabaseModel):
+    def __init__(self, db:DatabaseModel, games:GamesController):
         self.db_users = db.users
-        self.games = GamesController(db)
+        self.games = games
 
 
     # GET

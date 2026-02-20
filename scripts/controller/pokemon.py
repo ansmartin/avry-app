@@ -24,7 +24,30 @@ class PokemonController:
 
         return pokemon_name
 
-    def get_random_pokemon(self, game:GameSession, save:bool=False) -> dict:
+    def get_pokemon_name_and_ability(self, pokemon_id:int, ability_id:int):
+        tuple = (
+            pokemon_id,
+            self.get_pokemon_fullname(pokemon_id),
+            ability_id, 
+            self.abilities.get_ability_name(ability_id)
+        )
+        return tuple
+
+
+    def get_pokemon(self, pokemon_id:int, random_ability_generation:int=None) -> dict:
+        pokemon = self.db_pokemon.get_pokemon(pokemon_id)
+        if not pokemon:
+            return {}
+
+        # añadir habilidad random
+        if random_ability_generation is not None:
+            ability_id = self.abilities.get_random_ability(random_ability_generation)
+            pokemon['random_ability_id'] = ability_id
+            pokemon['random_ability_name'] = self.abilities.get_ability_name(ability_id)
+
+        return pokemon
+
+    def get_random_pokemon(self, game:GameSession) -> dict:
         # pasar filtros para obtener lista de ids
         pokemon_ids = self.db_pokemon.get_pokemon_ids(game.filters)
 
@@ -38,23 +61,8 @@ class PokemonController:
         n = random.randint(0, len(pokemon_ids)-1)
         pokemon_id = pokemon_ids[n]
 
-        pokemon = self.db_pokemon.get_pokemon(pokemon_id)
+        pokemon = self.get_pokemon(pokemon_id, game.filters.random_ability)
         if not pokemon:
             return {}
 
-        # añadir habilidad random
-        if game.filters.random_ability:
-            ability_id = self.abilities.get_random_ability(game.filters.generation)
-            pokemon['random_ability_id'] = ability_id
-            pokemon['random_ability_name'] = self.abilities.get_ability_name(ability_id)
-        
-        """ 
-        # guardar pokemon
-        if save:
-            self.db.rolls.insert_pokemon(
-                game.game_id,
-                pokemon_id,
-                pokemon.get('random_ability_id')
-            )
-        """
         return pokemon

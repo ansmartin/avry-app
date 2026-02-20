@@ -73,7 +73,7 @@ class PokemonDatabase:
         else:
             return None
 
-    def get_pokemon_ids(self, filters:PokemonFilters) -> list:
+    def get_pokemon_ids(self, filters:PokemonFilters, additional_filters:dict=None) -> list:
         query = f"""
         SELECT pokemon_id 
         FROM pokemon
@@ -96,8 +96,15 @@ class PokemonDatabase:
 
         if len(cond_list)>0:
             cond = ' OR '.join(cond_list)
-            cond = ' AND (' + cond + ')'
-            query += cond
+            query += f' AND ({cond})'
+
+        # filtros adicionales
+        if additional_filters:
+            if additional_filters.get('has_mega'):
+                query += ' AND has_mega'
+            pokemon_type = additional_filters.get('pokemon_type')
+            if pokemon_type:
+                query += f' AND (first_type=\'{pokemon_type}\' OR second_type=\'{pokemon_type}\')'
 
         self.cur.execute(query)
         rows = self.cur.fetchall()

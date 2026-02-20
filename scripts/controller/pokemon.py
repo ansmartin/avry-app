@@ -48,9 +48,9 @@ class PokemonController:
 
         return pokemon
 
-    def get_random_pokemon(self, game:GameSession) -> dict:
+    def get_random_pokemon(self, game:GameSession, additional_filters:dict=None) -> dict:
         # pasar filtros para obtener lista de ids
-        pokemon_ids = self.db_pokemon.get_pokemon_ids(game.filters)
+        pokemon_ids = self.db_pokemon.get_pokemon_ids(game.filters, additional_filters)
 
         # quitar pokemon ya obtenidos previamente
         obtained_pokemon_list = [ x[0] for x in game.pokemon_box._list ]

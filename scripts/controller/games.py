@@ -232,7 +232,7 @@ class GamesController:
     # Rolls
 
     def do_roll(self, game:GameSession, pokemon_type:str=None) -> dict:
-        mask = None
+        additional_filters = None
 
         if game.options.rolls==0:
             return {}
@@ -240,15 +240,11 @@ class GamesController:
         if pokemon_type:
             if game.options.tickets==0:
                 return {}
-            
-            mask = (
-                (self.pokemon_db.df_filtered.first_type==pokemon_type) 
-                | 
-                (self.pokemon_db.df_filtered.second_type==pokemon_type)
-            )
+
+            additional_filters = { 'pokemon_type':pokemon_type }
 
         # obtener pokemon
-        pokemon = self.pokemon.get_random_pokemon(game)
+        pokemon = self.pokemon.get_random_pokemon(game, additional_filters)
         if not pokemon:
             return {}
         

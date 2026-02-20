@@ -57,9 +57,9 @@ class GameCardsController:
         if not self.check_card_conditions(game, card):
             return {}
 
-        mask = self.pokemon_db.df_filtered.has_mega
+        additional_filters = { 'has_mega':True }
 
-        pokemon = self.games.pokemon.get_random_pokemon(game)
+        pokemon = self.games.pokemon.get_random_pokemon(game, additional_filters)
         if not pokemon:
             return {}
         
@@ -108,7 +108,7 @@ class GameCardsController:
         pokemon = self.games.pokemon.get_random_pokemon(game)
         if not pokemon:
             return {}
-        
+
         self.games.rolls.insert_roll(game.game_id, pokemon)
 
         # borrar pokemon

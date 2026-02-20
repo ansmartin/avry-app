@@ -136,13 +136,11 @@ class GameCardsController:
         if preevo_id is None:
             return
 
-        preevo = self.games.pokemon.get_pokemon(preevo_id)
-
-        ability_id = pokemon.get('random_ability_id')
+        preevo = self.games.pokemon.get_pokemon(preevo_id, game.filters)
 
         # borrar pokemon e insertar preevo
         self.games.rolls.db_rolls.delete_roll(game.game_id, pokemon_id)
-        self.games.rolls.db_rolls.insert_roll(game.game_id, preevo_id, ability_id)
+        self.games.rolls.insert_roll(game.game_id, preevo)
 
         self.buy_card(game, card)
 

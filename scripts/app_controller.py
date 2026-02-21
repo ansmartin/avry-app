@@ -9,6 +9,8 @@ class AppController:
     
     def __init__(self, connection):
         self.db = DatabaseModel(connection)
+
         self.games = GamesController(self.db)
         self.users = UsersController(self.db, self.games)
+
         self.game_cards = GameCardsController(self.games)

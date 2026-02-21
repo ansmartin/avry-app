@@ -1,5 +1,5 @@
 from scripts.controller.games import GamesController
-from scripts.game import GameOptions, PokemonFilters, GameSession
+from scripts.game import GameSession
 from scripts.cards import Card, Cards
 
 class GameCardsController:
@@ -52,7 +52,7 @@ class GameCardsController:
 
     def use_card_mega(self, game:GameSession):
         tag = 'mega'
-        card:Card = self.cards_dict.get(tag)
+        card = self.cards_dict.get(tag)
 
         if not self.check_card_conditions(game, card):
             return {}
@@ -63,7 +63,7 @@ class GameCardsController:
         if not pokemon:
             return {}
         
-        self.games.rolls.insert_roll(game.game_id, pokemon)
+        self.games.insert_roll(game, pokemon)
 
         self.buy_card(game, card)
 
@@ -76,7 +76,7 @@ class GameCardsController:
         if not self.check_card_conditions(game, card):
             return {}
 
-        if len(game.pokemon_box)<2:
+        if len(game.pokemon_box.box)<2:
             return {}
 
         # obtener pokemon
@@ -84,11 +84,11 @@ class GameCardsController:
         if not pokemon:
             return {}
         
-        self.games.rolls.insert_roll(game.game_id, pokemon)
+        self.games.insert_roll(game, pokemon)
 
         # borrar pokemons
-        self.games.rolls.db_rolls.delete_roll(game.game_id, pokemon_id1)
-        self.games.rolls.db_rolls.delete_roll(game.game_id, pokemon_id2)
+        self.games.delete_roll(game, pokemon_id1)
+        self.games.delete_roll(game, pokemon_id2)
 
         self.buy_card(game, card)
 
@@ -101,7 +101,7 @@ class GameCardsController:
         if not self.check_card_conditions(game, card):
             return {}
 
-        if len(game.pokemon_box)==0:
+        if len(game.pokemon_box.box)==0:
             return {}
 
         # obtener pokemon
@@ -109,10 +109,10 @@ class GameCardsController:
         if not pokemon:
             return {}
 
-        self.games.rolls.insert_roll(game.game_id, pokemon)
+        self.games.insert_roll(game, pokemon)
 
         # borrar pokemon
-        self.games.rolls.db_rolls.delete_roll(game.game_id, pokemon_id)
+        self.games.delete_roll(game, pokemon_id)
 
         self.buy_card(game, card)
 
@@ -125,10 +125,10 @@ class GameCardsController:
         if not self.check_card_conditions(game, card):
             return
 
-        if len(game.pokemon_box)==0:
+        if len(game.pokemon_box.box)==0:
             return
 
-        pokemon = self.games.pokemon.db_pokemon.get_pokemon(pokemon_id)
+        pokemon = self.games.pokemon.get_pokemon(pokemon_id)
         if not pokemon:
             return
 
@@ -136,11 +136,15 @@ class GameCardsController:
         if preevo_id is None:
             return
 
-        preevo = self.games.pokemon.get_pokemon(preevo_id, game.filters)
+        preevo = self.games.pokemon.get_pokemon(
+            preevo_id, 
+            game.filters.random_ability, 
+            game.filters.generation
+        )
 
         # borrar pokemon e insertar preevo
-        self.games.rolls.db_rolls.delete_roll(game.game_id, pokemon_id)
-        self.games.rolls.insert_roll(game.game_id, preevo)
+        self.games.delete_roll(game, pokemon_id)
+        self.games.insert_roll(game, preevo)
 
         self.buy_card(game, card)
 

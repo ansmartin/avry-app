@@ -10,14 +10,6 @@ from scripts.cards import Card
 def clear():
     system("clear||cls")
 
-def capitalize_name(text:str):
-    words = text.split('-')
-    return '-'.join(w.capitalize() for w in words)
-
-def capitalize_all_words(text:str):
-    words = text.replace('-',' ').split()
-    return ' '.join(w.capitalize() for w in words)
-
 
 class MenuManager():
 
@@ -99,62 +91,63 @@ class MenuManager():
         # print(f' - obtener sólo Pokémon que puedan gigamaxizar: {self.game.filters.has_gmax}')
 
     def print_box(self):
-        if len(self.game.pokemon_box._list)==0:
+        if len(self.game.pokemon_box.box)==0:
             print(f'\nLa lista de Pokémon obtenidos está vacía.')
         else:
             print(f'\nLista de Pokémon obtenidos:')
-            for n, pokemon in enumerate(self.game.pokemon_box._list):
-                pokemon_id = pokemon[0]
-                pokemon_name = pokemon[1]
-                ability_id = pokemon[2]
-                ability_name = pokemon[3]
-                row = f' - {n+1}:\t{pokemon_name}'#   (ID: {pokemon_id})'
+            for n, (pokemon_id,ability_id) in enumerate(self.game.pokemon_box.box.items()):
+                # pokemon_id = pokemon[0]
+                # pokemon_name = pokemon[1]
+                # ability_id = pokemon[2]
+                # ability_name = pokemon[3]
+                row = f' - {n+1}:\t{self.app.games.pokemon.get_pokemon_fullname(pokemon_id)}'
+                #   (ID: {pokemon_id})'
                 if ability_id:
-                    row += f'   (Habilidad: {ability_name})'
+                    row += f'   (Habilidad: {self.app.games.pokemon.abilities.get_ability_name(ability_id)})'
                 print(row)
 
     def print_pokemon(self, pokemon:dict):
         # nombre
-        species_name:str = pokemon['species_name']
-        form_name_text:str = pokemon['form_name_text']
+        pokemon_name:str = pokemon.get('pokemon_name')
+        form_name:str = pokemon.get('form_name')
         # generacion
-        pokemon_generation_number:int = pokemon['pokemon_generation_number']
+        generation:int = pokemon.get('generation')
         # tipos
-        first_type:str = pokemon['first_type']
-        second_type:str = pokemon['second_type']
+        first_type:str = pokemon.get('first_type')
+        second_type:str = pokemon.get('second_type')
         # habilidades
-        first_ability:str = pokemon['first_ability']
-        second_ability:str = pokemon['second_ability']
-        hidden_ability:str = pokemon['hidden_ability']
+        first_ability:int = pokemon.get('first_ability')
+        second_ability:int = pokemon.get('second_ability')
+        hidden_ability:int = pokemon.get('hidden_ability')
+        random_ability:int = pokemon.get('random_ability_id')
         # sprite
-        sprite_default:str = pokemon['sprite_default']
+        sprite:int = pokemon.get('sprite')
 
         print('\nPokémon obtenido:')
 
-        name = f'\tNombre: {species_name.capitalize()}'
-        if(form_name_text is not None):
-            name += f' ({form_name_text})'
+        name = f'\tNombre: {pokemon_name}'
+        if(form_name is not None):
+            name += f' ({form_name})'
         print(name)
 
-        print(f'\tGeneración: {pokemon_generation_number}')
+        print(f'\tGeneración: {generation}')
         
         types = f'\tTipo: {first_type.capitalize()}'
         if(second_type is not None):
             types += f' / {second_type.capitalize()}'
         print(types)
         
-        random_ability = pokemon.get('random_ability_name')
         if random_ability:
-            print(f'\tHabilidad (random): {random_ability}')
+            print(f'\tHabilidad (random): {self.app.games.pokemon.abilities.get_ability_name(random_ability)}')
         else:
-            abilities = f'\tHabilidad: {capitalize_all_words(first_ability)}'
+            abilities = f'\tHabilidad: {self.app.games.pokemon.abilities.get_ability_name(first_ability)}'
             if(second_ability is not None):
-                abilities += f' / {capitalize_all_words(second_ability)}'
+                abilities += f' / {self.app.games.pokemon.abilities.get_ability_name(second_ability)}'
             print(abilities)
             if(hidden_ability is not None):
-                print(f'\tHabilidad oculta: {capitalize_all_words(hidden_ability)}')
+                print(f'\tHabilidad oculta: {self.app.games.pokemon.abilities.get_ability_name(hidden_ability)}')
 
-        print(f'\tIlustración: {sprite_default}')
+        print(f'\tIlustración: {self.app.games.pokemon.get_sprite_link(sprite)}')
 
 
     # MENU MANAGE USERS
@@ -264,7 +257,7 @@ class MenuManager():
                     if n>=0 and n<len(usernames_list):
                         username = usernames_list[n]
 
-                        if self.app.users.delete_user(username):
+                        if self.app.users.delete_user(username=username):
                             usernames_list.pop(n)
                             clear()
                             break
@@ -329,7 +322,10 @@ class MenuManager():
                         gamename = self.user.games_list[n]
 
                         # cargar partida
-                        self.game = self.app.games.get_game_session(self.user.user_id, gamename)
+                        self.game = self.app.games.get_game_session(
+                            user_id = self.user.user_id, 
+                            gamename = gamename
+                        )
                         if self.game is not None:
                             clear()
                             self.open_menu_game()
@@ -532,17 +528,8 @@ class MenuManager():
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
-
-    def save_pokemon_in_box(self, pokemon:dict):
-        self.game.pokemon_box._list.append(
-            self.app.games.pokemon.get_pokemon_name_and_ability(
-                pokemon.get('id'), 
-                pokemon.get('random_ability_id')
-            )
-        )
         
 
     # MENU CARDS
@@ -628,12 +615,11 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        pokemon = self.app.game_cards.use_card_mega()
+        pokemon = self.app.game_cards.use_card_mega(self.game)
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
     def use_card_fusion(self):
@@ -643,7 +629,8 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        if len(self.game.pokemon_box._list)<2:
+        box_length = len(self.game.pokemon_box.box)
+        if box_length<2:
             print('\nNo se puede usar porque no tienes más de 2 Pokémon.')
             return
 
@@ -662,7 +649,6 @@ class MenuManager():
             print('\nError: Las posiciones tienen que ser diferentes.')
             return
 
-        box_length = len(self.game.pokemon_box._list)
         if (
             (position1<0 or position1>box_length) 
             or 
@@ -671,15 +657,17 @@ class MenuManager():
             print('\nError: Posiciones no detectadas.')
             return
 
+        pokemon_list = list(self.game.pokemon_box.box)
+
         pokemon = self.app.game_cards.use_card_fusion(
-            pokemon_id1 = self.game.pokemon_box._list[position1][0],
-            pokemon_id2 = self.game.pokemon_box._list[position2][0]
+            self.game,
+            pokemon_id1 = pokemon_list[position1],
+            pokemon_id2 = pokemon_list[position2]
         )
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
     def use_card_intercambio(self):
@@ -689,7 +677,8 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        if len(self.game.pokemon_box._list)==0:
+        box_length = len(self.game.pokemon_box.box)
+        if box_length==0:
             print('\nNo se puede usar porque no tienes ningún Pokémon.')
             return
 
@@ -703,18 +692,19 @@ class MenuManager():
             return
         
         if (
-            pokemon_position<0 or pokemon_position>len(self.game.pokemon_box._list)
+            pokemon_position<0 or pokemon_position>box_length
         ):
             print('\nError: Posición no detectada.')
             return
 
-        pokemon_id = self.game.pokemon_box._list[pokemon_position][0]
-        pokemon = self.app.game_cards.use_card_intercambio(pokemon_id)
+        
+        pokemon_list = list(self.game.pokemon_box.box)
+        pokemon_id = pokemon_list[pokemon_position]
+        pokemon = self.app.game_cards.use_card_intercambio(self.game, pokemon_id)
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
     def use_card_preevo(self):
@@ -724,7 +714,8 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        if len(self.game.pokemon_box._list)==0:
+        box_length = len(self.game.pokemon_box.box)
+        if len(self.game.pokemon_box.box)==0:
             print('\nNo se puede usar porque no tienes ningún Pokémon.')
             return
 
@@ -738,18 +729,18 @@ class MenuManager():
             return
 
         if (
-            pokemon_position<0 or pokemon_position>len(self.game.pokemon_box._list)
+            pokemon_position<0 or pokemon_position>box_length
         ):
             print('\nError: Posición no detectada.')
             return
 
-        pokemon_id = self.game.pokemon_box._list[pokemon_position][0]
-        pokemon = self.app.game_cards.use_card_preevo(pokemon_id)
+        pokemon_list = list(self.game.pokemon_box.box)
+        pokemon_id = pokemon_list[pokemon_position]
+        pokemon = self.app.game_cards.use_card_preevo(self.game, pokemon_id)
         if not pokemon:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
 
-        self.save_pokemon_in_box(pokemon)
         self.print_pokemon(pokemon)
 
     def use_card_comienzo(self):
@@ -763,7 +754,7 @@ class MenuManager():
             print('\nNo se puede usar porque ya se han realizado 18 tiradas o más.')
             return
 
-        self.app.game_cards.use_card_comienzo()
+        self.app.game_cards.use_card_comienzo(self.game)
         print('\nTiradas reiniciadas.')
 
     def use_card_powerhouse(self):
@@ -773,7 +764,7 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        self.app.game_cards.use_card_powerhouse()
+        self.app.game_cards.use_card_powerhouse(self.game)
 
     def use_card_type(self):
         tag = 'tipo'
@@ -782,7 +773,7 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        self.app.game_cards.use_card_type()
+        self.app.game_cards.use_card_type(self.game)
 
     def use_card_aditional(self, rolls:int):
         tag = 'adicional_' + str(rolls)
@@ -791,46 +782,51 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        self.app.game_cards.use_card_aditional(rolls)
+        self.app.game_cards.use_card_aditional(self.game, rolls)
         print(f'\nTiradas adicionales añadidas: {rolls}')
 
-    def use_card_selectiva(self, game:GameSession):
+    def use_card_selectiva(self):
         tag = 'selectiva'
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):
             return
 
-        if game.options.rolls < 6:
+        if self.game.options.rolls < 6:
             return
 
-        pokemon_list = []
-        obtained_pokemon_list = [ x[0] for x in self.game.pokemon_box._list ]
+        pokemon_dicts_list = []
 
-        for n in range(6):
+        for _ in range(6):
             pokemon = self.app.games.pokemon.get_random_pokemon(self.game)
 
             if not pokemon:
-                continue
+                break
 
-            pokemon_list.append(pokemon)
-            obtained_pokemon_list.append(pokemon.get('id'))
+            pokemon_dicts_list.append(pokemon)
+            # añadir a la caja para que no se repitan
+            pokemon_id = pokemon.get('pokemon_id')
+            self.game.pokemon_box.box[pokemon_id] = None
 
-        if len(pokemon_list)==0:
+        if len(pokemon_dicts_list)==0:
             print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
             return
+
+        # quitarlos de la caja
+        for pokemon in pokemon_dicts_list:
+            self.game.pokemon_box.box.pop(pokemon.get('pokemon_id'))
 
         clear()
         picks = 0
         while(True):
-            print(f'\nTiradas restantes: {game.options.rolls}\n')
+            print(f'\nTiradas restantes: {self.game.options.rolls}\n')
             
             # mostrar pokemons
-            for n, pokemon in enumerate(pokemon_list):
+            for n, pokemon in enumerate(pokemon_dicts_list):
                 print(f'- {n+1}')
                 self.print_pokemon(pokemon)
 
-            print(f'\nEscribe el número del Pokémon que quieres quedarte (del 1 al {len(pokemon_list)}) (Gastas 1 tirada por cada Pokémon que te quedes).\nEscribe 0 para parar.')
+            print(f'\nEscribe el número del Pokémon que quieres quedarte (del 1 al {len(pokemon_dicts_list)}) (Gastas 1 tirada por cada Pokémon que te quedes).\nEscribe 0 para parar.')
 
             try:
                 pokemon_position = int(input()) - 1
@@ -843,21 +839,23 @@ class MenuManager():
             if pokemon_position==-1:
                 break
 
-            if pokemon_position<0 or pokemon_position>=len(pokemon_list):
+            if pokemon_position<0 or pokemon_position>=len(pokemon_dicts_list):
                 clear()
                 print('\nError: La posición no se encuentra dentro del rango.')
                 continue
 
             clear()
-            print('\nTirada gastada.')
-            pokemon = pokemon_list.pop(pokemon_position)
-            self.app.games.rolls.insert_roll(game.game_id, pokemon)
-            self.app.games.spend_roll(game)
+            # obtener pokemon
+            pokemon = pokemon_dicts_list.pop(pokemon_position)
+            self.app.games.insert_roll(self.game, pokemon)
+            # gastar tirada
+            self.app.games.spend_roll(self.game)
             picks+=1
+            print('\nTirada gastada.')
 
             # termina
-            if picks==5 or len(pokemon_list)==0:
+            if picks==5 or len(pokemon_dicts_list)==0:
                 break
 
-        self.app.game_cards.buy_card(card)
+        self.app.game_cards.buy_card(self.game, card)
 

@@ -57,10 +57,12 @@ class PokemonFilters:
 
 class PokemonBox:
     
-    def __init__(self, pokemon_list:list, advanced:bool=False):
-        self._list = pokemon_list
+    def __init__(self, pokemons:dict, advanced:bool=False):
+        self.box = pokemons
         self.advanced = advanced
 
+    def reset(self):
+        self.box = {}
 
 class GameSession:
     

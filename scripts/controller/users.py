@@ -12,11 +12,10 @@ class UsersController:
 
     # GET
 
-    def get_user(self, user_id:int=None, username:str=None) -> dict:
+    def get_user(self, username:str) -> dict:
+        user_id = self.db_users.get_user_id(username)
         if user_id is None:
-            user_id = self.db_users.get_user_id(username)
-            if user_id is None:
-                return {}
+            return {}
 
         user = {
             'user_id' : user_id,
@@ -39,10 +38,13 @@ class UsersController:
 
     # DELETE
 
-    def delete_user(self, username:str) -> bool:
-        user_id = self.db_users.get_user_id(username)
+    def delete_user(self, user_id:int=None, username:str=None) -> bool:
         if user_id is None:
-            return False
+            if username is None:
+                return False
+            user_id = self.db_users.get_user_id(username)
+            if user_id is None:
+                return False
 
         self.db_users.delete_user(user_id)
 

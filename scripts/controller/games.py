@@ -2,7 +2,7 @@ from scripts.db import DatabaseModel
 from scripts.controller.pokemon import PokemonController
 from scripts.controller.rolls import RollsController
 from scripts.controller.cards import CardsController
-from scripts.game import GameOptions, PokemonFilters, GameSession
+from scripts.game import GameOptions, PokemonFilters, PokemonBox, GameSession
 
 class GamesController:
     
@@ -20,12 +20,17 @@ class GamesController:
             advanced_pokemon_box:bool=False
         ) -> GameSession:
         if game_id is None:
+            if user_id is None or gamename is None:
+                return None
             game_id = self.db_games.get_game_id(user_id, gamename)
             if game_id is None:
                 return None
 
         # cargar datos de la sesión de juego
         game = self.db_games.get_game(game_id)
+
+        user_id = game.get('user_id')
+        gamename = game.get('gamename')
 
         options = GameOptions(
             max_rolls = game.get('max_rolls'), 
@@ -46,14 +51,15 @@ class GamesController:
             random_ability = game.get('random_ability')
         )
 
-        box = self.rolls.db_rolls.get_rolls(game_id)
-        if advanced_pokemon_box:
-            pokemon_box = [
-                self.pokemon.get_pokemon_name_and_ability(pokemon_id, ability_id)
-                for pokemon_id, ability_id in box
-            ]
-        else:
-            pokemon_box = [ x[0] for x in box ]
+        box = { x:y for x,y in self.rolls.db_rolls.get_rolls(game_id) }
+        # if advanced_pokemon_box:
+        #     pokemon_box = [
+        #         self.pokemon.get_pokemon_name_and_ability(pokemon_id, ability_id)
+        #         for pokemon_id, ability_id in box
+        #     ]
+        # else:
+        #    pokemon_box = [ x[0] for x in box ]
+        pokemon_box = PokemonBox(box)
 
         used_cards = self.cards.get_used_cards(game_id)
 
@@ -162,6 +168,8 @@ class GamesController:
 
     def delete_game_session(self, game_id:int=None, user_id:int=None, gamename:str=None) -> bool:
         if game_id is None:
+            if user_id is None or gamename is None:
+                return False
             game_id = self.db_games.get_game_id(user_id, gamename)
             if game_id is None:
                 return False
@@ -170,6 +178,13 @@ class GamesController:
         self.rolls.db_rolls.delete_rolls(game_id)
         self.cards.db_cards.delete_all_used_cards(game_id)
         return True 
+
+    def delete_roll(self, game:GameSession, pokemon_id:int):
+        game.pokemon_box.box.pop(pokemon_id)
+        self.rolls.db_rolls.delete_roll(
+            game.game_id, 
+            pokemon_id
+        )
 
 
     # UPDATE
@@ -228,6 +243,29 @@ class GamesController:
             game.options.item_points
         )
 
+    def insert_roll(self, game:GameSession, pokemon:dict):
+        pokemon_id = pokemon.get('pokemon_id')
+        ability_id = pokemon.get('random_ability_id')
+
+        game.pokemon_box.box[pokemon_id] = ability_id
+        self.rolls.db_rolls.insert_roll(
+            game.game_id,
+            pokemon_id,
+            ability_id
+        )
+
+    def reset_rolls_and_box(self, game:GameSession):
+        game.options.rolls = game.options.max_rolls
+        self.db_games.update_game(
+            game.game_id,
+            'rolls',
+            game.options.max_rolls
+        )
+        game.pokemon_box.reset()
+        self.rolls.db_rolls.delete_rolls(
+            game.game_id
+        )
+
 
     # Rolls
 
@@ -247,8 +285,8 @@ class GamesController:
         pokemon = self.pokemon.get_random_pokemon(game, additional_filters)
         if not pokemon:
             return {}
-        
-        self.rolls.insert_roll(game.game_id, pokemon)
+
+        self.insert_roll(game, pokemon)
 
         # gastar tirada
         self.spend_roll(game)
@@ -258,15 +296,3 @@ class GamesController:
             self.spend_ticket(game)
 
         return pokemon
-
-    def reset_rolls_and_box(self, game:GameSession):
-        game.options.rolls = game.options.max_rolls
-        self.db_games.update_game(
-            game.game_id,
-            'rolls',
-            game.options.max_rolls
-        )
-        game.pokemon_box = []
-        self.rolls.db_rolls.delete_rolls(
-            game.game_id
-        )

@@ -73,7 +73,7 @@ class PokemonDatabase:
         else:
             return None
 
-    def get_pokemon_ids(self, filters:PokemonFilters, additional_filters:dict=None) -> list:
+    def get_pokemon_ids(self, filters:PokemonFilters, additional_filters:dict=None) -> set:
         query = f"""
         SELECT pokemon_id 
         FROM pokemon
@@ -82,21 +82,24 @@ class PokemonDatabase:
 
         if filters.fully_evolved:
             query += ' AND is_fully_evolved'
-
-        conditions = [
-            ('is_mythical', filters.mythical),
-            ('is_legendary', filters.legendary),
-            ('is_sublegendary', filters.sublegendary),
-            ('is_powerhouse', filters.powerhouse)
-        ]
-        cond_list = [ x[0] for x in conditions if x[1] ]
-
+        
+        conditions_list = []
+        if filters.mythical:
+            conditions_list.append('is_mythical')
+        if filters.legendary:
+            conditions_list.append('is_legendary')
+        if filters.sublegendary:
+            conditions_list.append('is_sublegendary')
+        if filters.powerhouse:
+            conditions_list.append('is_powerhouse')
         if filters.others:
-            cond_list.append("(NOT is_mythical AND NOT is_legendary AND NOT is_sublegendary AND NOT is_powerhouse)")
+            conditions_list.append(
+                '(NOT is_mythical AND NOT is_legendary AND NOT is_sublegendary AND NOT is_powerhouse)'
+            )
 
-        if len(cond_list)>0:
-            cond = ' OR '.join(cond_list)
-            query += f' AND ({cond})'
+        if len(conditions_list)>0:
+            conditions = ' OR '.join(conditions_list)
+            query += f' AND ({conditions})'
 
         # filtros adicionales
         if additional_filters:
@@ -108,4 +111,4 @@ class PokemonDatabase:
 
         self.cur.execute(query)
         rows = self.cur.fetchall()
-        return [ x[0] for x in rows ]
+        return { x[0] for x in rows }

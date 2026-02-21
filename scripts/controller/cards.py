@@ -1,9 +1,9 @@
-from scripts.db import DatabaseModel
+from scripts.database.cards import CardsDatabase
 
 class CardsController:
 
-    def __init__(self, db:DatabaseModel):
-        self.db_cards = db.cards
+    def __init__(self, connection, cursor):
+        self.db_cards = CardsDatabase(connection, cursor)
 
 
     # GET

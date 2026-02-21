@@ -1,12 +1,12 @@
-from scripts.db import DatabaseModel
+from scripts.database.users import UsersDatabase
 from scripts.controller.games import GamesController
 
 class UsersController:
 
     MAX_USERS = 128
 
-    def __init__(self, db:DatabaseModel, games:GamesController):
-        self.db_users = db.users
+    def __init__(self, connection, cursor, games:GamesController):
+        self.db_users = UsersDatabase(connection, cursor)
         self.games = games
 
 

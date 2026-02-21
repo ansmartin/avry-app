@@ -6,8 +6,9 @@ from scripts.menus import MenuManager
 
 try:
     connection = sqlite3.connect(const.DATABASE_PATH)
+    cursor = connection.cursor()
 
-    app = AppController(connection)
+    app = AppController(connection, cursor)
 
     menu = MenuManager(app)
     menu.open_menu_users()

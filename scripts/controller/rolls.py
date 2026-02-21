@@ -1,6 +1,6 @@
-from scripts.db import DatabaseModel
+from scripts.database.rolls import RollsDatabase
 
 class RollsController:
 
-    def __init__(self, db:DatabaseModel):
-        self.db_rolls = db.rolls
+    def __init__(self, connection, cursor):
+        self.db_rolls = RollsDatabase(connection, cursor)

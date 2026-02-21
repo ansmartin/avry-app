@@ -1,14 +1,14 @@
 import random
 
-from scripts.db import DatabaseModel
+from scripts.database.pokemon import PokemonDatabase
 from scripts.controller.abilities import AbilitiesController
-from scripts.game import GameSession, PokemonFilters
+from scripts.game import GameSession
 
 class PokemonController:
 
-    def __init__(self, db:DatabaseModel):
-        self.db_pokemon = db.pokemon
-        self.abilities = AbilitiesController(db)
+    def __init__(self, connection, cursor):
+        self.db_pokemon = PokemonDatabase(connection, cursor)
+        self.abilities = AbilitiesController(connection, cursor)
 
 
     # GET

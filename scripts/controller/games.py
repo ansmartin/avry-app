@@ -1,4 +1,4 @@
-from scripts.db import DatabaseModel
+from scripts.database.games import GamesDatabase
 from scripts.controller.pokemon import PokemonController
 from scripts.controller.rolls import RollsController
 from scripts.controller.cards import CardsController
@@ -6,11 +6,11 @@ from scripts.game import GameOptions, PokemonFilters, PokemonBox, GameSession
 
 class GamesController:
     
-    def __init__(self, db:DatabaseModel):
-        self.db_games = db.games
-        self.pokemon = PokemonController(db)
-        self.rolls = RollsController(db)
-        self.cards = CardsController(db)
+    def __init__(self, connection, cursor):
+        self.db_games = GamesDatabase(connection, cursor)
+        self.pokemon = PokemonController(connection, cursor)
+        self.rolls = RollsController(connection, cursor)
+        self.cards = CardsController(connection, cursor)
 
 
     # GET

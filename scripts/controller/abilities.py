@@ -1,11 +1,11 @@
 import random
 
-from scripts.db import DatabaseModel
+from scripts.database.abilities import AbilitiesDatabase
 
 class AbilitiesController:
 
-    def __init__(self, db:DatabaseModel):
-        self.db_abilities = db.abilities
+    def __init__(self, connection, cursor):
+        self.db_abilities = AbilitiesDatabase(connection, cursor)
 
 
     # GET

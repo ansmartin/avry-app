@@ -1,5 +1,6 @@
 from flask import Flask, request, g
 import sqlite3
+import os.path
 
 import scripts.constants as const
 
@@ -20,7 +21,7 @@ app = Flask(__name__)
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = sqlite3.connect(const.DATABASE_PATH)
+        db = g._database = sqlite3.connect(const.DATABASE_FILE)
     return db
 
 @app.teardown_appcontext
@@ -28,6 +29,23 @@ def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
+def init_db():
+    # crear la base de datos si no existe, salir si ya existe
+    if os.path.isfile(const.DATABASE_FILE):
+        return
+
+    with app.app_context():
+        db = get_db()
+        # schema
+        with app.open_resource(const.SCHEMA_FILE, mode='r') as f:
+            db.cursor().executescript(f.read())
+        # values
+        with app.open_resource(const.POKEMON_VALUES_FILE, mode='r') as f:
+            db.cursor().executescript(f.read())
+        with app.open_resource(const.ABILITIES_VALUES_FILE, mode='r') as f:
+            db.cursor().executescript(f.read())
+        db.commit()
 
 
 @app.route("/pokemon", methods=['GET'])
@@ -67,4 +85,5 @@ def get_pokemon_ids():
     return { 'pokemon_list' : pokemon_list}
 
 
+init_db()
 app.run(debug=True)

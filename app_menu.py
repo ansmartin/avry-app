@@ -5,7 +5,7 @@ from scripts.app_controller import AppController
 from scripts.menus import MenuManager
 
 try:
-    connection = sqlite3.connect(const.DATABASE_PATH)
+    connection = sqlite3.connect(const.DATABASE_FILE)
     cursor = connection.cursor()
 
     app = AppController(connection, cursor)

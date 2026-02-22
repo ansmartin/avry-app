@@ -1,1 +1,5 @@
-DATABASE_PATH = './database/database.db'
+DB_PATH = './database/'
+DATABASE_FILE = DB_PATH + 'database.db'
+SCHEMA_FILE = DB_PATH + 'schema.sql'
+POKEMON_VALUES_FILE = DB_PATH + 'pokemon.sql'
+ABILITIES_VALUES_FILE = DB_PATH + 'abilities.sql'

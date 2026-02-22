@@ -10,7 +10,7 @@ class RollsDatabase:
     # GET
 
     def get_rolls(self, game_id:int) -> list[(int,int)]:
-        self.cur.execute(f"SELECT pokemon_id, ability_id FROM pokemon_box WHERE game_id={game_id}")
+        self.cur.execute(f"SELECT pokemon_id, ability_id FROM rolls WHERE game_id={game_id}")
         rows = self.cur.fetchall()
         return rows
 
@@ -23,7 +23,7 @@ class RollsDatabase:
 
         self.cur.execute(
             f"""
-            INSERT INTO pokemon_box 
+            INSERT INTO rolls 
             (game_id, pokemon_id, ability_id)
             VALUES ({game_id}, {pokemon_id}, {ability_id})
             """
@@ -34,11 +34,11 @@ class RollsDatabase:
     # DELETE
 
     def delete_rolls(self, game_id:int):
-        self.cur.execute(f"DELETE FROM pokemon_box WHERE game_id={game_id}")
+        self.cur.execute(f"DELETE FROM rolls WHERE game_id={game_id}")
         self.connection.commit()
 
     def delete_roll(self, game_id:int, pokemon_id:int):
-        self.cur.execute(f"DELETE FROM pokemon_box WHERE game_id={game_id} AND pokemon_id={pokemon_id}")
+        self.cur.execute(f"DELETE FROM rolls WHERE game_id={game_id} AND pokemon_id={pokemon_id}")
         self.connection.commit()
 
 

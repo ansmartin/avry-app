@@ -2,7 +2,7 @@ CREATE TABLE users(
     user_id INTEGER PRIMARY KEY,
 	username TEXT NOT NULL,
 	UNIQUE (username)
-)
+);
 
 CREATE TABLE games(
     game_id INTEGER PRIMARY KEY,
@@ -23,15 +23,15 @@ CREATE TABLE games(
 	random_ability BOOLEAN NOT NULL,
 	FOREIGN KEY (user_id) REFERENCES users(user_id),
 	UNIQUE (user_id, gamename)
-)
+);
 
-CREATE TABLE pokemon_box(
+CREATE TABLE rolls(
     game_id INTEGER NOT NULL,
 	pokemon_id INTEGER NOT NULL,
 	ability_id INTEGER,
 	FOREIGN KEY (game_id) REFERENCES games(game_id),
 	CONSTRAINT roll_pk PRIMARY KEY (game_id, pokemon_id)
-)
+);
 
 CREATE TABLE used_cards(
     game_id INTEGER NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE used_cards(
 	uses INTEGER NOT NULL,
 	FOREIGN KEY (game_id) REFERENCES games(game_id),
 	CONSTRAINT used_card_pk PRIMARY KEY (game_id, tag)
-)
+);
 
 CREATE TABLE pokemon(
 	pokemon_id INTEGER PRIMARY KEY,
@@ -60,10 +60,10 @@ CREATE TABLE pokemon(
 	has_mega BOOLEAN NOT NULL, 
 	has_gmax BOOLEAN NOT NULL, 
 	sprite INTEGER
-)
+);
 
 CREATE TABLE abilities(
     ability_id INTEGER PRIMARY KEY,
     ability_name TEXT NOT NULL,
 	generation INTEGER NOT NULL
-)
+);

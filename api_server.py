@@ -13,6 +13,7 @@ from scripts.controller.abilities import AbilitiesController
 from scripts.controller.game_cards import GameCardsController
 
 from scripts.game import PokemonFilters, GameSession
+from scripts.cards import Cards
 
 
 app = Flask(__name__)
@@ -108,6 +109,57 @@ def do_roll():
 
     pokemon = controller_games.do_roll(game, pokemon_type)
     return pokemon
+
+
+# CARDS
+
+@app.route("/use_card", methods=['GET'])
+def use_card():
+    connection = get_db()
+    cursor = connection.cursor()
+
+    game_id = request.args.get('game_id')
+    card_tag = request.args.get('tag')
+    if not game_id:
+        return {}
+
+    controller_games = GamesController(connection, cursor)
+    game = controller_games.get_game_session(game_id=game_id)
+    if not game:
+        return {}
+
+    controller_gamecards = GameCardsController(controller_games)
+
+    if card_tag == Cards.TAG_MEGA:
+        pokemon = controller_gamecards.use_card_mega(game)
+        return pokemon
+    elif card_tag == Cards.TAG_FUSION:
+        pokemon_id1 = int(request.args.get('pokemon_id1'))
+        pokemon_id2 = int(request.args.get('pokemon_id2'))
+        pokemon = controller_gamecards.use_card_fusion(game,pokemon_id1,pokemon_id2)
+        return pokemon
+    elif card_tag == Cards.TAG_INTERCAMBIO:
+        pokemon_id = int(request.args.get('pokemon_id'))
+        pokemon = controller_gamecards.use_card_intercambio(game,pokemon_id)
+        return pokemon
+    elif card_tag == Cards.TAG_PREEVO:
+        pokemon_id = int(request.args.get('pokemon_id'))
+        pokemon = controller_gamecards.use_card_preevo(game,pokemon_id)
+        return pokemon
+    elif card_tag == Cards.TAG_COMIENZO:
+        controller_gamecards.use_card_comienzo(game)
+    elif card_tag == Cards.TAG_2_POWERHOUSE:
+        controller_gamecards.use_card_powerhouse(game)
+    elif card_tag == Cards.TAG_TICKET_TIPO:
+        controller_gamecards.use_card_tiquet_tipo(game)
+    elif card_tag == Cards.TAG_ADICIONAL_1:
+        controller_gamecards.use_card_aditional(game, 1)
+    elif card_tag == Cards.TAG_ADICIONAL_2:
+        controller_gamecards.use_card_aditional(game, 2)
+    elif card_tag == Cards.TAG_ADICIONAL_3:
+        controller_gamecards.use_card_aditional(game, 3)
+
+    return {}
 
 
 # POKEMON

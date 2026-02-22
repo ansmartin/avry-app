@@ -51,7 +51,7 @@ class GameCardsController:
     # Cards
 
     def use_card_mega(self, game:GameSession):
-        tag = 'mega'
+        tag = Cards.TAG_MEGA
         card = self.cards_dict.get(tag)
 
         if not self.check_card_conditions(game, card):
@@ -70,7 +70,7 @@ class GameCardsController:
         return pokemon
 
     def use_card_fusion(self, game:GameSession, pokemon_id1:int, pokemon_id2:int):
-        tag = 'fusion'
+        tag = Cards.TAG_FUSION
         card = self.cards_dict.get(tag)
 
         if not self.check_card_conditions(game, card):
@@ -95,13 +95,16 @@ class GameCardsController:
         return pokemon
 
     def use_card_intercambio(self, game:GameSession, pokemon_id:int):
-        tag = 'intercambio'
+        tag = Cards.TAG_INTERCAMBIO
         card = self.cards_dict.get(tag)
 
         if not self.check_card_conditions(game, card):
             return {}
 
         if len(game.pokemon_box.box)==0:
+            return {}
+
+        if not game.pokemon_box.box.get(pokemon_id):
             return {}
 
         # obtener pokemon
@@ -119,7 +122,7 @@ class GameCardsController:
         return pokemon
 
     def use_card_preevo(self, game:GameSession, pokemon_id:int):
-        tag = 'preevo'
+        tag = Cards.TAG_PREEVO
         card = self.cards_dict.get(tag)
 
         if not self.check_card_conditions(game, card):
@@ -127,6 +130,9 @@ class GameCardsController:
 
         if len(game.pokemon_box.box)==0:
             return
+
+        if not game.pokemon_box.box.get(pokemon_id):
+            return {}
 
         pokemon = self.games.pokemon.get_pokemon(pokemon_id)
         if not pokemon:
@@ -151,7 +157,7 @@ class GameCardsController:
         return preevo
 
     def use_card_comienzo(self, game:GameSession):
-        tag = 'comienzo'
+        tag = Cards.TAG_COMIENZO
         card = self.cards_dict.get(tag)
 
         if not self.check_card_conditions(game, card):
@@ -164,7 +170,7 @@ class GameCardsController:
         self.buy_card(game, card)
 
     def use_card_powerhouse(self, game:GameSession):
-        tag = 'powerhouse'
+        tag = Cards.TAG_2_POWERHOUSE
         card = self.cards_dict.get(tag)
 
         if not self.check_card_conditions(game, card):
@@ -172,8 +178,8 @@ class GameCardsController:
 
         self.buy_card(game, card)
 
-    def use_card_type(self, game:GameSession):
-        tag = 'tipo'
+    def use_card_tiquet_tipo(self, game:GameSession):
+        tag = Cards.TAG_TICKET_TIPO
         card = self.cards_dict.get(tag)
 
         if not self.check_card_conditions(game, card):
@@ -183,7 +189,7 @@ class GameCardsController:
         self.buy_card(game, card)
 
     def use_card_aditional(self, game:GameSession, quantity:int):
-        tag = 'adicional_' + str(quantity)
+        tag = Cards.get_tag_adicional(quantity)
         card = self.cards_dict.get(tag)
 
         if not self.check_card_conditions(game, card):

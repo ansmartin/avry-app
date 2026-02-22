@@ -4,7 +4,7 @@ from scripts.app_controller import AppController
 from scripts.user import User
 from scripts.game import GameSession
 from scripts.pokemon_types import PokemonTypes
-from scripts.cards import Card
+from scripts.cards import Card, Cards
 
 
 def clear():
@@ -577,7 +577,7 @@ class MenuManager():
             elif(option=='6'):
                 self.use_card_powerhouse()
             elif(option=='7'):
-                self.use_card_type()
+                self.use_card_tiquet_tipo()
             elif(option=='8'):
                 self.use_card_aditional(1)
             elif(option=='9'):
@@ -609,7 +609,7 @@ class MenuManager():
         return True
 
     def use_card_mega(self):
-        tag = 'mega'
+        tag = Cards.TAG_MEGA
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):
@@ -623,7 +623,7 @@ class MenuManager():
         self.print_pokemon(pokemon)
 
     def use_card_fusion(self):
-        tag = 'fusion'
+        tag = Cards.TAG_FUSION
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):
@@ -671,7 +671,7 @@ class MenuManager():
         self.print_pokemon(pokemon)
 
     def use_card_intercambio(self):
-        tag = 'intercambio'
+        tag = Cards.TAG_INTERCAMBIO
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):
@@ -708,7 +708,7 @@ class MenuManager():
         self.print_pokemon(pokemon)
 
     def use_card_preevo(self):
-        tag = 'preevo'
+        tag = Cards.TAG_PREEVO
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):
@@ -744,7 +744,7 @@ class MenuManager():
         self.print_pokemon(pokemon)
 
     def use_card_comienzo(self):
-        tag = 'comienzo'
+        tag = Cards.TAG_COMIENZO
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):
@@ -758,7 +758,7 @@ class MenuManager():
         print('\nTiradas reiniciadas.')
 
     def use_card_powerhouse(self):
-        tag = 'powerhouse'
+        tag = Cards.TAG_2_POWERHOUSE
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):
@@ -766,27 +766,27 @@ class MenuManager():
 
         self.app.game_cards.use_card_powerhouse(self.game)
 
-    def use_card_type(self):
-        tag = 'tipo'
+    def use_card_tiquet_tipo(self):
+        tag = Cards.TAG_TICKET_TIPO
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):
             return
 
-        self.app.game_cards.use_card_type(self.game)
+        self.app.game_cards.use_card_tiquet_tipo(self.game)
 
-    def use_card_aditional(self, rolls:int):
-        tag = 'adicional_' + str(rolls)
+    def use_card_aditional(self, quantity:int):
+        tag = Cards.get_tag_adicional(quantity)
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):
             return
 
-        self.app.game_cards.use_card_aditional(self.game, rolls)
-        print(f'\nTiradas adicionales añadidas: {rolls}')
+        self.app.game_cards.use_card_aditional(self.game, quantity)
+        print(f'\nTiradas adicionales añadidas: {quantity}')
 
     def use_card_selectiva(self):
-        tag = 'selectiva'
+        tag = Cards.TAG_SELECTIVA
         card = self.app.game_cards.cards_dict.get(tag)
 
         if not self.check_card_conditions(card):

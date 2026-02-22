@@ -12,7 +12,7 @@ from scripts.controller.pokemon import PokemonController
 from scripts.controller.abilities import AbilitiesController
 from scripts.controller.game_cards import GameCardsController
 
-from scripts.game import PokemonFilters
+from scripts.game import PokemonFilters, GameSession
 
 
 app = Flask(__name__)
@@ -48,15 +48,78 @@ def init_db():
         db.commit()
 
 
-@app.route("/pokemon", methods=['GET'])
+# USERS
+
+@app.route("/user", methods=['GET'])
+def get_user():
+    connection = get_db()
+    cursor = connection.cursor()
+
+    username = request.args.get('username')
+    if not username:
+        return {}
+
+    controller_games = GamesController(connection, cursor)
+    controller_users = UsersController(connection, cursor, controller_games)
+    user = controller_users.get_user(username)
+    return user
+
+
+# GAMES
+
+@app.route("/game", methods=['GET'])
+def get_game():
+    connection = get_db()
+    cursor = connection.cursor()
+
+    user_id = request.args.get('user_id')
+    gamename = request.args.get('gamename')
+    if not user_id or not gamename:
+        return {}
+
+    controller_games = GamesController(connection, cursor)
+    game = controller_games.get_game_session(user_id=user_id, gamename=gamename)
+    if not game:
+        return {}
+
+    game_dict = game.to_dict()
+    box = game_dict['pokemon_box']['box']
+    new_box = { 
+        pokemon_id : controller_games.pokemon.get_pokemon_important_data(pokemon_id,ability_id)
+        for pokemon_id,ability_id in box.items()
+    }
+    game_dict['pokemon_box']['box'] = new_box
+    return game_dict
+
+@app.route("/do_roll", methods=['GET'])
+def do_roll():
+    connection = get_db()
+    cursor = connection.cursor()
+
+    game_id = request.args.get('game_id')
+    pokemon_type = request.args.get('pokemon_type')
+    if not game_id:
+        return {}
+
+    controller_games = GamesController(connection, cursor)
+    game = controller_games.get_game_session(game_id=game_id)
+    if not game:
+        return {}
+
+    pokemon = controller_games.do_roll(game, pokemon_type)
+    return pokemon
+
+
+# POKEMON
+
+@app.route("/random_pokemon", methods=['GET'])
 def get_pokemon():
     connection = get_db()
     cursor = connection.cursor()
 
     controller_games = GamesController(connection, cursor)
 
-    game_id = 1
-    game = controller_games.get_game_session(game_id=game_id)
+    game = GameSession(game_id=0, user_id=0, gamename='')
     pokemon = controller_games.pokemon.get_random_pokemon(game)
     return pokemon
 

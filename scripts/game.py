@@ -57,8 +57,8 @@ class PokemonFilters:
 
 class PokemonBox:
     
-    def __init__(self, pokemons:dict, advanced:bool=False):
-        self.box = pokemons
+    def __init__(self, box:dict={}, advanced:bool=False):
+        self.box = box
         self.advanced = advanced
 
     def reset(self):
@@ -82,6 +82,18 @@ class GameSession:
         self.filters = filters if filters else PokemonFilters()
         self.pokemon_box = pokemon_box if pokemon_box else PokemonBox()
         self.used_cards = used_cards if used_cards else {}
+
+    def to_dict(self) -> dict:
+        game_dict = {
+            'game_id' : self.game_id,
+            'user_id' : self.user_id,
+            'gamename' : self.gamename,
+            'options' : self.options.__dict__,
+            'filters' : self.filters.__dict__,
+            'pokemon_box': self.pokemon_box.__dict__,
+            'used_cards' : self.used_cards
+        }
+        return game_dict
 
     def can_spend_roll(self) -> bool:
         return self.options.rolls > 0

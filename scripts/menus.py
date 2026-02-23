@@ -792,41 +792,24 @@ class MenuManager():
         if not self.check_card_conditions(card):
             return
 
-        if self.game.options.rolls < 6:
+        quantity = 6
+        if self.game.options.rolls < (quantity-1):
             return
 
-        pokemon_dicts_list = []
-
-        for _ in range(6):
-            pokemon = self.app.games.pokemon.get_random_pokemon(self.game)
-
-            if not pokemon:
-                break
-
-            pokemon_dicts_list.append(pokemon)
-            # añadir a la caja para que no se repitan
-            pokemon_id = pokemon.get('pokemon_id')
-            self.game.pokemon_box.box[pokemon_id] = None
-
-        if len(pokemon_dicts_list)==0:
-            print(MenuManager.TEXT_POKEMON_SEARCH_ERROR)
-            return
-
-        # quitarlos de la caja
-        for pokemon in pokemon_dicts_list:
-            self.game.pokemon_box.box.pop(pokemon.get('pokemon_id'))
+        pokemon_list = self.app.game_cards.games.pokemon.get_multiple_random_pokemons(self.game, quantity)
 
         clear()
         picks = 0
+        chosen_pokemons_dict = {}
         while(True):
             print(f'\nTiradas restantes: {self.game.options.rolls}\n')
             
             # mostrar pokemons
-            for n, pokemon in enumerate(pokemon_dicts_list):
+            for n, pokemon in enumerate(pokemon_list):
                 print(f'- {n+1}')
                 self.print_pokemon(pokemon)
 
-            print(f'\nEscribe el número del Pokémon que quieres quedarte (del 1 al {len(pokemon_dicts_list)}) (Gastas 1 tirada por cada Pokémon que te quedes).\nEscribe 0 para parar.')
+            print(f'\nEscribe el número del Pokémon que quieres quedarte (del 1 al {len(pokemon_list)}) (Gastas 1 tirada por cada Pokémon que te quedes).\nEscribe 0 para parar.')
 
             try:
                 pokemon_position = int(input()) - 1
@@ -839,23 +822,22 @@ class MenuManager():
             if pokemon_position==-1:
                 break
 
-            if pokemon_position<0 or pokemon_position>=len(pokemon_dicts_list):
+            if pokemon_position<0 or pokemon_position>=len(pokemon_list):
                 clear()
                 print('\nError: La posición no se encuentra dentro del rango.')
                 continue
 
             clear()
-            # obtener pokemon
-            pokemon = pokemon_dicts_list.pop(pokemon_position)
-            self.app.games.insert_roll(self.game, pokemon)
-            # gastar tirada
-            self.app.games.spend_roll(self.game)
+            # elegir pokemon
+            pokemon = pokemon_list.pop(pokemon_position)
+            chosen_pokemons_dict[pokemon.get('pokemon_id')] = pokemon.get('random_ability_id')
+
             picks+=1
             print('\nTirada gastada.')
 
             # termina
-            if picks==5 or len(pokemon_dicts_list)==0:
+            if picks==5 or len(pokemon_list)==0:
                 break
 
-        self.app.game_cards.buy_card(self.game, card)
+        self.app.game_cards.use_card_selectiva_final(self.game, chosen_pokemons_dict)
 

@@ -64,6 +64,7 @@ class GameCardsController:
             return {}
         
         self.games.insert_roll(game, pokemon)
+        self.games.spend_roll(game)
 
         self.buy_card(game, card)
 
@@ -196,4 +197,30 @@ class GameCardsController:
             return
 
         self.games.add_rolls(game, quantity)
+        self.buy_card(game, card)
+
+    def use_card_selectiva(self, game:GameSession):
+        tag = Cards.TAG_SELECTIVA
+        card = self.cards_dict.get(tag)
+
+        if not self.check_card_conditions(game, card):
+            return
+
+        quantity = 6
+        if game.options.rolls < (quantity-1):
+            return
+
+        pokemon_dicts_list = self.games.pokemon.get_multiple_random_pokemons(game, quantity)
+        return pokemon_dicts_list
+
+    def use_card_selectiva_final(self, game:GameSession, pokemon_dict:dict):
+        tag = Cards.TAG_SELECTIVA
+        card = self.cards_dict.get(tag)
+
+        for pokemon_id,ability_id in pokemon_dict.items():
+            pokemon = self.games.pokemon.get_pokemon(int(pokemon_id))
+            pokemon['random_ability_id'] = int(ability_id)
+            self.games.insert_roll(game, pokemon)
+            self.games.spend_roll(game)
+
         self.buy_card(game, card)

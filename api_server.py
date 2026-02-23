@@ -119,8 +119,10 @@ def use_card():
     cursor = connection.cursor()
 
     game_id = request.args.get('game_id')
-    card_tag = request.args.get('tag')
     if not game_id:
+        return {}
+    card_tag = request.args.get('tag')
+    if not card_tag:
         return {}
 
     controller_games = GamesController(connection, cursor)
@@ -158,6 +160,15 @@ def use_card():
         controller_gamecards.use_card_aditional(game, 2)
     elif card_tag == Cards.TAG_ADICIONAL_3:
         controller_gamecards.use_card_aditional(game, 3)
+    elif card_tag == Cards.TAG_SELECTIVA:
+        pokemons = request.args.get('pokemons')
+        if not pokemons:
+            # primera parte
+            pokemon_list = controller_gamecards.use_card_selectiva(game)
+            return { 'pokemon_list':pokemon_list }
+        else:
+            # segunda parte
+            controller_gamecards.use_card_selectiva_final(game, pokemons)
 
     return {}
 

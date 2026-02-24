@@ -24,6 +24,11 @@ class UsersController:
         }
         return user
 
+    def get_game(self, username:str, gamename:str):
+        user_id = self.db_users.get_user_id(username)
+        game = self.games.get_game(user_id=user_id, gamename=gamename)
+        return game
+
 
     # INSERT
 
@@ -50,6 +55,6 @@ class UsersController:
 
         games_ids_list = self.games.db_games.get_game_ids(user_id)
         for game_id in games_ids_list:
-            self.games.delete_game_session(game_id=game_id)
+            self.games.delete_game(game_id=game_id)
 
         return True

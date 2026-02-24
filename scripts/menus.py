@@ -322,7 +322,7 @@ class MenuManager():
                         gamename = self.user.games_list[n]
 
                         # cargar partida
-                        self.game = self.app.games.get_game_session(
+                        self.game = self.app.games.get_game(
                             user_id = self.user.user_id, 
                             gamename = gamename
                         )
@@ -403,7 +403,7 @@ class MenuManager():
                         print('\n¿Obtener habilidades randomizadas? (De cualquier Pokémon posible) Escribe 1 para si, escribe otra cosa para no.')
                         options['random_ability'] = input()=='1'
 
-                    self.app.games.create_game_session(self.user.user_id, name, options)
+                    self.app.games.create_game(self.user.user_id, name, options)
                     self.user.games_list.append(name)
                     clear()
                             
@@ -436,7 +436,7 @@ class MenuManager():
                         continue
 
                     if n>=0 and n<len(self.user.games_list):
-                        if self.app.games.delete_game_session(
+                        if self.app.games.delete_game(
                             user_id = self.user.user_id, 
                             gamename = self.user.games_list[n]
                         ):

@@ -15,7 +15,7 @@ class GamesController:
 
     # GET
 
-    def get_game_session(self, 
+    def get_game(self, 
             game_id:int=None, user_id:int=None, gamename:str=None, 
             advanced_pokemon_box:bool=False
         ) -> GameSession:
@@ -74,10 +74,23 @@ class GamesController:
         )
         return game
 
+    def get_game_simplified_dict(self, game:GameSession):
+        # convertir a diccionario
+        game_dict = game.to_dict()
+
+        # rellenar la caja con los nombres de los pokemon y nombres de habilidades 
+        box = game_dict['pokemon_box']['box']
+        new_box = { 
+            pokemon_id : self.pokemon.get_pokemon_important_data(pokemon_id, ability_id)
+            for pokemon_id,ability_id in box.items()
+        }
+        game_dict['pokemon_box']['box'] = new_box
+
+        return game_dict
 
     # INSERT
 
-    def create_game_session(self, user_id:int, gamename:str, dic_options:dict):
+    def create_game(self, user_id:int, gamename:str, dic_options:dict):
         options = None
         filters = None
 
@@ -166,7 +179,7 @@ class GamesController:
 
     # DELETE
 
-    def delete_game_session(self, game_id:int=None, user_id:int=None, gamename:str=None) -> bool:
+    def delete_game(self, game_id:int=None, user_id:int=None, gamename:str=None) -> bool:
         if game_id is None:
             if user_id is None or gamename is None:
                 return False

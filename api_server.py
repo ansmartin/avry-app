@@ -4,6 +4,7 @@ import os.path
 
 import scripts.constants as const
 
+from scripts.app_controller import AppController
 from scripts.controller.users import UsersController
 from scripts.controller.games import GamesController
 from scripts.controller.cards import CardsController
@@ -12,7 +13,7 @@ from scripts.controller.pokemon import PokemonController
 from scripts.controller.abilities import AbilitiesController
 from scripts.controller.game_cards import GameCardsController
 
-from scripts.game import PokemonFilters, GameSession
+from scripts.game import GameSession, PokemonFilters
 from scripts.cards import Cards
 
 
@@ -48,89 +49,87 @@ def init_db():
             db.cursor().executescript(f.read())
         db.commit()
 
+def error_game_not_found():
+    return { 'error':'Sesión de juego no encontrada' }
 
-# USERS
 
-@app.route("/user", methods=['GET'])
-def get_user():
+# USER
+
+@app.route("/user/<username>", methods = ['GET','POST','DELETE'])
+def user(username):
     connection = get_db()
     cursor = connection.cursor()
 
-    username = request.args.get('username')
-    if not username:
-        return {}
+    controller_users = UsersController(connection, cursor, None)
+
+    if request.method == 'GET':
+        controller_users.games = GamesController(connection, cursor)
+        user = controller_users.get_user(username)
+        return user
+    elif request.method == 'POST':
+        success = controller_users.insert_user(username)
+        return { 'success':success }
+    elif request.method == 'DELETE':
+        controller_users.games = GamesController(connection, cursor)
+        success = controller_users.delete_user(username=username)
+        return { 'success':success }
+
+
+# GAME
+
+@app.route("/user/<username>/game/<gamename>", methods=['GET','DELETE'])
+def game(username, gamename):
+    connection = get_db()
+    cursor = connection.cursor()
 
     controller_games = GamesController(connection, cursor)
     controller_users = UsersController(connection, cursor, controller_games)
-    user = controller_users.get_user(username)
-    return user
+
+    game = controller_users.get_game(username, gamename)
+    if not game:
+        return error_game_not_found()
+
+    if request.method == 'GET':
+        game_dict = controller_games.get_game_simplified_dict(game)
+        return game_dict
+    elif request.method == 'DELETE':
+        success = controller_games.delete_game(game_id=game.game_id)
+        return { 'success':success }
 
 
-# GAMES
+# ROLL
 
-@app.route("/game", methods=['GET'])
-def get_game():
+@app.route("/user/<username>/game/<gamename>/roll", methods=['GET'])
+def do_roll(username, gamename):
     connection = get_db()
     cursor = connection.cursor()
 
-    user_id = request.args.get('user_id')
-    gamename = request.args.get('gamename')
-    if not user_id or not gamename:
-        return {}
-
     controller_games = GamesController(connection, cursor)
-    game = controller_games.get_game_session(user_id=user_id, gamename=gamename)
+    controller_users = UsersController(connection, cursor, controller_games)
+
+    game = controller_users.get_game(username, gamename)
     if not game:
-        return {}
+        return error_game_not_found()
 
-    game_dict = game.to_dict()
-    box = game_dict['pokemon_box']['box']
-    new_box = { 
-        pokemon_id : controller_games.pokemon.get_pokemon_important_data(pokemon_id,ability_id)
-        for pokemon_id,ability_id in box.items()
-    }
-    game_dict['pokemon_box']['box'] = new_box
-    return game_dict
-
-@app.route("/do_roll", methods=['GET'])
-def do_roll():
-    connection = get_db()
-    cursor = connection.cursor()
-
-    game_id = request.args.get('game_id')
-    pokemon_type = request.args.get('pokemon_type')
-    if not game_id:
-        return {}
-
-    controller_games = GamesController(connection, cursor)
-    game = controller_games.get_game_session(game_id=game_id)
-    if not game:
-        return {}
-
+    pokemon_type = request.args.get('type')
     pokemon = controller_games.do_roll(game, pokemon_type)
     return pokemon
 
 
-# CARDS
+# CARD
 
-@app.route("/use_card", methods=['GET'])
-def use_card():
+@app.route("/user/<username>/game/<gamename>/card/<card_tag>", methods=['GET'])
+def use_card(username, gamename, card_tag):
     connection = get_db()
     cursor = connection.cursor()
 
-    game_id = request.args.get('game_id')
-    if not game_id:
-        return {}
-    card_tag = request.args.get('tag')
-    if not card_tag:
-        return {}
-
     controller_games = GamesController(connection, cursor)
-    game = controller_games.get_game_session(game_id=game_id)
-    if not game:
-        return {}
-
+    controller_users = UsersController(connection, cursor, controller_games)
     controller_gamecards = GameCardsController(controller_games)
+
+    game = controller_users.get_game(username, gamename)
+    if not game:
+        return error_game_not_found()
 
     if card_tag == Cards.TAG_MEGA:
         pokemon = controller_gamecards.use_card_mega(game)
@@ -176,7 +175,7 @@ def use_card():
 # POKEMON
 
 @app.route("/random_pokemon", methods=['GET'])
-def get_pokemon():
+def random_pokemon():
     connection = get_db()
     cursor = connection.cursor()
 
@@ -185,30 +184,6 @@ def get_pokemon():
     game = GameSession(game_id=0, user_id=0, gamename='')
     pokemon = controller_games.pokemon.get_random_pokemon(game)
     return pokemon
-
-@app.route("/pokemon_ids", methods=['GET'])
-def get_pokemon_ids():
-    connection = get_db()
-    cursor = connection.cursor()
-
-    controller_pokemon = PokemonController(connection, cursor)
-
-    filters = PokemonFilters(
-        generation=3, 
-        mythical=True, 
-        legendary=True, 
-        sublegendary=True, 
-        powerhouse=False, 
-        others=False, 
-        fully_evolved=True
-    )
-
-    ids = controller_pokemon.db_pokemon.get_pokemon_ids(filters)
-    ids_list = list(ids)
-    ids_list.sort()
-
-    pokemon_list = [ controller_pokemon.get_pokemon_fullname(x) for x in ids_list ]
-    return { 'pokemon_list' : pokemon_list}
 
 
 init_db()

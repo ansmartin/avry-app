@@ -105,9 +105,6 @@ class GameCardsController:
         if len(game.pokemon_box.box)==0:
             return {}
 
-        if not game.pokemon_box.box.get(pokemon_id):
-            return {}
-
         # obtener pokemon
         pokemon = self.games.pokemon.get_random_pokemon(game)
         if not pokemon:
@@ -131,9 +128,6 @@ class GameCardsController:
 
         if len(game.pokemon_box.box)==0:
             return
-
-        if not game.pokemon_box.box.get(pokemon_id):
-            return {}
 
         pokemon = self.games.pokemon.get_pokemon(pokemon_id)
         if not pokemon:
@@ -219,7 +213,8 @@ class GameCardsController:
 
         for pokemon_id,ability_id in pokemon_dict.items():
             pokemon = self.games.pokemon.get_pokemon(int(pokemon_id))
-            pokemon['random_ability_id'] = int(ability_id)
+            if ability_id!='':
+                pokemon['random_ability_id'] = int(ability_id)
             self.games.insert_roll(game, pokemon)
             self.games.spend_roll(game)
 

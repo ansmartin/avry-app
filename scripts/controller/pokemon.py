@@ -24,16 +24,18 @@ class PokemonController:
 
         return pokemon_name
 
-    def get_sprite_link(self, sprite_number:int):
+    def get_image_link(self, sprite_number:int):
         return f'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/{sprite_number}.png'
 
     def get_pokemon_important_data(self, pokemon_id:int, ability_id:int=None) -> dict:
         pokemon = self.db_pokemon.get_pokemon(pokemon_id)
 
         data = {
+            'pokemon_id' : pokemon_id,
             'pokemon_name' : self.get_pokemon_fullname(pokemon_id),
-            'random_ability' : self.abilities.get_ability_name(ability_id),
-            'sprite_link' : self.get_sprite_link(pokemon.get('sprite'))
+            'random_ability_id' : ability_id,
+            'random_ability_name' : self.abilities.get_ability_name(ability_id),
+            'image_link' : self.get_image_link(pokemon.get('sprite'))
         }
         return data
 

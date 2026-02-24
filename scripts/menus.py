@@ -147,7 +147,7 @@ class MenuManager():
             if(hidden_ability is not None):
                 print(f'\tHabilidad oculta: {self.app.games.pokemon.abilities.get_ability_name(hidden_ability)}')
 
-        print(f'\tIlustración: {self.app.games.pokemon.get_sprite_link(sprite)}')
+        print(f'\tIlustración: {self.app.games.pokemon.get_image_link(sprite)}')
 
 
     # MENU MANAGE USERS

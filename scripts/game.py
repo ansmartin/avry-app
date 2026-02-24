@@ -31,20 +31,27 @@ class GameOptions:
 class PokemonFilters:
     
     DEFAULT_GENERATION = 9
+    DEFAULT_MYTHICAL = False
+    DEFAULT_LEGENDARY = False
+    DEFAULT_SUBLEGENDARY = True
+    DEFAULT_POWERHOUSE = True
+    DEFAULT_OTHERS = True
+    DEFAULT_FULLY_EVOLVED = True
+    DEFAULT_RANDOM_ABILITY = False
 
     def __init__(self,
             # filter by generation
             generation:int = DEFAULT_GENERATION,
             # filter by category
-            mythical:bool = False,
-            legendary:bool = False,
-            sublegendary:bool = True,
-            powerhouse:bool = True,
-            others:bool = True,
+            mythical:bool = DEFAULT_MYTHICAL,
+            legendary:bool = DEFAULT_LEGENDARY,
+            sublegendary:bool = DEFAULT_SUBLEGENDARY,
+            powerhouse:bool = DEFAULT_POWERHOUSE,
+            others:bool = DEFAULT_OTHERS,
             # filter by stage
-            fully_evolved:bool = True,
+            fully_evolved:bool = DEFAULT_FULLY_EVOLVED,
             # random ability
-            random_ability:bool = False
+            random_ability:bool = DEFAULT_RANDOM_ABILITY
         ):
         self.generation = generation
         self.mythical = bool(mythical)

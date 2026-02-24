@@ -193,4 +193,7 @@ def random_pokemon():
 
 
 init_db()
-app.run(debug=True)
+
+if __name__ == "__main__":
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=8080)

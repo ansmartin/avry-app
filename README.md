@@ -32,7 +32,7 @@ Desarrollo de la parte del back-end con Python, gestión de la base de datos con
 	.\venv\Scripts\activate
 	```
 
-2. Iniciar aplicación (inicia API Rest en localhost)
+2. Iniciar aplicación (inicia API Rest en localhost puerto 8080)
    
    ```
    python -m api_server
@@ -51,6 +51,11 @@ Métodos:
 - 'POST': Crear usuario.
 - 'DELETE': Eliminar usuario.
 
+Ejemplo de crear nuevo usuario:
+
+<img width="709" height="347" alt="Captura_user" src="https://github.com/user-attachments/assets/c8f70840-eb16-463a-bb7d-c7dc922ea517" />
+
+
 ### - Game 
 Endpoint:
 `
@@ -61,6 +66,11 @@ Métodos:
 - 'GET': Obtener partida.
 - 'POST': Crear partida.
 - 'DELETE': Eliminar partida.
+
+Ejemplo de crear nueva partida con las opciones por defecto:
+
+<img width="711" height="869" alt="Captura_game" src="https://github.com/user-attachments/assets/17a5f7de-8569-4f23-a394-ad72cac4a626" />
+
 
 ### - Roll 
 Endpoint:
@@ -77,6 +87,11 @@ Endpoint:
 
 Métodos: 
 - 'GET': Realizar tirada para obtener un Pokémon aleatorio.
+
+Ejemplo:
+
+<img width="714" height="684" alt="Captura_roll" src="https://github.com/user-attachments/assets/550b0531-9490-415f-ae2c-6411fec868e4" />
+
 
 ### - Card 
 Endpoint:

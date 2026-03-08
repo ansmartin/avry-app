@@ -4,7 +4,7 @@ Aplicación para gestión de torneos de videojuegos de Pokémon.
 Desarrollo de la parte del back-end con Python, gestión de la base de datos con SQLite y creación de una API REST.
 
 
-## Preparación
+## Iniciar aplicación
 
 1. Crear entorno virtual (recomendado)
 
@@ -24,15 +24,7 @@ Desarrollo de la parte del back-end con Python, gestión de la base de datos con
    python -m pip install -r requirements.txt
    ```
 
-## Iniciar aplicación
-
-1. Activar entorno virtual (recomendado) si no lo has activado ya antes 
-
-	```
-	.\venv\Scripts\activate
-	```
-
-2. Iniciar aplicación (inicia API Rest en localhost puerto 8080)
+4. Inicia servidor API Rest en localhost puerto 8080:
    
    ```
    python -m api_server

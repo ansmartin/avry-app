@@ -40,33 +40,37 @@ Desarrollo de la parte del back-end con Python, gestión de la base de datos con
 
 ## Lista de recursos disponibles de la API
 
-### - User (endpoint)
+### - User 
+Endpoint:
 `
 /user/{username}
 `
 
 Métodos: 
 - 'GET': Obtener usuario.
-- 'POST': Añadir usuario.
+- 'POST': Crear usuario.
 - 'DELETE': Eliminar usuario.
 
-### - Game (endpoint)
+### - Game 
+Endpoint:
 `
 /user/{username}/game/{gamename}
 `
 
 Métodos: 
 - 'GET': Obtener partida.
-- 'POST': Añadir partida.
+- 'POST': Crear partida.
 - 'DELETE': Eliminar partida.
 
-### - Roll (endpoint)
+### - Roll 
+Endpoint:
 `
 /user/{username}/game/{gamename}/roll
 `
 
 (Opcional) Añadir argumento {type} para gastar un ticket de tipo y obtener un Pokémon del tipo especificado.
 
+Endpoint:
 `
 /user/{username}/game/{gamename}/roll?{type}
 `
@@ -74,7 +78,8 @@ Métodos:
 Métodos: 
 - 'GET': Realizar tirada para obtener un Pokémon aleatorio.
 
-### - Card (endpoint)
+### - Card 
+Endpoint:
 `
 /user/{username}/game/{gamename}/card/{card_tag}
 `

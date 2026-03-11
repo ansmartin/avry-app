@@ -22,7 +22,7 @@ Desarrollo de la parte del back-end con Python, gestión de la base de datos con
 	- obtener habilidad randomizada
 - Gestión de compra de cartas que otorgan distintas ventajas
 
-## Iniciar aplicación
+## Cómo iniciar la aplicación
 
 1. Crear entorno virtual (recomendado)
 

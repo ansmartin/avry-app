@@ -83,7 +83,7 @@ Métodos:
 
 Ejemplo de crear nueva partida con las opciones por defecto:
 
-<img width="711" height="869" alt="Captura_game" src="https://github.com/user-attachments/assets/17a5f7de-8569-4f23-a394-ad72cac4a626" />
+<img width="708" height="805" alt="Captura_game" src="https://github.com/user-attachments/assets/845bfa2f-571e-42dc-ba2d-9ed434d76e3d" />
 
 
 ### - Roll 

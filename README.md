@@ -104,9 +104,7 @@ Endpoint:
 Métodos: 
 - 'GET': Realizar tirada para obtener un Pokémon aleatorio.
 
-Ejemplo:
-
-<img width="714" height="684" alt="Captura_roll" src="https://github.com/user-attachments/assets/550b0531-9490-415f-ae2c-6411fec868e4" />
+	<img width="714" height="684" alt="Captura_roll" src="https://github.com/user-attachments/assets/550b0531-9490-415f-ae2c-6411fec868e4" />
 
 
 ### - Card 
@@ -130,6 +128,8 @@ Cartas disponibles:
 	Métodos: 
 	- 'GET': Obtiene un Pokémon con mega-evolución.
 
+		<img width="704" height="675" alt="Captura_card_mega" src="https://github.com/user-attachments/assets/6ecdf4aa-d1f2-4052-9fed-c10b32060316" />
+
 - tag = 'fusion'
 
 	nombre = FUSIÓN ALEATORIA
@@ -144,6 +144,8 @@ Cartas disponibles:
 			pokemon_id1 : {id}
 			pokemon_id2 : {id}
 
+		<img width="716" height="746" alt="Captura_card_fusion" src="https://github.com/user-attachments/assets/67bacbd7-6ccf-4465-b32f-6b53604470a2" />
+
 - tag = 'intercambio'
 
 	name = INTERCAMBIO PRODIGIOSO
@@ -157,6 +159,8 @@ Cartas disponibles:
 
 			pokemon_id : {id}
 
+		<img width="710" height="708" alt="Captura_card_intercambio" src="https://github.com/user-attachments/assets/f1bea23f-6b9f-4070-a4d6-182b21b46f49" />
+
 - tag = 'preevo'
 
 	nombre = LA PRE-EVO ES MEJOR
@@ -169,6 +173,8 @@ Cartas disponibles:
 	- 'POST': Envía el id del Pokémon a cambiar dentro del Body de la petición. Obtiene el Pokémon pre-evolucionado.
 
 			pokemon_id : {id}
+
+		<img width="709" height="712" alt="Captura_card_preevo" src="https://github.com/user-attachments/assets/75950e3f-4951-4d7c-b883-5eddb7a179ce" />
 
 - tag = 'comienzo'
 

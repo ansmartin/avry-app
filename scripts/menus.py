@@ -354,8 +354,6 @@ class MenuManager():
                     print('\n¿Valores de juego por defecto? Escribe 1 para si, escribe otra cosa para no.')
                     default_options = input()
 
-                    options['default_options'] = default_options=='1'
-
                     if default_options!='1':
                         print('\nEscribe el número de tiradas disponibles:')
                         options['rolls'] = input()
@@ -372,8 +370,6 @@ class MenuManager():
 
                     print('\n¿Valores de filtros por defecto? Escribe 1 para si, escribe otra cosa para no.')
                     default_filters = input()
-
-                    options['default_filters'] = default_filters=='1'
 
                     if default_filters!='1':
                         print('\nFiltrar por generación del Pokémon.')

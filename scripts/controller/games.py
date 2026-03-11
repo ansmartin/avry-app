@@ -88,79 +88,71 @@ class GamesController:
     # INSERT
 
     def create_game(self, user_id:int, gamename:str, dic_options:dict):
-        options = None
-        filters = None
 
-        if dic_options.get('default_options'):
-            options = GameOptions()
-        else:
-            try:
-                max_rolls = dic_options.get('rolls',GameOptions.DEFAULT_ROLLS)
-                max_rolls = int(max_rolls)
-                if max_rolls<0:
-                    max_rolls=0
-                elif max_rolls > GameOptions.MAX_ROLLS:
-                    max_rolls = GameOptions.MAX_ROLLS
-            except:
-                max_rolls = GameOptions.DEFAULT_ROLLS
+        try:
+            max_rolls = dic_options.get('rolls')
+            max_rolls = int(max_rolls)
+            if max_rolls<0:
+                max_rolls=0
+            elif max_rolls > GameOptions.MAX_ROLLS:
+                max_rolls = GameOptions.MAX_ROLLS
+        except:
+            max_rolls = GameOptions.DEFAULT_ROLLS
 
-            try:
-                tickets = dic_options.get('tickets',GameOptions.DEFAULT_TICKETS)
-                tickets = int(tickets)
-                if tickets<0:
-                    tickets=0
-                elif tickets > GameOptions.MAX_ROLLS:
-                    tickets = GameOptions.MAX_ROLLS
-            except:
-                tickets = GameOptions.DEFAULT_TICKETS
+        try:
+            tickets = dic_options.get('tickets')
+            tickets = int(tickets)
+            if tickets<0:
+                tickets=0
+            elif tickets > GameOptions.MAX_ROLLS:
+                tickets = GameOptions.MAX_ROLLS
+        except:
+            tickets = GameOptions.DEFAULT_TICKETS
 
-            try:
-                money = dic_options.get('money',GameOptions.DEFAULT_MONEY)
-                money = int(money)
-                if money<0:
-                    money=0
-            except:
-                money = GameOptions.DEFAULT_MONEY
+        try:
+            money = dic_options.get('money')
+            money = int(money)
+            if money<0:
+                money=0
+        except:
+            money = GameOptions.DEFAULT_MONEY
 
-            try:
-                item_points = dic_options.get('item_points',GameOptions.DEFAULT_ITEM_POINTS)
-                item_points = int(item_points)
-                if item_points<0:
-                    item_points=0
-            except:
-                item_points = GameOptions.DEFAULT_ITEM_POINTS
+        try:
+            item_points = dic_options.get('item_points')
+            item_points = int(item_points)
+            if item_points<0:
+                item_points=0
+        except:
+            item_points = GameOptions.DEFAULT_ITEM_POINTS
 
-            options = GameOptions(
-                max_rolls = max_rolls, 
-                rolls = max_rolls, 
-                tickets = tickets, 
-                money = money, 
-                item_points = item_points
-            )
+        options = GameOptions(
+            max_rolls = max_rolls, 
+            rolls = max_rolls, 
+            tickets = tickets, 
+            money = money, 
+            item_points = item_points
+        )
 
-        if dic_options.get('default_filters'):
-            filters = PokemonFilters()
-        else:
-            try:
-                generation = dic_options.get('generation',PokemonFilters.DEFAULT_GENERATION)
-                generation = int(generation)
-                if generation<0:
-                    generation=0
-                elif generation>PokemonFilters.DEFAULT_GENERATION:
-                    raise Exception()
-            except:
-                generation = PokemonFilters.DEFAULT_GENERATION
-            
-            filters = PokemonFilters(
-                generation = generation,
-                mythical = dic_options.get('mythical',PokemonFilters.DEFAULT_MYTHICAL),
-                legendary = dic_options.get('legendary',PokemonFilters.DEFAULT_LEGENDARY),
-                sublegendary = dic_options.get('sublegendary',PokemonFilters.DEFAULT_SUBLEGENDARY),
-                powerhouse = dic_options.get('powerhouse',PokemonFilters.DEFAULT_POWERHOUSE),
-                others = dic_options.get('others',PokemonFilters.DEFAULT_OTHERS),
-                fully_evolved = dic_options.get('fully_evolved',PokemonFilters.DEFAULT_FULLY_EVOLVED),
-                random_ability = dic_options.get('random_ability',PokemonFilters.DEFAULT_RANDOM_ABILITY)
-            )
+        try:
+            generation = dic_options.get('generation')
+            generation = int(generation)
+            if generation<0:
+                generation=0
+            elif generation>PokemonFilters.DEFAULT_GENERATION:
+                raise Exception()
+        except:
+            generation = PokemonFilters.DEFAULT_GENERATION
+        
+        filters = PokemonFilters(
+            generation = generation,
+            mythical = dic_options.get('mythical',PokemonFilters.DEFAULT_MYTHICAL),
+            legendary = dic_options.get('legendary',PokemonFilters.DEFAULT_LEGENDARY),
+            sublegendary = dic_options.get('sublegendary',PokemonFilters.DEFAULT_SUBLEGENDARY),
+            powerhouse = dic_options.get('powerhouse',PokemonFilters.DEFAULT_POWERHOUSE),
+            others = dic_options.get('others',PokemonFilters.DEFAULT_OTHERS),
+            fully_evolved = dic_options.get('fully_evolved',PokemonFilters.DEFAULT_FULLY_EVOLVED),
+            random_ability = dic_options.get('random_ability',PokemonFilters.DEFAULT_RANDOM_ABILITY)
+        )
 
         self.db_games.insert_game(
             user_id,

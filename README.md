@@ -1,8 +1,26 @@
 # App Liga Rushdown
-Aplicación para gestión de torneos de videojuegos de Pokémon.
+Aplicación para gestión de torneos personalizables de videojuegos de Pokémon.
 
 Desarrollo de la parte del back-end con Python, gestión de la base de datos con SQLite y creación de una API REST.
 
+## Características
+- Gestión de usuarios (obtener usuario, crear usuario, eliminar usuario)
+- Gestión de partidas (obtener partida, crear partida, eliminar partida)
+- Variedad de opciones disponibles al crear partida:
+	- número de tiradas (para obtener un Pokémon aleatorio)
+	- número de tiquets de tipo (para obtener un Pokémon aleatorio del tipo especificado)
+	- cantidad de dinero (para comprar cartas de ventaja)
+	- cantidad de puntos de ítems (para comprar ítems)
+	- generación disponible
+- Variedad de filtros disponibles para la obtención de Pokémon aleatorios:
+	- incluir míticos
+	- incluir legendarios
+	- incluir semi-legendarios
+	- incluir pesos pesados
+	- incluir los Pokémon normales (que no pertenecen a las categorías anteriores)
+	- incluir sólo Pokémon completamente evolucionados
+	- obtener habilidad randomizada
+- Gestión de compra de cartas que otorgan distintas ventajas
 
 ## Iniciar aplicación
 
@@ -24,7 +42,7 @@ Desarrollo de la parte del back-end con Python, gestión de la base de datos con
    python -m pip install -r requirements.txt
    ```
 
-4. Inicia servidor API Rest en localhost puerto 8080:
+4. Iniciar aplicación (inicia API Rest en localhost puerto 8080):
    
    ```
    python -m api_server
@@ -33,6 +51,8 @@ Desarrollo de la parte del back-end con Python, gestión de la base de datos con
 ## Lista de recursos disponibles de la API
 
 ### - User 
+Gestión de usuarios
+
 Endpoint:
 `
 /user/{username}
@@ -49,6 +69,8 @@ Ejemplo de crear nuevo usuario:
 
 
 ### - Game 
+Gestión de partidas
+
 Endpoint:
 `
 /user/{username}/game/{gamename}
@@ -65,6 +87,8 @@ Ejemplo de crear nueva partida con las opciones por defecto:
 
 
 ### - Roll 
+Gasta una tirada para obtener un Pokémon aleatorio según los filtros especificados en la partida.
+
 Endpoint:
 `
 /user/{username}/game/{gamename}/roll
@@ -86,12 +110,14 @@ Ejemplo:
 
 
 ### - Card 
+Gestión de compra de cartas que otorgan distintas ventajas.
+
 Endpoint:
 `
 /user/{username}/game/{gamename}/card/{card_tag}
 `
 
-Cartas de ventaja disponibles:
+Cartas disponibles:
 
 - tag = 'mega'
 

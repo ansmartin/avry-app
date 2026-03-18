@@ -4,23 +4,29 @@ Aplicación para gestión de torneos personalizables de videojuegos de Pokémon.
 Desarrollo de la parte del back-end con Python, gestión de la base de datos con SQLite y creación de una API REST.
 
 ## Características
-- Gestión de usuarios (obtener usuario, crear usuario, eliminar usuario)
-- Gestión de partidas (obtener partida, crear partida, eliminar partida)
-- Variedad de opciones disponibles al crear partida:
-	- número de tiradas (para obtener un Pokémon aleatorio)
-	- número de tiquets de tipo (para obtener un Pokémon aleatorio del tipo especificado)
-	- cantidad de dinero (para comprar cartas de ventaja)
-	- cantidad de puntos de ítems (para comprar ítems)
-	- generación disponible
-- Variedad de filtros disponibles para la obtención de Pokémon aleatorios:
+- Gestión de usuarios (para obtener, crear y eliminar usuarios)
+- Gestión de partidas (para obtener, crear y eliminar partidas)
+- Variedad de opciones al crear partida:
+	- número de tiradas disponibles para obtener Pokémon aleatorios
+	- número de tiquets de tipo disponibles para obtener Pokémon aleatorios del tipo especificado
+	- cantidad de dinero disponible para comprar cartas de ventaja
+	- cantidad de puntos disponibles para comprar ítems
+	- número de generación máxima a la que pertenecen los Pokémon que se pueden obtener
+- Variedad de filtros para la obtención de Pokémon aleatorios:
 	- incluir míticos
 	- incluir legendarios
 	- incluir semi-legendarios
 	- incluir pesos pesados
-	- incluir los Pokémon normales (que no pertenecen a las categorías anteriores)
+	- incluir los demás Pokémon que no pertenecen a las categorías anteriores
 	- incluir sólo Pokémon completamente evolucionados
-	- obtener habilidad randomizada
-- Gestión de compra de cartas que otorgan distintas ventajas
+	- obtener Pokémon con habilidad randomizada
+- Gestión de compra de cartas que otorgan distintas ventajas:
+	- obtener Pokémon con mega-evolución
+	- intercambiar Pokémon para obtener uno nuevo
+	- realizar tiradas selectivas
+	- comprar más tiradas y tickets de tipo
+	- reiniciar las tiradas y Pokémon obtenidos
+
 
 ## Cómo iniciar la aplicación
 

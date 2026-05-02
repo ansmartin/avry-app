@@ -1,11 +1,11 @@
 # App Liga Rushdown
 Aplicación para gestión de torneos personalizables de videojuegos de Pokémon.
 
-Desarrollo de la parte del back-end con Python, gestión de la base de datos con SQLite y creación de una API REST.
+Desarrollo de la parte del back-end con Python, gestión de la base de datos con SQLite y creación de una API REST para interactuar con el sistema.
 
 ## Características
-- Gestión de usuarios (para obtener, crear y eliminar usuarios)
-- Gestión de partidas (para obtener, crear y eliminar partidas)
+- Gestión de usuarios (obtener, crear y eliminar usuarios)
+- Gestión de partidas (obtener, crear y eliminar partidas)
 - Variedad de opciones al crear partida:
 	- número de tiradas disponibles para obtener Pokémon aleatorios
 	- número de tiquets de tipo disponibles para obtener Pokémon aleatorios del tipo especificado
@@ -16,10 +16,10 @@ Desarrollo de la parte del back-end con Python, gestión de la base de datos con
 	- incluir míticos
 	- incluir legendarios
 	- incluir semi-legendarios
-	- incluir pesos pesados
+	- incluir pesos pesados (pseudo-legendarios)
 	- incluir los demás Pokémon que no pertenecen a las categorías anteriores
 	- incluir sólo Pokémon completamente evolucionados
-	- obtener Pokémon con habilidad randomizada
+	- obtener Pokémon con una habilidad aleatoria
 - Gestión de compra de cartas que otorgan distintas ventajas:
 	- obtener Pokémon con mega-evolución
 	- intercambiar Pokémon para obtener uno nuevo

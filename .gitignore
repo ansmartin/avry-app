@@ -2,3 +2,4 @@ __pycache__
 _temp
 database.db
 test_*
+database/backup

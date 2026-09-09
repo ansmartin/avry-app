@@ -316,4 +316,5 @@ VALUES
 (312, 'Eelevate', 9),
 (313, 'Mega Sol', 9),
 (314, 'Fire Mane', 9),
-(315, 'Spicy Spray', 9)
+(315, 'Spicy Spray', 9),
+(316, 'Aura Guard', 9)

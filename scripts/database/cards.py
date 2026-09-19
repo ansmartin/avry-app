@@ -7,7 +7,7 @@ class CardsDatabase:
         self.cur = cursor
 
 
-    # GET
+    # SELECT
 
     def get_used_cards(self, game_id:int) -> list:
         self.cur.execute(f"SELECT tag, uses FROM used_cards WHERE game_id={game_id}")

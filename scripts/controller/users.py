@@ -3,14 +3,13 @@ from scripts.controller.games import GamesController
 
 class UsersController:
 
-    MAX_USERS = 128
+    MAX_USERS = 256
 
-    def __init__(self, connection, cursor, games:GamesController):
+    def __init__(self, connection, cursor):
         self.db_users = UsersDatabase(connection, cursor)
-        self.games = games
 
 
-    # GET
+    # SELECT
 
     def get_user(self, username:str) -> dict:
         user_id = self.db_users.get_user_id(username)
@@ -19,15 +18,12 @@ class UsersController:
 
         user = {
             'user_id' : user_id,
-            'username' : username,
-            'games' : self.games.db_games.get_gamenames(user_id)
+            'username' : username
         }
         return user
-
-    def get_game(self, username:str, gamename:str):
-        user_id = self.db_users.get_user_id(username)
-        game = self.games.get_game(user_id=user_id, gamename=gamename)
-        return game
+    
+    def get_usernames(self) -> list:
+        return self.db_users.get_usernames()
 
 
     # INSERT
@@ -52,9 +48,4 @@ class UsersController:
                 return False
 
         self.db_users.delete_user(user_id)
-
-        games_ids_list = self.games.db_games.get_game_ids(user_id)
-        for game_id in games_ids_list:
-            self.games.delete_game(game_id=game_id)
-
         return True

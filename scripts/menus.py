@@ -84,7 +84,7 @@ class MenuManager():
         print(f'   - legendary: {self.game.filters.legendary}')
         print(f'   - sublegendary: {self.game.filters.sublegendary}')
         print(f'   - powerhouse: {self.game.filters.powerhouse}')
-        print(f'   - el resto de Pokémon: {self.game.filters.others}')
+        #print(f'   - el resto de Pokémon: {self.game.filters.others}')
         print(f' - obtener sólo Pokémon completamente evolucionados: {self.game.filters.fully_evolved}')
         print(f' - obtener habilidades randomizadas: {self.game.filters.random_ability}')
         # print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {self.game.filters.has_mega}')

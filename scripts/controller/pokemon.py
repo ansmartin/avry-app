@@ -11,7 +11,7 @@ class PokemonController:
         self.abilities = AbilitiesController(connection, cursor)
 
 
-    # GET
+    # SELECT
 
     def get_pokemon_fullname(self, pokemon_id:int) -> str:
         pokemon = self.db_pokemon.get_pokemon_name(pokemon_id)

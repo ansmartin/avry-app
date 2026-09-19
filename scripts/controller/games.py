@@ -2,7 +2,7 @@ from scripts.database.games import GamesDatabase
 from scripts.controller.pokemon import PokemonController
 from scripts.controller.rolls import RollsController
 from scripts.controller.cards import CardsController
-from scripts.game import GameOptions, PokemonFilters, PokemonBox, GameSession
+from scripts.game import GameProperties, PokemonFilters, PokemonBox, GameSession
 
 class GamesController:
     
@@ -13,13 +13,28 @@ class GamesController:
         self.cards = CardsController(connection, cursor)
 
 
-    # GET
+    # SELECT
+
+    def get_gamemode(self, gamemode_id:int=None, gamename:str=None) -> dict:
+        if gamemode_id is None:
+            if gamename is None:
+                return None
+            gamemode_id = self.db_games.get_gamemode_id(gamename)
+            if gamemode_id is None:
+                return None
+
+        # cargar datos
+        gamemode = self.db_games.get_gamemode(gamemode_id)
+        return gamemode
 
     def get_game(self, game_id:int=None, user_id:int=None, gamename:str=None) -> GameSession:
         if game_id is None:
             if user_id is None or gamename is None:
                 return None
-            game_id = self.db_games.get_game_id(user_id, gamename)
+            gamemode_id = self.db_games.get_gamemode_id(gamename)
+            if gamemode_id is None:
+                return None
+            game_id = self.db_games.get_game_id(user_id, gamemode_id=gamemode_id)
             if game_id is None:
                 return None
 
@@ -27,9 +42,8 @@ class GamesController:
         game = self.db_games.get_game(game_id)
 
         user_id = game.get('user_id')
-        gamename = game.get('gamename')
 
-        options = GameOptions(
+        properties = GameProperties(
             max_rolls = game.get('max_rolls'), 
             rolls = game.get('rolls'), 
             tickets = game.get('tickets'), 
@@ -37,25 +51,19 @@ class GamesController:
             item_points = game.get('item_points')
         )
 
+        gamemode = self.db_games.get_gamemode(gamemode_id)
+
         filters = PokemonFilters(
-            generation = game.get('generation'),
-            mythical = game.get('mythical'),
-            legendary = game.get('legendary'),
-            sublegendary = game.get('sublegendary'),
-            powerhouse = game.get('powerhouse'),
-            others = game.get('others'),
-            fully_evolved = game.get('fully_evolved'),
-            random_ability = game.get('random_ability')
+            generation = gamemode.get('generation'),
+            mythical = gamemode.get('mythical'),
+            legendary = gamemode.get('legendary'),
+            sublegendary = gamemode.get('sublegendary'),
+            powerhouse = gamemode.get('powerhouse'),
+            fully_evolved = gamemode.get('fully_evolved'),
+            random_ability = gamemode.get('random_ability')
         )
 
         box = { x:y for x,y in self.rolls.db_rolls.get_rolls(game_id) }
-        # if advanced_pokemon_box:
-        #     pokemon_box = [
-        #         self.pokemon.get_pokemon_name_and_ability(pokemon_id, ability_id)
-        #         for pokemon_id, ability_id in box
-        #     ]
-        # else:
-        #    pokemon_box = [ x[0] for x in box ]
         pokemon_box = PokemonBox(box)
 
         used_cards = self.cards.get_used_cards(game_id)
@@ -64,7 +72,7 @@ class GamesController:
             game_id, 
             user_id,
             gamename, 
-            options, 
+            properties, 
             filters, 
             pokemon_box, 
             used_cards
@@ -87,47 +95,68 @@ class GamesController:
 
     # INSERT
 
-    def create_game(self, user_id:int, gamename:str, dic_options:dict):
+    def create_game(self, user_id:int, gamemode_id:int):
+        
+        gamemode = self.db_games.get_gamemode(gamemode_id)
+
+        if not gamemode:
+            return None
+
+        self.db_games.insert_game(
+            user_id,
+            gamemode_id,
+            gamemode.get('max_rolls'),
+            gamemode.get('max_rolls'),
+            gamemode.get('max_tickets'), 
+            gamemode.get('max_money'), 
+            gamemode.get('max_item_points')
+        )
+
+    def create_gamemode(self, gamename:str, dic_options:dict):
 
         try:
-            max_rolls = dic_options.get('rolls')
-            max_rolls = int(max_rolls)
-            if max_rolls<0:
-                max_rolls=0
-            elif max_rolls > GameOptions.MAX_ROLLS:
-                max_rolls = GameOptions.MAX_ROLLS
+            rolls = dic_options.get('rolls')
+            rolls = int(rolls)
+            if rolls<0:
+                rolls=0
+            elif rolls > GameProperties.MAX_ROLLS:
+                rolls = GameProperties.MAX_ROLLS
         except:
-            max_rolls = GameOptions.DEFAULT_ROLLS
+            rolls = GameProperties.DEFAULT_ROLLS
 
         try:
             tickets = dic_options.get('tickets')
             tickets = int(tickets)
             if tickets<0:
                 tickets=0
-            elif tickets > GameOptions.MAX_ROLLS:
-                tickets = GameOptions.MAX_ROLLS
+            elif tickets > GameProperties.MAX_TICKETS:
+                tickets = GameProperties.MAX_TICKETS
         except:
-            tickets = GameOptions.DEFAULT_TICKETS
+            tickets = GameProperties.DEFAULT_TICKETS
 
         try:
             money = dic_options.get('money')
             money = int(money)
             if money<0:
                 money=0
+            elif money > GameProperties.MAX_MONEY:
+                money = GameProperties.MAX_MONEY
         except:
-            money = GameOptions.DEFAULT_MONEY
+            money = GameProperties.DEFAULT_MONEY
 
         try:
             item_points = dic_options.get('item_points')
             item_points = int(item_points)
             if item_points<0:
                 item_points=0
+            elif item_points > GameProperties.MAX_ITEM_POINTS:
+                item_points = GameProperties.MAX_ITEM_POINTS
         except:
-            item_points = GameOptions.DEFAULT_ITEM_POINTS
+            item_points = GameProperties.DEFAULT_ITEM_POINTS
 
-        options = GameOptions(
-            max_rolls = max_rolls, 
-            rolls = max_rolls, 
+        properties = GameProperties(
+            max_rolls = rolls,
+            rolls = rolls, 
             tickets = tickets, 
             money = money, 
             item_points = item_points
@@ -149,25 +178,21 @@ class GamesController:
             legendary = dic_options.get('legendary',PokemonFilters.DEFAULT_LEGENDARY),
             sublegendary = dic_options.get('sublegendary',PokemonFilters.DEFAULT_SUBLEGENDARY),
             powerhouse = dic_options.get('powerhouse',PokemonFilters.DEFAULT_POWERHOUSE),
-            others = dic_options.get('others',PokemonFilters.DEFAULT_OTHERS),
             fully_evolved = dic_options.get('fully_evolved',PokemonFilters.DEFAULT_FULLY_EVOLVED),
             random_ability = dic_options.get('random_ability',PokemonFilters.DEFAULT_RANDOM_ABILITY)
         )
 
-        self.db_games.insert_game(
-            user_id,
+        self.db_games.insert_gamemode(
             gamename,
-            options.max_rolls,
-            options.rolls,
-            options.tickets,
-            options.money,
-            options.item_points,
+            properties.rolls,
+            properties.tickets,
+            properties.money,
+            properties.item_points,
             filters.generation,
             filters.mythical,
             filters.legendary,
             filters.sublegendary,
             filters.powerhouse,
-            filters.others,
             filters.fully_evolved,
             filters.random_ability
         )
@@ -179,7 +204,7 @@ class GamesController:
         if game_id is None:
             if user_id is None or gamename is None:
                 return False
-            game_id = self.db_games.get_game_id(user_id, gamename)
+            game_id = self.db_games.get_game_id(user_id, gamename=gamename)
             if game_id is None:
                 return False
 
@@ -187,6 +212,26 @@ class GamesController:
         self.rolls.db_rolls.delete_rolls(game_id)
         self.cards.db_cards.delete_all_used_cards(game_id)
         return True 
+
+    def delete_gamemode(self, gamemode_id:int=None, gamename:str=None) -> bool:
+        if gamemode_id is None:
+            if gamename is None:
+                return False
+            gamemode_id = self.db_games.get_gamemode_id(gamename)
+            if gamemode_id is None:
+                return False
+
+        self.db_games.delete_gamemode(gamemode_id)
+        game_ids = self.db_games.get_game_ids_of_gamemode(gamemode_id)
+        for game_id in game_ids:
+            self.delete_game(game_id=game_id)
+        return True 
+
+    def delete_games_of_user(self, user_id):
+        games_ids_list = self.db_games.get_game_ids(user_id)
+        for game_id in games_ids_list:
+            self.delete_game(game_id=game_id)
+        return True
 
     def delete_roll(self, game:GameSession, pokemon_id:int):
         game.pokemon_box.box.pop(pokemon_id)
@@ -199,57 +244,57 @@ class GamesController:
     # UPDATE
 
     def add_rolls(self, game:GameSession, quantity:int):
-        game.options.rolls+=quantity
+        game.properties.rolls+=quantity
         self.db_games.update_game(
             game.game_id,
             'rolls',
-            game.options.rolls
+            game.properties.rolls
         )
-        game.options.max_rolls+=quantity
+        game.properties.max_rolls+=quantity
         self.db_games.update_game(
             game.game_id,
             'max_rolls',
-            game.options.max_rolls
+            game.properties.max_rolls
         )
 
     def add_tickets(self, game:GameSession, quantity:int):
-        game.options.tickets+=quantity
+        game.properties.tickets+=quantity
         self.db_games.update_game(
             game.game_id,
             'tickets',
-            game.options.tickets
+            game.properties.tickets
         )
 
     def spend_roll(self, game:GameSession):
-        game.options.rolls-=1
+        game.properties.rolls-=1
         self.db_games.update_game(
             game.game_id,
             'rolls',
-            game.options.rolls
+            game.properties.rolls
         )
 
     def spend_ticket(self, game:GameSession):
-        game.options.tickets-=1
+        game.properties.tickets-=1
         self.db_games.update_game(
             game.game_id,
             'tickets',
-            game.options.tickets
+            game.properties.tickets
         )
 
     def spend_money(self, game:GameSession, price:int):
-        game.options.money-=price
+        game.properties.money-=price
         self.db_games.update_game(
             game.game_id,
             'money',
-            game.options.money
+            game.properties.money
         )
 
     def spend_item_points(self, game:GameSession, points:int):
-        game.options.item_points-=points
+        game.properties.item_points-=points
         self.db_games.update_game(
             game.game_id,
             'item_points',
-            game.options.item_points
+            game.properties.item_points
         )
 
     def insert_roll(self, game:GameSession, pokemon:dict):
@@ -264,11 +309,11 @@ class GamesController:
         )
 
     def reset_rolls_and_box(self, game:GameSession):
-        game.options.rolls = game.options.max_rolls
+        game.properties.rolls = game.properties.max_rolls
         self.db_games.update_game(
             game.game_id,
             'rolls',
-            game.options.max_rolls
+            game.properties.max_rolls
         )
         game.pokemon_box.reset()
         self.rolls.db_rolls.delete_rolls(
@@ -281,11 +326,11 @@ class GamesController:
     def do_roll(self, game:GameSession, pokemon_type:str=None) -> dict:
         additional_filters = None
 
-        if game.options.rolls==0:
+        if game.properties.rolls==0:
             return {}
 
         if pokemon_type:
-            if game.options.tickets==0:
+            if game.properties.tickets==0:
                 return {}
 
             additional_filters = { 'pokemon_type':pokemon_type }

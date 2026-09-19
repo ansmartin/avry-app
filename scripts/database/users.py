@@ -7,7 +7,7 @@ class UsersDatabase:
         self.cur = cursor
 
 
-    # GET
+    # SELECT
 
     def get_users(self) -> list:
         self.cur.execute(f"SELECT user_id, username FROM users")

@@ -9,7 +9,7 @@ class PokemonDatabase:
         self.cur = cursor
 
 
-    # GET
+    # SELECT
 
     def get_pokemon(self, pokemon_id:int) -> dict:
         self.cur.execute(
@@ -92,7 +92,7 @@ class PokemonDatabase:
             conditions_list.append('is_sublegendary')
         if filters.powerhouse:
             conditions_list.append('is_powerhouse')
-        if filters.others:
+        if True: #filters.others:
             conditions_list.append(
                 '(NOT is_mythical AND NOT is_legendary AND NOT is_sublegendary AND NOT is_powerhouse)'
             )

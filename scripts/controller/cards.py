@@ -6,7 +6,7 @@ class CardsController:
         self.db_cards = CardsDatabase(connection, cursor)
 
 
-    # GET
+    # SELECT
 
     def get_used_cards(self, game_id:int) -> dict:
         used_cards = {

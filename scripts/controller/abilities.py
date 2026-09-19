@@ -8,7 +8,7 @@ class AbilitiesController:
         self.db_abilities = AbilitiesDatabase(connection, cursor)
 
 
-    # GET
+    # SELECT
 
     def get_random_ability(self, generation:int) -> int|None:
         abilities_ids = self.db_abilities.get_abilities(generation)

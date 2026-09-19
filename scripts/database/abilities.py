@@ -7,7 +7,7 @@ class AbilitiesDatabase:
         self.cur = cursor
 
 
-    # GET
+    # SELECT
 
     def get_abilities(self, generation:int) -> list:
         self.cur.execute(f"SELECT ability_id FROM abilities WHERE generation<={generation}")

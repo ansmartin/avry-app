@@ -7,7 +7,7 @@ class RollsDatabase:
         self.cur = cursor
 
 
-    # GET
+    # SELECT
 
     def get_rolls(self, game_id:int) -> list[(int,int)]:
         self.cur.execute(f"SELECT pokemon_id, ability_id FROM rolls WHERE game_id={game_id}")

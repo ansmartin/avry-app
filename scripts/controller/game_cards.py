@@ -158,7 +158,7 @@ class GameCardsController:
         if not self.check_card_conditions(game, card):
             return
 
-        if abs(game.options.rolls - game.options.max_rolls) >= 18:
+        if abs(game.properties.rolls - game.properties.max_rolls) >= 18:
             return
 
         self.games.reset_rolls_and_box(game)
@@ -201,7 +201,7 @@ class GameCardsController:
             return
 
         quantity = 6
-        if game.options.rolls < (quantity-1):
+        if game.properties.rolls < (quantity-1):
             return
 
         pokemon_dicts_list = self.games.pokemon.get_multiple_random_pokemons(game, quantity)

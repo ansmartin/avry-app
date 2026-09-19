@@ -98,7 +98,6 @@ class GamesController:
     def create_game(self, user_id:int, gamemode_id:int):
         
         gamemode = self.db_games.get_gamemode(gamemode_id)
-
         if not gamemode:
             return None
 

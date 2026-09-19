@@ -30,11 +30,23 @@ class PokemonController:
     def get_pokemon_important_data(self, pokemon_id:int, ability_id:int=None) -> dict:
         pokemon = self.db_pokemon.get_pokemon(pokemon_id)
 
+        pokemon_name = pokemon.get('pokemon_name')
+        form_name = pokemon.get('form_name')
+        if form_name is not None:
+            pokemon_name += f' ({form_name})'
+
+        ability_name = None
+        if ability_id is not None:
+            ability_name = self.abilities.get_ability_name(ability_id)
+
         data = {
             'pokemon_id' : pokemon_id,
-            'pokemon_name' : self.get_pokemon_fullname(pokemon_id),
-            'random_ability_id' : ability_id,
-            'random_ability_name' : self.abilities.get_ability_name(ability_id),
+            'pokemon_name' : pokemon_name,
+            'first_type' : pokemon.get('first_type'),
+            'second_type' : pokemon.get('second_type'),
+            'random_ability' : ability_name,
+            #'random_ability_id' : ability_id,
+            #'random_ability_name' : self.abilities.get_ability_name(ability_id),
             'image_link' : self.get_image_link(pokemon.get('sprite'))
         }
         return data

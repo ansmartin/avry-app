@@ -2,7 +2,7 @@ from scripts.database.games import GamesDatabase
 from scripts.controller.pokemon import PokemonController
 from scripts.controller.rolls import RollsController
 from scripts.controller.cards import CardsController
-from scripts.game import GameProperties, PokemonFilters, PokemonBox, GameSession
+from scripts.classes.game import GameProperties, PokemonFilters, PokemonBox, GameSession
 
 class GamesController:
     

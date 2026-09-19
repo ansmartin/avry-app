@@ -1,10 +1,10 @@
 from os import system
 
-from scripts.app_controller import AppController
-from scripts.user import User
-from scripts.game import GameSession
-from scripts.pokemon_types import PokemonTypes
-from scripts.cards import Card, Cards
+from scripts.controller.app_controller import AppController
+from scripts.classes.user import User
+from scripts.classes.game import GameSession
+from scripts.classes.pokemon_types import PokemonTypes
+from scripts.classes.cards import Card, Cards
 
 
 def clear():

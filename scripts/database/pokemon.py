@@ -1,6 +1,6 @@
 from sqlite3 import Connection, Cursor
 
-from scripts.game import PokemonFilters
+from scripts.classes.game import PokemonFilters
 
 class PokemonDatabase:
     

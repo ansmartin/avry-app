@@ -1,6 +1,6 @@
 from scripts.controller.games import GamesController
-from scripts.game import GameSession
-from scripts.cards import Card, Cards
+from scripts.classes.game import GameSession
+from scripts.classes.cards import Card, Cards
 
 class GameCardsController:
 

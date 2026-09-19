@@ -2,7 +2,7 @@ import random
 
 from scripts.database.pokemon import PokemonDatabase
 from scripts.controller.abilities import AbilitiesController
-from scripts.game import GameSession
+from scripts.classes.game import GameSession
 
 class PokemonController:
 

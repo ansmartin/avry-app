@@ -4,7 +4,6 @@ import os.path
 
 import scripts.constants as const
 
-from scripts.app_controller import AppController
 from scripts.controller.users import UsersController
 from scripts.controller.games import GamesController
 from scripts.controller.cards import CardsController
@@ -13,8 +12,8 @@ from scripts.controller.pokemon import PokemonController
 from scripts.controller.abilities import AbilitiesController
 from scripts.controller.game_cards import GameCardsController
 
-from scripts.game import GameSession, PokemonFilters
-from scripts.cards import Cards
+from scripts.classes.game import GameSession
+from scripts.classes.cards import Cards
 
 
 app = Flask(__name__)

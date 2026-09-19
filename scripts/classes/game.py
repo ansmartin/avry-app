@@ -1,4 +1,4 @@
-from scripts.cards import Card
+from scripts.classes.cards import Card
 
 class GameProperties:
     

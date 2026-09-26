@@ -143,7 +143,8 @@ def gamemode(gamename):
         controller_gamemodes.create_gamemode(gamename, dic_options)
         
         # return gamemode
-        gamemode = controller_gamemodes.get_gamemode_wih_name(gamename)
+        gamemode_id = controller_gamemodes.get_gamemode_id(gamename)
+        gamemode = controller_gamemodes.get_gamemode(gamemode_id)
         return gamemode
     
     elif request.method == 'DELETE':

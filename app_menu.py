@@ -6,6 +6,7 @@ API_URL = 'http://localhost:8080'
 API_URL_GAMEMODE = API_URL + '/game/'
 API_URL_USER = API_URL + '/user/'
 API_URL_USER_GAME = API_URL_USER + '{}/game/{}'
+API_URL_USER_GAME_ROLL = API_URL_USER_GAME + '/roll'
 
 
 TEXT_LINE = '\n------------------------------------'
@@ -207,7 +208,7 @@ def open_menu_gamemodes():
                 print('\n¿Obtener habilidades randomizadas? (De cualquier Pokémon posible) Escribe 1 para sí, escribe otra cosa para no.')
                 options['random_ability'] = input()=='1'
 
-            response = requests.post(API_URL_GAMEMODE+name, json=options)
+            response = requests.post(API_URL_GAMEMODE+name, data=options)
             print(response.text)
 
         #- 3: Eliminar modo de juego
@@ -409,7 +410,7 @@ def open_menu_gamesessions(username:str):
                 continue
             
             if name in gamenames_list:
-                print('Esa partida ya fue creada anteriormente.')
+                print('Ya estabas unido a una partida con este modo de juego.')
                 continue
             
             response = requests.post(API_URL_USER_GAME.format(username, name))
@@ -467,7 +468,7 @@ def open_menu_game(username:str, gamename:str):
     while(True):
         print(TEXT_USER.format(username))
         print(TEXT_GAME.format(gamename))
-        print_game_info()
+        print_game_info(username, gamename)
         print_box()
 
         print(TEXT_MENU_PLAY_GAME)
@@ -479,13 +480,13 @@ def open_menu_game(username:str, gamename:str):
         print(TEXT_SELECTED_OPTION.format(option))
 
         if(option=='1'):
-            roll()
+            roll(username, gamename)
         elif(option=='2'):
-            roll(spend_ticket=True)
+            roll(username, gamename, spend_ticket=True)
         elif(option=='3'):
             open_menu_cards()
         elif(option=='4'):
-            print_filters()
+            print_filters(gamename)
 
         elif(option=='9'):
             clear()
@@ -499,17 +500,41 @@ def open_menu_game(username:str, gamename:str):
 
         print(TEXT_LINE)
 
-def print_game_info():
-    pass
+def print_game_info(username, gamename):
+    response = requests.get(API_URL_USER_GAME.format(username, gamename))
+    game:dict = response.json()
+    game_properties:dict = game.get('game_properties')
+    print(f'\n   Datos de la sesión de juego')
+    print(f'      Tiradas restantes: {game_properties.get('rolls')}')
+    print(f'      Tiquets para forzar tipo: {game_properties.get('tickets')}')
+    print(f'      Dinero: {game_properties.get('money')} monedas')
+    print(f'      Puntos de items: {game_properties.get('item_points')}')
 
-def print_filters():
-    pass
+def print_filters(gamename):
+    response = requests.get(API_URL_GAMEMODE+gamename)
+    gamemode:dict = response.json()
+    print('\nFiltros:')
+    print(f' - filtrar por generación')
+    print(f'   - obtener Pokémon hasta la generación: {gamemode.get('generation')}')
+    print(f' - filtrar por categoría')
+    print(f'   - mythical: {str(bool(gamemode.get('mythical')))}')
+    print(f'   - legendary: {str(bool(gamemode.get('legendary')))}')
+    print(f'   - sublegendary: {str(bool(gamemode.get('sublegendary')))}')
+    print(f'   - powerhouse: {str(bool(gamemode.get('powerhouse')))}')
+    print(f' - obtener sólo Pokémon completamente evolucionados: {str(bool(gamemode.get('fully_evolved')))}')
+    print(f' - obtener habilidades randomizadas: {str(bool(gamemode.get('random_ability')))}')
+    #print(f'   - el resto de Pokémon: {gamemode.get('')}')
+    # print(f' - obtener sólo Pokémon que puedan mega-evolucionar: {gamemode.get('')}')
+    # print(f' - obtener sólo Pokémon que puedan gigamaxizar: {gamemode.get('')}')
+
 
 def print_box():
     pass
 
-def roll():
-    pass
+def roll(username:str, gamename:str, spend_ticket:bool=False):
+    response = requests.get(API_URL_USER_GAME_ROLL.format(username, gamename))
+    print('\n')
+    print(response.text)
 
 def open_menu_cards():
     pass

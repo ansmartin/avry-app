@@ -1,4 +1,5 @@
 from scripts.database.games import GamesDatabase
+from scripts.database.gamemodes import GamemodesDatabase
 from scripts.controller.pokemon import PokemonController
 from scripts.controller.rolls import RollsController
 from scripts.controller.cards import CardsController
@@ -8,6 +9,7 @@ class GamesController:
     
     def __init__(self, connection, cursor):
         self.db_games = GamesDatabase(connection, cursor)
+        self.db_gamemodes = GamemodesDatabase(connection, cursor)
         self.pokemon = PokemonController(connection, cursor)
         self.rolls = RollsController(connection, cursor)
         self.cards = CardsController(connection, cursor)
@@ -15,33 +17,17 @@ class GamesController:
 
     # SELECT
 
-    def get_gamemode(self, gamemode_id:int=None, gamename:str=None) -> dict:
-        if gamemode_id is None:
-            if gamename is None:
-                return None
-            gamemode_id = self.db_games.get_gamemode_id(gamename)
-            if gamemode_id is None:
-                return None
-
-        # cargar datos
-        gamemode = self.db_games.get_gamemode(gamemode_id)
-        return gamemode
-
-    def get_game(self, game_id:int=None, user_id:int=None, gamename:str=None) -> GameSession:
+    def get_game(self, game_id:int) -> GameSession:
         if game_id is None:
-            if user_id is None or gamename is None:
-                return None
-            gamemode_id = self.db_games.get_gamemode_id(gamename)
-            if gamemode_id is None:
-                return None
-            game_id = self.db_games.get_game_id(user_id, gamemode_id=gamemode_id)
-            if game_id is None:
-                return None
+            return None
 
         # cargar datos de la sesión de juego
         game = self.db_games.get_game(game_id)
+        if not game:
+            return None
 
         user_id = game.get('user_id')
+        gamemode_id = game.get('gamemode_id')
 
         properties = GameProperties(
             max_rolls = game.get('max_rolls'), 
@@ -51,7 +37,12 @@ class GamesController:
             item_points = game.get('item_points')
         )
 
-        gamemode = self.db_games.get_gamemode(gamemode_id)
+        # cargar datos del modo de juego
+        gamemode = self.db_gamemodes.get_gamemode(gamemode_id)
+        if not gamemode:
+            return None
+
+        gamename = gamemode.get('gamename')
 
         filters = PokemonFilters(
             generation = gamemode.get('generation'),
@@ -78,13 +69,25 @@ class GamesController:
             used_cards
         )
         return game
+    
+    def get_game_with_user_and_name(self, user_id:int, gamename:str) -> GameSession:
+        if user_id is None or gamename is None:
+            return None
+        gamemode_id = self.db_gamemodes.get_gamemode_id(gamename)
+        if gamemode_id is None:
+            return None
+        game_id = self.get_game_id(user_id, gamemode_id)
+        if game_id is None:
+            return None
+        
+        return self.get_game(game_id)
 
-    def get_game_simplified_dict(self, game:GameSession):
+    def get_simple_game_dict(self, game:GameSession):
         # convertir a diccionario
         game_dict = game.to_dict()
 
         # rellenar la caja con los nombres de los pokemon y nombres de habilidades 
-        box = game_dict['pokemon_box']['box']
+        box:dict = game_dict['pokemon_box']['box']
         new_box = { 
             pokemon_id : self.pokemon.get_pokemon_important_data(pokemon_id, ability_id)
             for pokemon_id,ability_id in box.items()
@@ -93,13 +96,21 @@ class GamesController:
 
         return game_dict
 
+    def get_game_id(self, user_id:int, gamemode_id:int) -> int|None:
+        if user_id is None or gamemode_id is None:
+            return None
+
+        return self.db_games.get_game_id(user_id, gamemode_id)
+
+
     # INSERT
 
     def create_game(self, user_id:int, gamemode_id:int):
-        
-        gamemode = self.db_games.get_gamemode(gamemode_id)
+
+        # carga las mismas variables del modo de juego 
+        gamemode = self.db_gamemodes.get_gamemode(gamemode_id)
         if not gamemode:
-            return None
+            return
 
         self.db_games.insert_game(
             user_id,
@@ -111,126 +122,25 @@ class GamesController:
             gamemode.get('max_item_points')
         )
 
-    def create_gamemode(self, gamename:str, dic_options:dict):
-
-        try:
-            rolls = dic_options.get('rolls')
-            rolls = int(rolls)
-            if rolls<0:
-                rolls=0
-            elif rolls > GameProperties.MAX_ROLLS:
-                rolls = GameProperties.MAX_ROLLS
-        except:
-            rolls = GameProperties.DEFAULT_ROLLS
-
-        try:
-            tickets = dic_options.get('tickets')
-            tickets = int(tickets)
-            if tickets<0:
-                tickets=0
-            elif tickets > GameProperties.MAX_TICKETS:
-                tickets = GameProperties.MAX_TICKETS
-        except:
-            tickets = GameProperties.DEFAULT_TICKETS
-
-        try:
-            money = dic_options.get('money')
-            money = int(money)
-            if money<0:
-                money=0
-            elif money > GameProperties.MAX_MONEY:
-                money = GameProperties.MAX_MONEY
-        except:
-            money = GameProperties.DEFAULT_MONEY
-
-        try:
-            item_points = dic_options.get('item_points')
-            item_points = int(item_points)
-            if item_points<0:
-                item_points=0
-            elif item_points > GameProperties.MAX_ITEM_POINTS:
-                item_points = GameProperties.MAX_ITEM_POINTS
-        except:
-            item_points = GameProperties.DEFAULT_ITEM_POINTS
-
-        properties = GameProperties(
-            max_rolls = rolls,
-            rolls = rolls, 
-            tickets = tickets, 
-            money = money, 
-            item_points = item_points
-        )
-
-        try:
-            generation = dic_options.get('generation')
-            generation = int(generation)
-            if generation<0:
-                generation=0
-            elif generation>PokemonFilters.DEFAULT_GENERATION:
-                raise Exception()
-        except:
-            generation = PokemonFilters.DEFAULT_GENERATION
-        
-        filters = PokemonFilters(
-            generation = generation,
-            mythical = dic_options.get('mythical',PokemonFilters.DEFAULT_MYTHICAL),
-            legendary = dic_options.get('legendary',PokemonFilters.DEFAULT_LEGENDARY),
-            sublegendary = dic_options.get('sublegendary',PokemonFilters.DEFAULT_SUBLEGENDARY),
-            powerhouse = dic_options.get('powerhouse',PokemonFilters.DEFAULT_POWERHOUSE),
-            fully_evolved = dic_options.get('fully_evolved',PokemonFilters.DEFAULT_FULLY_EVOLVED),
-            random_ability = dic_options.get('random_ability',PokemonFilters.DEFAULT_RANDOM_ABILITY)
-        )
-
-        self.db_games.insert_gamemode(
-            gamename,
-            properties.rolls,
-            properties.tickets,
-            properties.money,
-            properties.item_points,
-            filters.generation,
-            filters.mythical,
-            filters.legendary,
-            filters.sublegendary,
-            filters.powerhouse,
-            filters.fully_evolved,
-            filters.random_ability
-        )
-
 
     # DELETE
 
-    def delete_game(self, game_id:int=None, user_id:int=None, gamename:str=None) -> bool:
-        if game_id is None:
-            if user_id is None or gamename is None:
-                return False
-            game_id = self.db_games.get_game_id(user_id, gamename=gamename)
-            if game_id is None:
-                return False
-
+    def delete_game(self, game_id:int) -> bool:
         self.db_games.delete_game(game_id)
         self.rolls.db_rolls.delete_rolls(game_id)
         self.cards.db_cards.delete_all_used_cards(game_id)
-        return True 
 
-    def delete_gamemode(self, gamemode_id:int=None, gamename:str=None) -> bool:
-        if gamemode_id is None:
-            if gamename is None:
-                return False
-            gamemode_id = self.db_games.get_gamemode_id(gamename)
-            if gamemode_id is None:
-                return False
-
-        self.db_games.delete_gamemode(gamemode_id)
-        game_ids = self.db_games.get_game_ids_of_gamemode(gamemode_id)
-        for game_id in game_ids:
-            self.delete_game(game_id=game_id)
-        return True 
-
-    def delete_games_of_user(self, user_id):
+    def delete_games_of_user(self, user_id:int) -> bool:
         games_ids_list = self.db_games.get_game_ids(user_id)
+        return self.delete_games(games_ids_list)
+
+    def delete_games_of_gamemode(self, gamemode_id:int) -> bool:
+        games_ids_list = self.db_games.get_game_ids_of_gamemode(gamemode_id)
+        return self.delete_games(games_ids_list)
+    
+    def delete_games(self, games_ids_list:list[int]):
         for game_id in games_ids_list:
-            self.delete_game(game_id=game_id)
-        return True
+            self.delete_game(game_id)
 
     def delete_roll(self, game:GameSession, pokemon_id:int):
         game.pokemon_box.box.pop(pokemon_id)

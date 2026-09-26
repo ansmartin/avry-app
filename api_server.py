@@ -2,16 +2,14 @@ from flask import Flask, request, g
 import sqlite3
 import os.path
 
-import scripts.constants as const
+import scripts.classes.constants as const
 
 from scripts.controller.users import UsersController
+from scripts.controller.gamemodes import GamemodesController
 from scripts.controller.games import GamesController
-from scripts.controller.cards import CardsController
-from scripts.controller.rolls import RollsController
-from scripts.controller.pokemon import PokemonController
-from scripts.controller.abilities import AbilitiesController
 from scripts.controller.game_cards import GameCardsController
 
+from scripts.classes.status_codes import StatusCode
 from scripts.classes.game import GameSession
 from scripts.classes.cards import Cards
 
@@ -53,15 +51,6 @@ def init_db():
             cur.executescript(f.read())
         con.commit()
 
-def error_user_not_found():
-    return { 'success':False, 'error':'Usuario no encontrado' }
-
-def error_gamemode_not_found():
-    return { 'success':False, 'error':'Modo de juego no encontrado' }
-
-def error_game_not_found():
-    return { 'success':False, 'error':'Sesión de juego no encontrada' }
-
 
 # USER
 
@@ -84,39 +73,39 @@ def user(username):
     if request.method == 'GET':
         user = controller_users.get_user(username)
         if not user:
-            return error_user_not_found()
-        
-        controller_games = GamesController(con, cur)
+            return StatusCode.not_found()
+
+        controller_gamemodes = GamemodesController(con, cur)
 
         # add gamenames
         user_id = user.get('user_id')
-        user['games'] = controller_games.db_games.get_gamenames_user(user_id)
-        
+        user['games'] = controller_gamemodes.db_gamemodes.get_gamenames_of_user(user_id)
         return user
     
     elif request.method == 'POST':
-        success = controller_users.insert_user(username)
-        return { 'success':success }
+        user_id = controller_users.get_user_id(username)
+        if user_id is not None:
+            return StatusCode.duplicated()
+            
+        controller_users.insert_user(username)
+
+        # return user
+        user = controller_users.get_user(username)
+        return user
     
     elif request.method == 'DELETE':
-        # delete user
-        user_id = controller_users.db_users.get_user_id(username)
+        user_id = controller_users.get_user_id(username)
         if user_id is None:
-            return error_user_not_found()
-        success_user = controller_users.delete_user(user_id=user_id)
+            return StatusCode.not_found()
+        
+        # delete user
+        controller_users.delete_user(user_id)
+        
         # delete games
         controller_games = GamesController(con, cur)
-        success_games = controller_games.delete_games_of_user(user_id)
-
-        success = (success_user & success_games)
-        if success:
-            return { 'success':True }
-        else:
-            return { 
-            'success': False,
-            'user':{'success':success_user}, 
-            'games':{'success':success_games}
-        }
+        controller_games.delete_games_of_user(user_id)
+        
+        return StatusCode.ok()
 
 
 # GAMEMODES
@@ -125,36 +114,51 @@ def user(username):
 def gamemodes():
     con, cur = get_connection_and_cursor()
 
-    controller_games = GamesController(con, cur)
+    controller_gamemodes = GamemodesController(con, cur)
 
     if request.method == 'GET':
-        return controller_games.db_games.get_gamenames()
+        return controller_gamemodes.get_all_gamemode_names()
 
 
 @app.route("/game/<gamename>", methods=['GET','POST','DELETE'])
 def gamemode(gamename):
     con, cur = get_connection_and_cursor()
 
-    controller_games = GamesController(con, cur)
+    controller_gamemodes = GamemodesController(con, cur)
 
-    if request.method == 'GET' or request.method == 'POST':
-        if request.method == 'POST':
-            # check not repeated
-            gamemode_id = controller_games.db_games.get_gamemode_id(gamename)
-            if gamemode_id is not None:
-                return { 'success':False }
-            dic_options = request.form
-            controller_games.create_gamemode(gamename, dic_options)
+    if request.method == 'GET':
+        gamemode_id = controller_gamemodes.get_gamemode_id(gamename)
+        if gamemode_id is None:
+            return StatusCode.not_found()
+        
+        gamemode = controller_gamemodes.get_gamemode(gamemode_id)
+        return gamemode
+    
+    if request.method == 'POST':
+        gamemode_id = controller_gamemodes.get_gamemode_id(gamename)
+        if gamemode_id is not None:
+            return StatusCode.duplicated()
 
-        # return gamemode dictionary
-        gamemode = controller_games.get_gamemode(gamename=gamename)
-        if not gamemode:
-            return error_gamemode_not_found()
+        dic_options = request.form
+        controller_gamemodes.create_gamemode(gamename, dic_options)
+        
+        # return gamemode
+        gamemode = controller_gamemodes.get_gamemode_wih_name(gamename)
         return gamemode
     
     elif request.method == 'DELETE':
-        success = controller_games.delete_gamemode(gamename=gamename)
-        return { 'success':success }
+        gamemode_id = controller_gamemodes.get_gamemode_id(gamename)
+        if gamemode_id is None:
+            return StatusCode.not_found()
+        
+        # delete gamemode
+        controller_gamemodes.delete_gamemode(gamemode_id)
+        
+        # delete games
+        controller_games = GamesController(con, cur)
+        controller_games.delete_games_of_gamemode(gamemode_id)
+        
+        return StatusCode.ok()
 
 
 # GAME
@@ -164,34 +168,56 @@ def game(username, gamename):
     con, cur = get_connection_and_cursor()
 
     controller_users = UsersController(con, cur)
-    user_id = controller_users.db_users.get_user_id(username)
+    
+    user_id = controller_users.get_user_id(username)
     if user_id is None:
-        return error_user_not_found()
+        return StatusCode.not_found()
 
     controller_games = GamesController(con, cur)
 
-    if request.method == 'GET' or request.method == 'POST':
-        if request.method == 'POST':
-            # check gamemode exists
-            gamemode_id = controller_games.db_games.get_gamemode_id(gamename)
-            if gamemode_id is None:
-                return error_gamemode_not_found()
-            # check not repeated
-            game_id = controller_games.db_games.get_game_id(user_id, gamemode_id=gamemode_id)
-            if game_id is not None:
-                return { 'success':False }
-            controller_games.create_game(user_id, gamemode_id)
+    if request.method == 'GET':
+        gamemode_id = controller_games.db_gamemodes.get_gamemode_id(gamename)
+        if gamemode_id is None:
+            return StatusCode.not_found()
+        
+        game_id = controller_games.get_game_id(user_id, gamemode_id)
+        if game_id is None:
+            return StatusCode.not_found()
+        
+        # return game dictionary
+        game = controller_games.get_game(game_id)
+        game_dict = controller_games.get_simple_game_dict(game)
+        return game_dict
+    
+    if request.method == 'POST':
+        gamemode_id = controller_games.db_gamemodes.get_gamemode_id(gamename)
+        if gamemode_id is None:
+            return StatusCode.not_found()
+        
+        game_id = controller_games.get_game_id(user_id, gamemode_id)
+        if game_id is not None:
+            return StatusCode.duplicated()
+        
+        controller_games.create_game(user_id, gamemode_id)
 
         # return game dictionary
-        game = controller_games.get_game(user_id=user_id, gamename=gamename)
-        if not game:
-            return error_game_not_found()
-        game_dict = controller_games.get_game_simplified_dict(game)
+        game_id = controller_games.get_game_id(user_id, gamemode_id)
+        game = controller_games.get_game(game_id)
+        game_dict = controller_games.get_simple_game_dict(game)
         return game_dict
     
     elif request.method == 'DELETE':
-        success = controller_games.delete_game(user_id=user_id, gamename=gamename)
-        return { 'success':success }
+        gamemode_id = controller_games.db_gamemodes.get_gamemode_id(gamename)
+        if gamemode_id is None:
+            return StatusCode.not_found()
+        
+        game_id = controller_games.get_game_id(user_id, gamemode_id)
+        if game_id is None:
+            return StatusCode.not_found()
+        
+        controller_games.delete_game(user_id)
+
+        return StatusCode.ok()
 
 
 # ROLL
@@ -201,22 +227,32 @@ def do_roll(username, gamename):
     con, cur = get_connection_and_cursor()
 
     controller_users = UsersController(con, cur)
-    user_id = controller_users.db_users.get_user_id(username)
-    if user_id is None:
-        return error_user_not_found()
 
+    user_id = controller_users.get_user_id(username)
+    if user_id is None:
+        return StatusCode.not_found()
+    
     controller_games = GamesController(con, cur)
-    game = controller_games.get_game(user_id=user_id, gamename=gamename)
-    if not game:
-        return error_game_not_found()
+
+    gamemode_id = controller_games.db_gamemodes.get_gamemode_id(gamename)
+    if gamemode_id is None:
+        return StatusCode.not_found()
+    
+    game_id = controller_games.get_game_id(user_id, gamemode_id)
+    if game_id is None:
+        return StatusCode.not_found()
+
+    game = controller_games.get_game(game_id)
 
     pokemon_type = request.args.get('type')
 
     pokemon = controller_games.do_roll(game, pokemon_type)
+    if not pokemon:
+        return {}
 
     data = controller_games.pokemon.get_pokemon_important_data(
         pokemon.get('pokemon_id'), 
-        pokemon.get('random_ability_id', None)
+        pokemon.get('random_ability_id')
     )
     return data
 
@@ -228,14 +264,22 @@ def use_card(username, gamename, card_tag):
     con, cur = get_connection_and_cursor()
 
     controller_users = UsersController(con, cur)
-    user_id = controller_users.db_users.get_user_id(username)
+
+    user_id = controller_users.get_user_id(username)
     if user_id is None:
-        return error_user_not_found()
+        return StatusCode.not_found()
 
     controller_games = GamesController(con, cur)
-    game = controller_games.get_game(user_id=user_id, gamename=gamename)
-    if not game:
-        return error_game_not_found()
+    
+    gamemode_id = controller_games.db_gamemodes.get_gamemode_id(gamename)
+    if gamemode_id is None:
+        return StatusCode.not_found()
+    
+    game_id = controller_games.get_game_id(user_id, gamemode_id)
+    if game_id is None:
+        return StatusCode.not_found()
+    
+    game = controller_games.get_game(game_id)
     
     controller_gamecards = GameCardsController(controller_games)
 

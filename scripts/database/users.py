@@ -30,10 +30,9 @@ class UsersDatabase:
     def get_user_id(self, username:str) -> int|None:
         self.cur.execute(f"SELECT user_id FROM users WHERE username=\'{username}\'")
         rows = self.cur.fetchall()
-        if rows:
-            return rows[0][0]
-        else:
+        if not rows:
             return None
+        return rows[0][0]
 
     def get_usernames(self) -> list:
         self.cur.execute(f"SELECT username FROM users")

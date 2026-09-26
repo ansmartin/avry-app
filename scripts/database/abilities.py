@@ -18,7 +18,6 @@ class AbilitiesDatabase:
     def get_ability_name(self, ability_id:int) -> str|None:
         self.cur.execute(f"SELECT ability_name FROM abilities WHERE ability_id={ability_id}")
         rows = self.cur.fetchall()
-        if rows:
-            return rows[0][0]
-        else:
+        if not rows:
             return None
+        return rows[0][0]
